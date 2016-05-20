@@ -50,6 +50,7 @@ public class ApplicationConfig {
         return map;
     }
 
+    
     @Bean
     public IntegrationService integrationService() {
         return new IntegrationService(integrationFacades());
