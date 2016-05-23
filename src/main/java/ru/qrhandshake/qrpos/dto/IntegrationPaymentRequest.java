@@ -17,7 +17,7 @@ public class IntegrationPaymentRequest {
     private String cardHolderName;
     private String cvc;
     private String returnUrl;
-    private String currency;
+    private String currency = "643";
     private String language;
     private String description;
     private Long amount;

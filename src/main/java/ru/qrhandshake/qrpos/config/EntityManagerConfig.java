@@ -15,6 +15,7 @@ import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaDialect;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManagerFactory;
@@ -25,6 +26,7 @@ import java.util.Properties;
  * Created by lameroot on 18.05.16.
  */
 @Configuration
+//@EnableTransactionManagement
 public class EntityManagerConfig {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -33,7 +35,7 @@ public class EntityManagerConfig {
     @Resource
     private DataSource dataSource;
 
-    /*
+
     @Bean
     public JdbcTemplate jdbcTemplate() {
         return new JdbcTemplate(dataSource);
@@ -101,8 +103,9 @@ public class EntityManagerConfig {
     public String hibernateDialect() {
         return environment.getRequiredProperty("hibernate.dialect");
     }
-    */
 
+
+    /*
     @Bean
     public EntityManagerFactory entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean entityManagerFactory = new LocalContainerEntityManagerFactoryBean();
@@ -128,5 +131,6 @@ public class EntityManagerConfig {
         adapter.setDatabase(Database.H2);
         return adapter;
     }
+    */
 
 }

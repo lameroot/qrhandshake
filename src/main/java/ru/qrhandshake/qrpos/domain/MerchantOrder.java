@@ -50,7 +50,7 @@ public class MerchantOrder {
     private IntegrationSupport integrationSupport;
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
-    private OrderStatus status;
+    private OrderStatus status = OrderStatus.REGISTERED;
 
     public Long getId() {
         return id;

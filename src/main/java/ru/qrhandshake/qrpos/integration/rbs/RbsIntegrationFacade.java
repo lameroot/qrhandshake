@@ -53,11 +53,13 @@ public class RbsIntegrationFacade implements IntegrationFacade {
     @Override
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException{
         OrderParams rbsParams = new OrderParams();
-        rbsParams.setCurrency(integrationPaymentRequest.getCurrency());
+        //rbsParams.setCurrency(integrationPaymentRequest.getCurrency());
+        rbsParams.setCurrency("643");
         rbsParams.setLanguage(integrationPaymentRequest.getLanguage());
         rbsParams.setDescription(integrationPaymentRequest.getDescription());
         rbsParams.setAmount(integrationPaymentRequest.getAmount());
-        rbsParams.setReturnUrl(integrationPaymentRequest.getReturnUrl());
+        //rbsParams.setReturnUrl(integrationPaymentRequest.getReturnUrl());
+        rbsParams.setReturnUrl("http://ya.ru");
         rbsParams.setMerchantOrderNumber(integrationPaymentRequest.getOrderId());
         for (Map.Entry<String, String> entry : integrationPaymentRequest.getParams().entrySet()) {
             ServiceParam serviceParam = new ServiceParam();

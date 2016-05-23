@@ -2,7 +2,6 @@ package ru.qrhandshake.qrpos.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
@@ -25,7 +24,7 @@ public class QrWebApplicationInitializer  implements WebApplicationInitializer {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private static String[] activeProfiles = new String[]{
         RbsIntegrationConfig.RBS_PROFILE,
-            "test"
+            "prod"
     };
 
 

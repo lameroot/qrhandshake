@@ -3,6 +3,7 @@ package ru.qrhandshake.qrpos.controller;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ import javax.validation.Valid;
  * Created by lameroot on 18.05.16.
  */
 @Controller
+@RequestMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
 public class MerchantOrderController {
 
     public final static String REGISTER_PATH = "/r";
@@ -41,17 +43,20 @@ public class MerchantOrderController {
     @ExceptionHandler(value = AuthException.class)
     @ResponseBody
     public MerchantResponse authException(AuthException e) {
+        logger.error("Auth error",e);
         return new MerchantResponse.ErrorMerchantResponse(ResponseCode.FAIL,e.getMessage());//todo:locale
     }
 
     @ExceptionHandler(value = MerchantOrderNotFoundException.class)
     @ResponseBody
     public MerchantResponse merchantOrderNotFoundException(MerchantOrderNotFoundException e) {
+        logger.error("Order not found",e);
         return new MerchantResponse.ErrorMerchantResponse(ResponseCode.FAIL, e.getMessage());//todo: locale
     }
 
     @ExceptionHandler(value = IllegalOrderStatusException.class)
     public String illegalOrderStatus(IllegalOrderStatusException e) {
+        logger.error("Illegal status:",e);
         switch (e.getIllegalOrderStatus() ) {
             case DEPOSITED: {
 
@@ -70,12 +75,17 @@ public class MerchantOrderController {
         return "";//todo: redirect to page
     }
 
+    @ExceptionHandler(value = Throwable.class)
+    public @ResponseBody String error(Throwable e) {
+        logger.error("Error",e);
+        return "Error";
+    }
+
     @RequestMapping(value = REGISTER_PATH)
     @ResponseBody
     public MerchantOrderRegisterResponse register(@Valid MerchantOrderRegisterRequest merchantOrderRegisterRequest,
                                      HttpServletRequest request) throws AuthException {
-        String contextPath = request.getContextPath();
-        return merchantOrderService.register(contextPath, merchantOrderRegisterRequest);
+        return merchantOrderService.register(merchantOrderRegisterRequest);
     }
 
     @RequestMapping(value = ORDER_STATUS_PATH)

@@ -17,7 +17,7 @@ import javax.annotation.Resource;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = ApplicationConfig.class, loader = AnnotationConfigContextLoader.class)
-@ActiveProfiles(value = {"test"})
+@ActiveProfiles(value = {"prod"})
 public class GeneralTest extends TestCase {
 
     @Resource

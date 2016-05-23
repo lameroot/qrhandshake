@@ -2,8 +2,10 @@ package ru.qrhandshake.qrpos.repository;
 
 import org.junit.Test;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.GeneralTest;
 import ru.qrhandshake.qrpos.domain.Merchant;
+import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.dto.MerchantDto;
 import ru.qrhandshake.qrpos.service.MerchantService;
 
@@ -19,6 +21,8 @@ public class MerchantRepositoryTest extends GeneralTest {
     private MerchantService merchantService;
     @Resource
     private MerchantRepository merchantRepository;
+    @Resource
+    private MerchantOrderRepository merchantOrderRepository;
 
     @Test
     public void testCreate() {
@@ -34,6 +38,13 @@ public class MerchantRepositoryTest extends GeneralTest {
 
         UserDetails userDetails = merchantService.loadUserByUsername(merchant.getUsername());
         assertNotNull(userDetails);
+    }
+
+    @Test
+    @Transactional
+    public void testFindOne() {
+        MerchantOrder merchantOrder = merchantOrderRepository.findOne(9L);
+        System.out.println(merchantOrder.getMerchant());
     }
 
     private MerchantDto createMerchantDto(String name) {

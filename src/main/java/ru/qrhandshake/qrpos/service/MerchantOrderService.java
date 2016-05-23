@@ -1,10 +1,12 @@
 package ru.qrhandshake.qrpos.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.Merchant;
 import ru.qrhandshake.qrpos.domain.MerchantOrder;
+import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.dto.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IllegalOrderStatusException;
@@ -33,7 +35,7 @@ public class MerchantOrderService {
     @Resource
     private IntegrationService integrationService;//возможно надо перенсти в одно место
 
-    public MerchantOrderRegisterResponse register(String contextPath, MerchantOrderRegisterRequest merchantOrderRegisterRequest) throws AuthException {
+    public MerchantOrderRegisterResponse register(MerchantOrderRegisterRequest merchantOrderRegisterRequest) throws AuthException {
         Merchant merchant = merchantService.loadMerchant(merchantOrderRegisterRequest);
         MerchantOrder merchantOrder = new MerchantOrder();
         merchantOrder.setDescription(merchantOrderRegisterRequest.getDescription());
@@ -42,18 +44,19 @@ public class MerchantOrderService {
         merchantOrder.setClient(toClient(merchantOrderRegisterRequest.getClient()));
 
         merchantOrderRepository.save(merchantOrder);
-        String paymentUrl = buildPaymentUrl(contextPath,merchantOrder);
-        File qrImg = qrService.generate(paymentUrl);
-        String qrUrl = contextPath + MerchantOrderController.QR_PATH + "/" + qrImg.getName();
+
+        String paymentUrl = buildPaymentUrl(merchantOrder);
+
         MerchantOrderRegisterResponse merchantOrderRegisterResponse = new MerchantOrderRegisterResponse();
+        merchantOrderRegisterResponse.setOrderId(String.valueOf(merchantOrder.getId()));
         merchantOrderRegisterResponse.setPaymentUrl(paymentUrl);
-        merchantOrderRegisterResponse.setQrUrl(qrUrl);
         merchantOrderRegisterResponse.setResponseCode(ResponseCode.SUCCESS);
         merchantOrderRegisterResponse.setResponseMessage("Success");
 
         return merchantOrderRegisterResponse;
     }
 
+    @Transactional
     public MerchantOrderStatusResponse getOrderStatus(MerchantOrderStatusRequest merchantOrderStatusRequest)
             throws MerchantOrderNotFoundException, AuthException, IllegalOrderStatusException {
         Merchant merchant = merchantService.loadMerchant(merchantOrderStatusRequest);
@@ -65,7 +68,7 @@ public class MerchantOrderService {
         MerchantOrderStatusResponse merchantOrderStatusResponse = new MerchantOrderStatusResponse();
         merchantOrderStatusResponse.setAmount(merchantOrder.getAmount());
         merchantOrderStatusResponse.setOrderId(merchantOrderStatusRequest.getOrderId());
-        if ( null == merchantOrder.getStatus() || merchantOrderStatusRequest.isExternalRequest() ) {
+        if ( !OrderStatus.REGISTERED.equals(merchantOrder.getStatus()) || merchantOrderStatusRequest.isExternalRequest() ) {
             IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(merchantOrder.getExternalId());
             try {
                 IntegrationOrderStatusResponse integrationOrderStatusResponse = integrationService.getOrderStatus(integrationOrderStatusRequest);
@@ -78,6 +81,8 @@ public class MerchantOrderService {
         else {
             merchantOrderStatusResponse.setStatus(merchantOrder.getStatus());
         }
+        merchantOrderStatusResponse.setResponseMessage("Success");
+        merchantOrderStatusResponse.setResponseCode(ResponseCode.SUCCESS);
 
         return merchantOrderStatusResponse;
     }
@@ -116,8 +121,8 @@ public class MerchantOrderService {
         merchantOrderRepository.save(merchantOrder);
     }
 
-    private String buildPaymentUrl(String contextPath, MerchantOrder merchantOrder) {
-        return contextPath + MerchantOrderController.PAYMENT_PATH + "/" + generateUniqueIdOrder(merchantOrder);
+    private String buildPaymentUrl(MerchantOrder merchantOrder) {
+        return MerchantOrderController.PAYMENT_PATH + "/" + generateUniqueIdOrder(merchantOrder);
     }
 
     private String generateUniqueIdOrder(MerchantOrder merchantOrder) {

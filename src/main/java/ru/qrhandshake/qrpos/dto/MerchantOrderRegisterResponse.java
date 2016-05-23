@@ -5,8 +5,16 @@ package ru.qrhandshake.qrpos.dto;
  */
 public class MerchantOrderRegisterResponse extends MerchantResponse {
 
+    private String orderId;
     private String paymentUrl;
-    private String qrUrl;
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
 
     public String getPaymentUrl() {
         return paymentUrl;
@@ -16,11 +24,4 @@ public class MerchantOrderRegisterResponse extends MerchantResponse {
         this.paymentUrl = paymentUrl;
     }
 
-    public String getQrUrl() {
-        return qrUrl;
-    }
-
-    public void setQrUrl(String qrUrl) {
-        this.qrUrl = qrUrl;
-    }
 }

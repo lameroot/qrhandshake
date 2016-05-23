@@ -34,7 +34,7 @@ public class MerchantService implements UserDetailsService {
 
     public Merchant loadMerchant(MerchantRequest merchantRequest) throws AuthException {
         Merchant merchant = merchantRepository.findByUsername(merchantRequest.getLogin());
-        if ( merchant.getPassword().equals(passwordEncoder.encode(merchantRequest.getPassword())) ) {
+        if ( null == merchant || merchant.getPassword().equals(passwordEncoder.encode(merchantRequest.getPassword())) ) {
             throw new AuthException("Invalid username and password");
         }
         return merchant;

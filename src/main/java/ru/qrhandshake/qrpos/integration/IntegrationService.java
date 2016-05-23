@@ -35,7 +35,7 @@ public class IntegrationService {
         if ( null == orderStatus ) {
             throw new IntegrationException("Unknown status of order:" + integrationPaymentRequest.getOrderId());
         }
-        if ( !orderStatus.equals(OrderStatus.CREATED) ) {
+        if ( !orderStatus.equals(OrderStatus.REGISTERED) ) {
             throw new IllegalOrderStatusException("Illegal order status for payment order with orderId: " + integrationPaymentRequest.getOrderId(), orderStatus);
         }
         IntegrationSupport integrationSupport = checkIntegrationSupport(integrationPaymentRequest);
