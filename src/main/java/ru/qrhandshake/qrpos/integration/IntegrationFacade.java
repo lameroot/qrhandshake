@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.integration;
 
+import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.dto.IntegrationOrderStatusRequest;
 import ru.qrhandshake.qrpos.dto.IntegrationOrderStatusResponse;
 import ru.qrhandshake.qrpos.dto.IntegrationPaymentRequest;
@@ -14,5 +15,6 @@ public interface IntegrationFacade {
     IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException;
     IntegrationOrderStatusResponse getOrderStatus(IntegrationOrderStatusRequest integrationOrderStatusRequest) throws IntegrationException;
     IntegrationSupport getIntegrationSupport();
+    OrderStatus toOrderStatus(IntegrationOrderStatus integrationOrderStatus);
     boolean isApplicable();
 }

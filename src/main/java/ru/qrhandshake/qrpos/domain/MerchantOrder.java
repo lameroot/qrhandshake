@@ -19,6 +19,8 @@ public class MerchantOrder {
     private Long id;
     @Column(name = "external_id")
     private String externalId;
+    @Column(name = "external_order_status")
+    private String externalOrderStatus;
     @Column(name = "created_date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdDate = new Date();
@@ -48,9 +50,9 @@ public class MerchantOrder {
     @Column(name = "integration")
     @Enumerated(EnumType.STRING)
     private IntegrationSupport integrationSupport;
-    @Column(name = "status")
+    @Column(name = "orderStatus")
     @Enumerated(EnumType.STRING)
-    private OrderStatus status = OrderStatus.REGISTERED;
+    private OrderStatus orderStatus = OrderStatus.REGISTERED;
 
     public Long getId() {
         return id;
@@ -164,12 +166,12 @@ public class MerchantOrder {
         this.language = language;
     }
 
-    public OrderStatus getStatus() {
-        return status;
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
     }
 
-    public void setStatus(OrderStatus status) {
-        this.status = status;
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
     }
 
     public String getExternalId() {
@@ -178,5 +180,13 @@ public class MerchantOrder {
 
     public void setExternalId(String externalId) {
         this.externalId = externalId;
+    }
+
+    public String getExternalOrderStatus() {
+        return externalOrderStatus;
+    }
+
+    public void setExternalOrderStatus(String externalOrderStatus) {
+        this.externalOrderStatus = externalOrderStatus;
     }
 }

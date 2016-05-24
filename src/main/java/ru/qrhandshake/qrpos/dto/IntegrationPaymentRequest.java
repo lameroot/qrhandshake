@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.dto;
 
 import ru.qrhandshake.qrpos.domain.OrderStatus;
+import ru.qrhandshake.qrpos.domain.PaymentWay;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,7 @@ public class IntegrationPaymentRequest {
     private ClientDto client;
     private OrderStatus orderStatus;
     private Map<String, String> params = new HashMap<>();
+    private PaymentWay paymentWay = PaymentWay.CARD;
 
     public String getOrderId() {
         return orderId;
@@ -135,5 +137,13 @@ public class IntegrationPaymentRequest {
 
     public void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
+    }
+
+    public PaymentWay getPaymentWay() {
+        return paymentWay;
+    }
+
+    public void setPaymentWay(PaymentWay paymentWay) {
+        this.paymentWay = paymentWay;
     }
 }

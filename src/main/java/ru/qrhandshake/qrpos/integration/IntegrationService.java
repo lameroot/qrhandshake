@@ -68,8 +68,24 @@ public class IntegrationService {
         return integrationOrderStatusResponse;
     }
 
+
     private IntegrationSupport checkIntegrationSupport(IntegrationPaymentRequest paymentRequest) {
-        return IntegrationSupport.RBS_SBRF;//тут может быть проверка на тип карты и взависимости от этого выбор, через кого проводить операцию
+        switch (paymentRequest.getPaymentWay()) {
+            case CARD: {
+                return IntegrationSupport.RBS_SBRF;//todo: hardcode only sber
+            }
+            case YANDEX_WALLET: {
+                return IntegrationSupport.YANDEX_WALLET;
+            }
+            case QIWI_WALLET: {
+                return IntegrationSupport.QIWI_WALLET;
+            }
+            case GOOGLE_WALLET: {
+                return IntegrationSupport.GOOGLE_WALLET;
+            }
+        }
+        throw new IllegalArgumentException("Unknown payment way: " + paymentRequest.getPaymentWay());
+        //тут может быть проверка на тип карты и взависимости от этого выбор, через кого проводить операцию
     }
 
 }

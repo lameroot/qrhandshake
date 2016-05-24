@@ -5,11 +5,9 @@ package ru.qrhandshake.qrpos.domain;
  */
 public enum  OrderStatus {
     REGISTERED,
-    CREATED,
-    DEPOSITED,
-    APPROVED,
+    PAID,
     DECLINED,
     REVERSED,
     REFUNDED,
-    REDIRECT_TO_ACS;
+
 }

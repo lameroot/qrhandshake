@@ -17,6 +17,7 @@ import ru.qrhandshake.qrpos.dto.IntegrationPaymentResponse;
 import ru.qrhandshake.qrpos.exception.IllegalOrderStatusException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.integration.IntegrationFacade;
+import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
 import ru.qrhandshake.qrpos.integration.IntegrationSupport;
 
 import javax.annotation.Resource;
@@ -96,11 +97,11 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         response.setPaReq(paymentOrderResult.getPaReq());
         response.setTermUrl(paymentOrderResult.getRedirect());
         if (StringUtils.isNotBlank(paymentOrderResult.getAcsUrl()) ) {
-            response.setStatus(OrderStatus.REDIRECT_TO_ACS);
+            response.setOrderStatus(RbsOrderStatus.REDIRECTED_TO_ACS);
         }
         else {
             IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(orderId));
-            response.setStatus(integrationOrderStatusResponse.getOrderStatus());
+            //todo: check status если невалидный, то делать еще раз несколько раз
         }
 
         return response;
@@ -118,8 +119,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             integrationOrderStatusResponse.setOrderStatus(null);
         }
         RbsOrderStatus rbsOrderStatus = RbsOrderStatus.valueOf(getOrderStatusExtendedResponse.getOrderStatus());
-        OrderStatus orderStatus = toOrderStatus(rbsOrderStatus);
-        integrationOrderStatusResponse.setOrderStatus(orderStatus);
+        integrationOrderStatusResponse.setOrderStatus(rbsOrderStatus);
 
         return integrationOrderStatusResponse;
     }
@@ -134,16 +134,21 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         return environment.acceptsProfiles(RbsIntegrationConfig.RBS_PROFILE);
     }
 
-    protected OrderStatus toOrderStatus(RbsOrderStatus rbsOrderStatus) {
-        if ( null == rbsOrderStatus ) return null;
-        switch (rbsOrderStatus) {
-            case CREATED: return OrderStatus.CREATED;
-            case DEPOSITED: return OrderStatus.DEPOSITED;
-            case APPROVED: return OrderStatus.APPROVED;
-            case REFUNDED: return OrderStatus.REFUNDED;
-            case REVERSED: return OrderStatus.REVERSED;
-            case REDIRECTED_TO_ACS: return OrderStatus.REDIRECT_TO_ACS;
+    @Override
+    public OrderStatus toOrderStatus(IntegrationOrderStatus integrationOrderStatus) {
+        if ( integrationOrderStatus instanceof RbsOrderStatus ) {
+            RbsOrderStatus rbsOrderStatus = (RbsOrderStatus)integrationOrderStatus;
+            switch (rbsOrderStatus) {
+                case CREATED: return OrderStatus.REGISTERED;
+                case DEPOSITED: return OrderStatus.PAID;
+                case APPROVED: return OrderStatus.PAID;
+                case REFUNDED: return OrderStatus.REFUNDED;
+                case REVERSED: return OrderStatus.REVERSED;
+                case REDIRECTED_TO_ACS: return OrderStatus.REGISTERED;
+            }
+            return OrderStatus.REGISTERED;
         }
-        return null;
+        throw new IllegalArgumentException("Unknown integration order status: " + integrationOrderStatus);
     }
+
 }

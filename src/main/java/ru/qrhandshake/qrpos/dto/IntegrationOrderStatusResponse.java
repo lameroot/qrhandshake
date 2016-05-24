@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.dto;
 
 import ru.qrhandshake.qrpos.domain.OrderStatus;
+import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
 
 /**
  * Created by lameroot on 20.05.16.
@@ -8,7 +9,7 @@ import ru.qrhandshake.qrpos.domain.OrderStatus;
 public class IntegrationOrderStatusResponse {
 
     private String externalId;
-    private OrderStatus orderStatus;
+    private IntegrationOrderStatus orderStatus;
     //todo: добавить сюда поля которые могут приходить из запроса к процессингу
 
     public String getExternalId() {
@@ -19,11 +20,11 @@ public class IntegrationOrderStatusResponse {
         this.externalId = externalId;
     }
 
-    public OrderStatus getOrderStatus() {
+    public IntegrationOrderStatus getOrderStatus() {
         return orderStatus;
     }
 
-    public void setOrderStatus(OrderStatus orderStatus) {
+    public void setOrderStatus(IntegrationOrderStatus orderStatus) {
         this.orderStatus = orderStatus;
     }
 }

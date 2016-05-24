@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.dto;
 
 import ru.qrhandshake.qrpos.domain.OrderStatus;
+import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
 
 /**
  * Created by lameroot on 19.05.16.
@@ -11,7 +12,7 @@ public class IntegrationPaymentResponse {
     private String acsUrl;
     private String paReq;
     private String termUrl;
-    private OrderStatus status;
+    private IntegrationOrderStatus orderStatus;
 
     public String getOrderId() {
         return orderId;
@@ -45,11 +46,11 @@ public class IntegrationPaymentResponse {
         this.termUrl = termUrl;
     }
 
-    public OrderStatus getStatus() {
-        return status;
+    public IntegrationOrderStatus getOrderStatus() {
+        return orderStatus;
     }
 
-    public void setStatus(OrderStatus status) {
-        this.status = status;
+    public void setOrderStatus(IntegrationOrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
     }
 }
