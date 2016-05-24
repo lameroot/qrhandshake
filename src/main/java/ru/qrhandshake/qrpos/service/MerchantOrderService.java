@@ -115,7 +115,7 @@ public class MerchantOrderService {
 
     public void toMerchantOrder(IntegrationPaymentResponse integrationPaymentResponse) throws MerchantOrderNotFoundException {
         MerchantOrder merchantOrder = findMerchantOrderByGeneratedId(integrationPaymentResponse.getOrderId());
-        merchantOrder.setOrderStatus(integrationService.toOrderStatus(integrationPaymentResponse.getOrderStatus()));
+        //merchantOrder.setOrderStatus(integrationService.toOrderStatus(integrationPaymentResponse.getOrderStatus()));
         merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getOrderStatus().getStatus());//todo: nullable
         merchantOrder.setExternalId(integrationPaymentResponse.getOrderId());
 

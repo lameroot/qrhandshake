@@ -13,7 +13,6 @@ import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IllegalOrderStatusException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
-import ru.qrhandshake.qrpos.integration.IntegrationFacade;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.service.MerchantOrderService;
 
@@ -25,12 +24,13 @@ import javax.validation.Valid;
  * Created by lameroot on 18.05.16.
  */
 @Controller
-@RequestMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
+@RequestMapping(value = MerchantOrderController.MERCHANT_ORDER_PATH, produces = {MediaType.APPLICATION_JSON_VALUE})
 public class MerchantOrderController {
 
-    public final static String REGISTER_PATH = "/r";
-    public final static String ORDER_STATUS_PATH = "/s";
-    public final static String PAYMENT_PATH = "/p";
+    public final static String MERCHANT_ORDER_PATH = "/order";
+    public final static String REGISTER_PATH = "/register";
+    public final static String ORDER_STATUS_PATH = "/status";
+    public final static String PAYMENT_PATH = "/payment";
     public final static String QR_PATH = "/qr"; //static files host in nginx
     @Resource
     private MerchantOrderService merchantOrderService;
@@ -39,47 +39,6 @@ public class MerchantOrderController {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-
-    @ExceptionHandler(value = AuthException.class)
-    @ResponseBody
-    public MerchantResponse authException(AuthException e) {
-        logger.error("Auth error",e);
-        return new MerchantResponse.ErrorMerchantResponse(ResponseCode.FAIL,e.getMessage());//todo:locale
-    }
-
-    @ExceptionHandler(value = MerchantOrderNotFoundException.class)
-    @ResponseBody
-    public MerchantResponse merchantOrderNotFoundException(MerchantOrderNotFoundException e) {
-        logger.error("Order not found",e);
-        return new MerchantResponse.ErrorMerchantResponse(ResponseCode.FAIL, e.getMessage());//todo: locale
-    }
-
-    @ExceptionHandler(value = IllegalOrderStatusException.class)
-    public String illegalOrderStatus(IllegalOrderStatusException e) {
-        logger.error("Illegal status:",e);
-        switch (e.getIllegalOrderStatus() ) {
-            case DEPOSITED: {
-
-                break;
-            }
-            case APPROVED: {
-                break;
-            }
-            case DECLINED: {
-                break;
-            }
-            case REDIRECT_TO_ACS: {
-                break;
-            }
-        }
-        return "";//todo: redirect to page
-    }
-
-    @ExceptionHandler(value = Throwable.class)
-    public @ResponseBody String error(Throwable e) {
-        logger.error("Error",e);
-        return "Error";
-    }
 
     @RequestMapping(value = REGISTER_PATH)
     @ResponseBody

@@ -48,7 +48,9 @@ public class MerchantService implements UserDetailsService {
         merchant.setUsername(merchantDto.getUsername());
         merchant.setPassword(encodePassword(merchantDto.getPassword()));
 
-        return merchantRepository.save(merchant);
+        merchantRepository.save(merchant);
+        merchantDto.setId(merchant.getId());
+        return merchant;
     }
 
     private String encodePassword(String password) {

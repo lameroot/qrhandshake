@@ -5,7 +5,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by lameroot on 18.05.16.
  */
-public abstract class AuthRequest {
+public class AuthRequest {
 
     @NotNull
     private String login;

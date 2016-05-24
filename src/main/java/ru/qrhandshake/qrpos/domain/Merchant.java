@@ -34,6 +34,8 @@ public class Merchant implements UserDetails{
     private Date createdDate;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
     private Set<MerchantDetail> merchantDetails;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
+    private Set<Terminal> terminals;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -123,5 +125,13 @@ public class Merchant implements UserDetails{
 
     public void setMerchantDetails(Set<MerchantDetail> merchantDetails) {
         this.merchantDetails = merchantDetails;
+    }
+
+    public Set<Terminal> getTerminals() {
+        return terminals;
+    }
+
+    public void setTerminals(Set<Terminal> terminals) {
+        this.terminals = terminals;
     }
 }
