@@ -5,5 +5,9 @@ package ru.qrhandshake.qrpos.integration;
  */
 public enum IntegrationSupport {
     RBS_SBRF,
-    RBS_ALFA;
+    RBS_ALFA,
+    TINKOFF,
+    YANDEX_WALLET,
+    QIWI_WALLET,
+    GOOGLE_WALLET;
 }

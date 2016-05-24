@@ -5,7 +5,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by lameroot on 20.05.16.
  */
-public class MerchantOrderStatusRequest extends MerchantRequest {
+public class MerchantOrderStatusRequest extends AuthRequest {
 
     @NotNull
     private String orderId;

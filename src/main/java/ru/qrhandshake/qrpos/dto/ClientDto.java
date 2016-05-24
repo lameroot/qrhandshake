@@ -5,7 +5,7 @@ import ru.qrhandshake.qrpos.domain.Client;
 /**
  * Created by lameroot on 18.05.16.
  */
-public class ClientDto {
+public class ClientDto extends AuthRequest {
 
     private String name;
     private String phone;

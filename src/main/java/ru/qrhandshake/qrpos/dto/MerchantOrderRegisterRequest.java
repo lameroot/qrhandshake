@@ -5,7 +5,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by lameroot on 18.05.16.
  */
-public class MerchantOrderRegisterRequest extends MerchantRequest{
+public class MerchantOrderRegisterRequest extends AuthRequest {
 
     @NotNull
     private Long amount;

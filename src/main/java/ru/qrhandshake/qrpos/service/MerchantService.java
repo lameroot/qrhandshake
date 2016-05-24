@@ -6,9 +6,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.domain.Merchant;
-import ru.qrhandshake.qrpos.domain.User;
 import ru.qrhandshake.qrpos.dto.MerchantDto;
-import ru.qrhandshake.qrpos.dto.MerchantRequest;
+import ru.qrhandshake.qrpos.dto.AuthRequest;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.repository.MerchantRepository;
 
@@ -32,9 +31,9 @@ public class MerchantService implements UserDetailsService {
         return merchant;
     }
 
-    public Merchant loadMerchant(MerchantRequest merchantRequest) throws AuthException {
-        Merchant merchant = merchantRepository.findByUsername(merchantRequest.getLogin());
-        if ( null == merchant || merchant.getPassword().equals(passwordEncoder.encode(merchantRequest.getPassword())) ) {
+    public Merchant loadMerchant(AuthRequest authRequest) throws AuthException {
+        Merchant merchant = merchantRepository.findByUsername(authRequest.getLogin());
+        if ( null == merchant || merchant.getPassword().equals(passwordEncoder.encode(authRequest.getPassword())) ) {
             throw new AuthException("Invalid username and password");
         }
         return merchant;
