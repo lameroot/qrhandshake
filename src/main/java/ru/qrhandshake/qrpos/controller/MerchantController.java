@@ -4,8 +4,11 @@ import org.springframework.beans.factory.annotation.Required;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import ru.qrhandshake.qrpos.api.MerchantRegisterRequest;
+import ru.qrhandshake.qrpos.api.MerchantRegisterResponse;
 import ru.qrhandshake.qrpos.dto.MerchantDto;
 import ru.qrhandshake.qrpos.service.MerchantService;
 
@@ -30,5 +33,17 @@ public class MerchantController {
     public MerchantDto registerMerchant(@Valid MerchantDto merchantRequest) {
         merchantService.create(merchantRequest);
         return merchantRequest;
+    }
+
+    @RequestMapping(value = "/is_exists")
+    @ResponseBody
+    public Boolean isExists(@RequestParam(value = "merchant_id") String merchantId) {
+        return merchantService.isExist(merchantId);
+    }
+
+    @RequestMapping(value = "/register")
+    @ResponseBody
+    public MerchantRegisterResponse register(@Valid MerchantRegisterRequest merchantRegisterRequest) {
+        return merchantService.register(merchantRegisterRequest);
     }
 }

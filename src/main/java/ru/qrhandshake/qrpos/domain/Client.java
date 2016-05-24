@@ -1,24 +1,29 @@
 package ru.qrhandshake.qrpos.domain;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import ru.qrhandshake.qrpos.dto.Location;
 
 import javax.persistence.*;
+import java.util.Collection;
 
 /**
  * Created by lameroot on 18.05.16.
  */
 @Entity
 @Table(name = "client")
-public class Client {
+public class Client implements UserDetails {
 
     @Id
     @Column(updatable = false, name="id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "clientSequence")
     @SequenceGenerator(name = "clientSequence", sequenceName = "seq_client", allocationSize = 1)
     private Long id;
+    private String username;//todo: возмоно сделать по телефону
+    private String password;
     private String name;
-    private String phone;
-    private String email;
+    private String phone;//unique
+    private String email;//unique
     private String address;
     private String ip;
     private double lat;
@@ -86,5 +91,48 @@ public class Client {
 
     public void setIp(String ip) {
         this.ip = ip;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return false;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return false;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return false;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return false;
     }
 }

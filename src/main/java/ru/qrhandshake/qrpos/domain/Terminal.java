@@ -17,6 +17,10 @@ public class Terminal {
     @ManyToOne
     @JoinColumn(name = "fk_merchant_id")
     private Merchant merchant;
+    @Column(name = "terminal_id", nullable = false, unique = true)
+    private String terminalId;
+    @Column(nullable = false)
+    private String password;
 
     public Long getId() {
         return id;
@@ -32,5 +36,21 @@ public class Terminal {
 
     public void setMerchant(Merchant merchant) {
         this.merchant = merchant;
+    }
+
+    public String getTerminalId() {
+        return terminalId;
+    }
+
+    public void setTerminalId(String terminalId) {
+        this.terminalId = terminalId;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

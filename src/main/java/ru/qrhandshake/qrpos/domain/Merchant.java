@@ -15,7 +15,7 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "merchant")
-public class Merchant implements UserDetails{
+public class Merchant {
 
     @Id
     @Column(updatable = false, name="id")
@@ -24,48 +24,17 @@ public class Merchant implements UserDetails{
     private Long id;
     @Column(unique = true, nullable = false)
     private String name;
-    @Column(unique = true, nullable = false)
-    private String username;
-    private String password;
+    @Column(name = "merchant_id", unique = true, nullable = false)
+    private String merchantId;
     private String description;
-    private String contact;
     @Column(name = "created_date")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date createdDate;
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
-    private Set<MerchantDetail> merchantDetails;
+    private Date createdDate = new Date();
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
     private Set<Terminal> terminals;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
+    private Set<User> users;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.EMPTY_SET;
-    }
-
-    @Override
-    public String getUsername() {
-        return this.username;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return false;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return false;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return false;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
 
     public Long getId() {
         return id;
@@ -83,32 +52,12 @@ public class Merchant implements UserDetails{
         this.name = name;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public String getDescription() {
         return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public String getContact() {
-        return contact;
-    }
-
-    public void setContact(String contact) {
-        this.contact = contact;
     }
 
     public Date getCreatedDate() {
@@ -119,19 +68,27 @@ public class Merchant implements UserDetails{
         this.createdDate = createdDate;
     }
 
-    public Set<MerchantDetail> getMerchantDetails() {
-        return merchantDetails;
-    }
-
-    public void setMerchantDetails(Set<MerchantDetail> merchantDetails) {
-        this.merchantDetails = merchantDetails;
-    }
-
     public Set<Terminal> getTerminals() {
         return terminals;
     }
 
     public void setTerminals(Set<Terminal> terminals) {
         this.terminals = terminals;
+    }
+
+    public Set<User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<User> users) {
+        this.users = users;
+    }
+
+    public String getMerchantId() {
+        return merchantId;
+    }
+
+    public void setMerchantId(String merchantId) {
+        this.merchantId = merchantId;
     }
 }
