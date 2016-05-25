@@ -7,6 +7,14 @@ public class ApiResponse {
     private ResponseStatus status;
     private String message;
 
+    public ApiResponse() {
+    }
+
+    public ApiResponse(ResponseStatus status, String message) {
+        this.status = status;
+        this.message = message;
+    }
+
     public ResponseStatus getStatus() {
         return status;
     }

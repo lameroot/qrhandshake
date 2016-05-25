@@ -19,6 +19,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TerminalControllerTest extends ServletConfigTest {
 
     @Test
+    public void testAuth() throws Exception {
+        mockMvc.perform(post("/terminal/auth")
+        .param("authName","auth")
+        .param("authPassword","password"))
+                .andDo(print());
+    }
+
+    @Test
     public void testRegister() throws Exception {
         mockMvc.perform(get(TerminalController.TERMINAL_PATH + TerminalController.REGISTER_PATH)
                 //.param("login","login")

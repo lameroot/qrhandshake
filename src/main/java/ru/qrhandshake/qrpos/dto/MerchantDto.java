@@ -22,10 +22,10 @@ public class MerchantDto {
         if ( null != merchant ) {
             this.id = merchant.getId();
             this.name = merchant.getName();
-            this.contact = merchant.getContact();
+
             this.description = merchant.getDescription();
             this.createdDate = merchant.getCreatedDate();
-            this.username = merchant.getUsername();
+
         }
     }
 

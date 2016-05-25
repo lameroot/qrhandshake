@@ -1,5 +1,7 @@
 package ru.qrhandshake.qrpos.api;
 
+import org.apache.commons.lang.StringUtils;
+
 import javax.validation.constraints.NotNull;
 
 /**
@@ -43,5 +45,9 @@ public class ApiAuth {
 
     public void setAuthType(AuthType authType) {
         this.authType = authType;
+    }
+
+    public boolean authIsNotBlank() {
+        return StringUtils.isNotBlank(authName) && StringUtils.isNotBlank(authPassword);
     }
 }

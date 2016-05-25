@@ -2,6 +2,7 @@ package ru.qrhandshake.qrpos.repository;
 
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.domain.Merchant;
 
 /**
@@ -10,5 +11,6 @@ import ru.qrhandshake.qrpos.domain.Merchant;
 @Repository
 public interface MerchantRepository extends CrudRepository<Merchant, Long>{
 
-    public Merchant findByMerchantId(String merchantId);
+    @Transactional(readOnly = true)
+    public Merchant findByName(String name);
 }

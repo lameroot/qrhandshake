@@ -27,12 +27,18 @@ public class UserService implements UserDetailsService {
         return userRepository.findByUsername(s);
     }
 
-    public User create(Merchant merchant, String password, boolean expired) {
+    public User create(Merchant merchant, String username, String password) {
+        return create(merchant, username, password, true, false, false);
+    }
+    public User create(Merchant merchant, String username, String password,
+                       boolean isEnabled, boolean isExpired, boolean isLocked) {
         User user = new User();
         user.setMerchant(merchant);
-        user.setUsername(merchant.getMerchantId());
+        user.setUsername(username);
         user.setPassword(encodePassword(password));
-        user.setExpired(expired);//need to change password
+        user.setExpired(isExpired);
+        user.setEnabled(isEnabled);
+        user.setLocked(isLocked);
         return userRepository.save(user);
     }
 

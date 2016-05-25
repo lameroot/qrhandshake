@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Required;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -28,20 +29,13 @@ public class MerchantController {
     @Resource
     private MerchantService merchantService;
 
-    @RequestMapping(value = REGISTER_PATH)
-    @ResponseBody
-    public MerchantDto registerMerchant(@Valid MerchantDto merchantRequest) {
-        merchantService.create(merchantRequest);
-        return merchantRequest;
-    }
-
     @RequestMapping(value = "/is_exists")
     @ResponseBody
-    public Boolean isExists(@RequestParam(value = "merchant_id") String merchantId) {
-        return merchantService.isExist(merchantId);
+    public Boolean isExists(@RequestParam(value = "name") String name) {
+        return merchantService.isExist(name);
     }
 
-    @RequestMapping(value = "/register")
+    @RequestMapping(value = "/register", method = RequestMethod.POST)
     @ResponseBody
     public MerchantRegisterResponse register(@Valid MerchantRegisterRequest merchantRegisterRequest) {
         return merchantService.register(merchantRegisterRequest);

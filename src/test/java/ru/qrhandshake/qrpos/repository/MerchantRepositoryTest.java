@@ -24,21 +24,7 @@ public class MerchantRepositoryTest extends GeneralTest {
     @Resource
     private MerchantOrderRepository merchantOrderRepository;
 
-    @Test
-    public void testCreate() {
-        Merchant merchant = merchantService.create(createMerchantDto("first"));
-        assertNotNull(merchant);
-        assertNotNull(merchant.getId());
 
-        Merchant merchant1 = merchantRepository.findByName("first");
-        assertNotNull(merchant1);
-        assertEquals(merchant.getUsername(),merchant1.getUsername());
-        Merchant merchant2 = merchantRepository.findByUsername(merchant.getUsername());
-        assertNotNull(merchant2);
-
-        UserDetails userDetails = merchantService.loadUserByUsername(merchant.getUsername());
-        assertNotNull(userDetails);
-    }
 
     @Test
     @Transactional

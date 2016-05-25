@@ -11,7 +11,7 @@ import java.util.Date;
  * Created by lameroot on 18.05.16.
  */
 @Entity
-@Table(name = "user")
+@Table(name = "`user`")
 public class User implements UserDetails {
 
     @Id
@@ -111,5 +111,9 @@ public class User implements UserDetails {
 
     public void setLocked(boolean isLocked) {
         this.isLocked = isLocked;
+    }
+
+    public boolean canCreateTerminal() {
+        return !isLocked && !isExpired && isEnabled;
     }
 }

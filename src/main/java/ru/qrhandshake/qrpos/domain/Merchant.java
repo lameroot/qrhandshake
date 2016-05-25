@@ -24,8 +24,6 @@ public class Merchant {
     private Long id;
     @Column(unique = true, nullable = false)
     private String name;
-    @Column(name = "merchant_id", unique = true, nullable = false)
-    private String merchantId;
     private String description;
     @Column(name = "created_date")
     @Temporal(TemporalType.TIMESTAMP)
@@ -84,11 +82,9 @@ public class Merchant {
         this.users = users;
     }
 
+    @Transient
     public String getMerchantId() {
-        return merchantId;
+        return null != id ? String.valueOf(id) : null;
     }
 
-    public void setMerchantId(String merchantId) {
-        this.merchantId = merchantId;
-    }
 }

@@ -10,5 +10,5 @@ import ru.qrhandshake.qrpos.domain.Terminal;
 @Repository
 public interface TerminalRepository extends CrudRepository<Terminal, Long>{
 
-    public Terminal findByTerminalId(String terminalId);
+    public Terminal findByAuthName(String authName);
 }

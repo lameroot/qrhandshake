@@ -1,15 +1,21 @@
 package ru.qrhandshake.qrpos.controller;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-import ru.qrhandshake.qrpos.api.TerminalRegisterRequest;
-import ru.qrhandshake.qrpos.api.TerminalRegisterResponse;
+import ru.qrhandshake.qrpos.api.*;
+import ru.qrhandshake.qrpos.domain.Terminal;
+import ru.qrhandshake.qrpos.domain.User;
+import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.service.TerminalService;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.security.Principal;
+import java.util.Optional;
 
 /**
  * Created by lameroot on 24.05.16.
@@ -24,10 +30,19 @@ public class TerminalController {
     @Resource
     private TerminalService terminalService;
 
+    @RequestMapping(value = "/auth", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResponse auth(@Valid ApiAuth apiAuth) {
+        return Optional.ofNullable(terminalService.auth(apiAuth)).isPresent()
+                ? new ApiResponse(ResponseStatus.SUCCESS,"Auth success")
+                : new ApiResponse(ResponseStatus.FAIL,"Auth fail");
+    }
+
     @RequestMapping(value = "/register")
     @ResponseBody
-    public TerminalRegisterResponse register(@Valid TerminalRegisterRequest terminalRegisterRequest) {
-        return terminalService.register(terminalRegisterRequest);
+    public TerminalRegisterResponse register(Principal principal, @Valid TerminalRegisterRequest terminalRegisterRequest) {
+        User user = (User)((Authentication) principal).getPrincipal();
+        return terminalService.create(user, terminalRegisterRequest);
     }
 
 

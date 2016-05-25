@@ -5,10 +5,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import ru.qrhandshake.qrpos.api.ApiAuth;
-import ru.qrhandshake.qrpos.api.MerchantRegisterRequest;
-import ru.qrhandshake.qrpos.api.MerchantRegisterResponse;
-import ru.qrhandshake.qrpos.api.ResponseStatus;
+import org.springframework.transaction.annotation.Transactional;
+import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.domain.Merchant;
 import ru.qrhandshake.qrpos.domain.User;
 import ru.qrhandshake.qrpos.dto.MerchantDto;
@@ -29,72 +27,56 @@ public class MerchantService {
 
     @Resource
     private MerchantRepository merchantRepository;
-    private UserRepository userRepository;
-    @Resource
-    private PasswordEncoder passwordEncoder;
     @Resource
     private UserService userService;
+    @Resource
+    private TerminalService terminalService;
 
-    public Merchant findByMerchantId(String merchantId) {
-        return merchantRepository.findByMerchantId(merchantId);
+    public boolean isExist(String name) {
+        return null != merchantRepository.findByName(name);
     }
 
-    public Merchant loadMerchant(AuthRequest authRequest) throws AuthException {
-        Merchant merchant = merchantRepository.findByUsername(authRequest.getLogin());
-        if ( null == merchant || merchant.getPassword().equals(passwordEncoder.encode(authRequest.getPassword())) ) {
-            throw new AuthException("Invalid username and password");
-        }
-        return merchant;
-    }
-
-    public Merchant create(MerchantDto merchantDto) {
-        Merchant merchant = new Merchant();
-        merchant.setContact(merchantDto.getContact());
-        merchant.setCreatedDate(new Date());
-        merchant.setDescription(merchantDto.getDescription());
-        merchant.setName(merchantDto.getName());
-        merchant.setUsername(merchantDto.getUsername());
-        merchant.setPassword(encodePassword(merchantDto.getPassword()));
-
-        merchantRepository.save(merchant);
-        merchantDto.setId(merchant.getId());
-        return merchant;
-    }
-
-    private String encodePassword(String password) {
-        return passwordEncoder.encode(password);
-    }
-
-    public boolean isExist(String merchantId) {
-        return null != merchantRepository.findByMerchantId(merchantId);
-    }
-
+    //@Transactional
     public MerchantRegisterResponse register(MerchantRegisterRequest merchantRegisterRequest) {
-        if ( isExist(merchantRegisterRequest.getMerchantId()) ) {
-            MerchantRegisterResponse merchantRegisterResponse = new MerchantRegisterResponse();
-            merchantRegisterResponse.setMessage("Merchant exists");
+        MerchantRegisterResponse merchantRegisterResponse = new MerchantRegisterResponse();
+        if ( isExist(merchantRegisterRequest.getName()) ) {
+            merchantRegisterResponse.setMessage("Merchant with name: '" + merchantRegisterRequest.getName() + "' exists");
             merchantRegisterResponse.setStatus(ResponseStatus.FAIL);
-            return merchantRegisterResponse;
+        }
+        else if ( !merchantRegisterRequest.authIsNotBlank() ) {
+            merchantRegisterResponse.setStatus(ResponseStatus.FAIL);
+            merchantRegisterResponse.setMessage("Auth params aren't correct");
+        }
+        else if ( null != userService.loadUserByUsername(merchantRegisterRequest.getAuthName()) ) {
+            merchantRegisterResponse.setMessage("User with name: '" + merchantRegisterRequest.getAuthName() + "' exists");
+            merchantRegisterResponse.setStatus(ResponseStatus.FAIL);
         }
         else {
             Merchant merchant = new Merchant();
             merchant.setDescription(merchantRegisterRequest.getDescription());
             merchant.setName(merchantRegisterRequest.getName());
-            merchant.setMerchantId(merchantRegisterRequest.getMerchantId());
             merchantRepository.save(merchant);
 
-            String password = merchant.getMerchantId();//first password
-            User user = userService.create(merchant, password, true);
+            User user = userService.create(merchant, merchantRegisterRequest.getAuthName(), merchantRegisterRequest.getAuthPassword());
+            //create default terminal
+            TerminalRegisterRequest terminalRegisterRequest = new TerminalRegisterRequest();
+            terminalRegisterRequest.setAuthName(merchantRegisterRequest.getAuthName());
+            terminalRegisterRequest.setAuthPassword(merchantRegisterRequest.getAuthPassword());
+            TerminalRegisterResponse terminalRegisterResponse = terminalService.create(user, terminalRegisterRequest);
 
-            MerchantRegisterResponse merchantRegisterResponse = new MerchantRegisterResponse();
-            merchantRegisterResponse.setStatus(ResponseStatus.SUCCESS);
-            merchantRegisterResponse.setMessage("Merchant created");
-            merchantRegisterResponse.setMerchantId(merchant.getMerchantId());
-            ApiAuth apiAuth = new ApiAuth(user.getUsername(), password);
+            ApiAuth apiAuth = new ApiAuth(merchantRegisterRequest.getAuthName(), merchantRegisterRequest.getAuthPassword());
             merchantRegisterResponse.setAuth(apiAuth);
+            merchantRegisterResponse.setMerchantId(merchant.getMerchantId());
+            merchantRegisterResponse.setStatus(ResponseStatus.SUCCESS);
 
-            return merchantRegisterResponse;
+            if ( ResponseStatus.SUCCESS.equals(terminalRegisterResponse.getStatus()) ) {
+                merchantRegisterResponse.setMessage("Merchant created");
+            }
+            else {
+                merchantRegisterResponse.setMessage("Merchant crated, but terminal not: " + terminalRegisterResponse.getMessage());
+            }
         }
+        return merchantRegisterResponse;
     }
 
 

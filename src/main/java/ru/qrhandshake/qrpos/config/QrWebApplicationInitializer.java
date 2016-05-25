@@ -2,6 +2,7 @@ package ru.qrhandshake.qrpos.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
 import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
@@ -49,6 +50,12 @@ public class QrWebApplicationInitializer  implements WebApplicationInitializer {
         characterEncodingFilter.setEncoding("UTF-8");
 
         container.addFilter("characterEncodingFilter",characterEncodingFilter)
+                .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD), true, "/*");
+
+        OpenEntityManagerInViewFilter openEntityManagerInViewFilter = new OpenEntityManagerInViewFilter();
+        openEntityManagerInViewFilter.setEntityManagerFactoryBeanName("entityManagerFactory");
+
+        container.addFilter("openEntityManagerInViewFilter",openEntityManagerInViewFilter)
                 .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD), true, "/*");
 
         //appServlet

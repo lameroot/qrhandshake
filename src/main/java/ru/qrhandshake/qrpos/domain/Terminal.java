@@ -1,6 +1,10 @@
 package ru.qrhandshake.qrpos.domain;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import javax.persistence.*;
+import java.util.Collection;
 
 /**
  * Created by lameroot on 24.05.16.
@@ -17,10 +21,12 @@ public class Terminal {
     @ManyToOne
     @JoinColumn(name = "fk_merchant_id")
     private Merchant merchant;
-    @Column(name = "terminal_id", nullable = false, unique = true)
-    private String terminalId;
-    @Column(nullable = false)
-    private String password;
+    @Column(name = "auth_name", nullable = false, unique = true)
+    private String authName;
+    @Column(name = "auth_password", nullable = false)
+    private String authPassword;
+    @Column(name = "enabled")
+    private boolean enabled;
 
     public Long getId() {
         return id;
@@ -38,19 +44,27 @@ public class Terminal {
         this.merchant = merchant;
     }
 
-    public String getTerminalId() {
-        return terminalId;
+    public String getAuthName() {
+        return authName;
     }
 
-    public void setTerminalId(String terminalId) {
-        this.terminalId = terminalId;
+    public void setAuthName(String authName) {
+        this.authName = authName;
     }
 
-    public String getPassword() {
-        return password;
+    public String getAuthPassword() {
+        return authPassword;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setAuthPassword(String authPassword) {
+        this.authPassword = authPassword;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }

@@ -35,7 +35,8 @@ public class MerchantOrderService {
     private IntegrationService integrationService;//возможно надо перенсти в одно место
 
     public MerchantOrderRegisterResponse register(MerchantOrderRegisterRequest merchantOrderRegisterRequest) throws AuthException {
-        Merchant merchant = merchantService.loadMerchant(merchantOrderRegisterRequest);
+        //Merchant merchant = merchantService.loadMerchant(merchantOrderRegisterRequest);
+        Merchant merchant = null;//todo
         MerchantOrder merchantOrder = new MerchantOrder();
         merchantOrder.setDescription(merchantOrderRegisterRequest.getDescription());
         merchantOrder.setMerchant(merchant);
@@ -58,7 +59,8 @@ public class MerchantOrderService {
     @Transactional
     public MerchantOrderStatusResponse getOrderStatus(MerchantOrderStatusRequest merchantOrderStatusRequest)
             throws MerchantOrderNotFoundException, AuthException, IllegalOrderStatusException {
-        Merchant merchant = merchantService.loadMerchant(merchantOrderStatusRequest);
+        //Merchant merchant = merchantService.loadMerchant(merchantOrderStatusRequest);
+        Merchant merchant = null;//todo
         MerchantOrder merchantOrder = Optional.ofNullable(merchantOrderRepository.findOne(Long.parseLong(merchantOrderStatusRequest.getOrderId())))
                 .orElseThrow(()-> new MerchantOrderNotFoundException("Order not found by id: " + merchantOrderStatusRequest.getOrderId()));
         if ( !merchantOrder.getMerchant().equals(merchant) ) {
