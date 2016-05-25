@@ -1,15 +1,15 @@
-package ru.qrhandshake.qrpos.dto;
+package ru.qrhandshake.qrpos.api;
 
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 
 /**
  * Created by lameroot on 20.05.16.
  */
-public class MerchantOrderStatusResponse extends MerchantResponse {
+public class MerchantOrderStatusResponse extends ApiResponse {
 
     private String orderId;
     private Long amount;
-    private OrderStatus status;
+    private OrderStatus orderStatus;
 
     public String getOrderId() {
         return orderId;
@@ -27,11 +27,11 @@ public class MerchantOrderStatusResponse extends MerchantResponse {
         this.amount = amount;
     }
 
-    public OrderStatus getStatus() {
-        return status;
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
     }
 
-    public void setStatus(OrderStatus status) {
-        this.status = status;
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
     }
 }

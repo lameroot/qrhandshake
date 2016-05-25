@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.api.ApiAuth;
 import ru.qrhandshake.qrpos.api.ResponseStatus;
 import ru.qrhandshake.qrpos.api.TerminalRegisterRequest;
@@ -20,6 +21,7 @@ import ru.qrhandshake.qrpos.repository.UserRepository;
 import javax.annotation.Resource;
 import java.security.Principal;
 import java.util.Optional;
+import java.util.Random;
 
 /**
  * Created by lameroot on 24.05.16.
@@ -30,42 +32,69 @@ public class TerminalService {
     @Resource
     private TerminalRepository terminalRepository;
     @Resource
-    private MerchantService merchantService;
-    @Resource
-    private PasswordEncoder passwordEncoder;
+    private SecurityService securityService;
 
+    private static final char[] _base62chars = "123456789ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijklmnpqrstuvwxyz".toCharArray();
+    private static final int LENGTH_AUTH = 8;
+
+    String generateUniqueAuthName() {
+        Random _random = new Random();
+        StringBuilder sb = new StringBuilder(LENGTH_AUTH);
+
+        for (int i=0; i<LENGTH_AUTH; i++) {
+            sb.append(_base62chars[_random.nextInt(36)]);
+        }
+        String name = sb.toString();
+        if ( null != terminalRepository.findByAuthName(name) ) return generateUniqueAuthName();
+        return name;
+    }
+
+    String generateAuthPassword() {
+        Random _random = new Random();
+        StringBuilder sb = new StringBuilder(LENGTH_AUTH);
+
+        for (int i=0; i<LENGTH_AUTH; i++) {
+            sb.append(_base62chars[_random.nextInt(36)]);
+        }
+        return sb.toString();
+    }
 
     public Terminal auth(ApiAuth apiAuth) {
         Terminal terminal = terminalRepository.findByAuthName(apiAuth.getAuthName());
-        if ( null != terminal && terminal.isEnabled() && terminal.getAuthPassword().equals(passwordEncoder.encode(apiAuth.getAuthPassword())) ) {
+        if ( null != terminal && terminal.isEnabled() && securityService.match(apiAuth.getAuthPassword(), terminal.getAuthPassword()) ) {
             return terminal;
         }
         return null;
     }
 
-    public TerminalRegisterResponse create(User user, TerminalRegisterRequest terminalRegisterRequest) {
-        if ( !user.canCreateTerminal() ) {
-            TerminalRegisterResponse terminalRegisterResponse = new TerminalRegisterResponse();
-            terminalRegisterResponse.setAuth(new ApiAuth(terminalRegisterRequest.getAuthName(),terminalRegisterRequest.getAuthPassword()));
-            terminalRegisterResponse.setStatus(ResponseStatus.FAIL);
-            terminalRegisterResponse.setMessage("User: " + user.getUsername() + " can't create terminal");
-            return terminalRegisterResponse;
+    @Transactional
+    public TerminalRegisterResponse create(Merchant merchant) {
+        return create(merchant,null);
+    }
+
+    @Transactional
+    public TerminalRegisterResponse create(Merchant merchant, ApiAuth apiAuth) {
+        ApiAuth terminalAuth = null;
+        if ( null != apiAuth && apiAuth.authIsNotBlank() && null == terminalRepository.findByAuthName(apiAuth.getAuthName())) {
+            terminalAuth = apiAuth;
         }
-        Merchant merchant = user.getMerchant();
+        else {
+            terminalAuth = new ApiAuth(generateUniqueAuthName(), generateAuthPassword());
+        }
+
         Terminal terminal = new Terminal();
         terminal.setMerchant(merchant);
-        terminal.setAuthName(terminalRegisterRequest.getAuthName());
-        terminal.setAuthPassword(passwordEncoder.encode(terminalRegisterRequest.getAuthPassword()));
+        terminal.setAuthName(terminalAuth.getAuthName());
+        terminal.setAuthPassword(securityService.encodePassword(terminalAuth.getAuthPassword()));
         terminal.setEnabled(true);
         terminalRepository.save(terminal);
 
         TerminalRegisterResponse terminalRegisterResponse = new TerminalRegisterResponse();
         terminalRegisterResponse.setMerchantId(merchant.getMerchantId());
-        terminalRegisterResponse.setAuth(new ApiAuth(terminalRegisterRequest.getAuthName(),terminalRegisterRequest.getAuthPassword()));
+        terminalRegisterResponse.setAuth(terminalAuth);
         terminalRegisterResponse.setStatus(ResponseStatus.SUCCESS);
         terminalRegisterResponse.setMessage("Terminal success created");
         return terminalRegisterResponse;
-
     }
 
 }

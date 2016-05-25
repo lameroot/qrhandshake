@@ -27,23 +27,16 @@ public class MerchantOrder {
     @Column(name = "payment_date")
     @Temporal(TemporalType.TIMESTAMP)
     private Date paymentDate;
-    @Column(name = "approved_date")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date approvedDate;
-    @Column(name = "confirmed_date")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date confirmedDate;
-    @Column(name = "expired_date")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date expiredDate;
     private Long amount;
     private String description;
-    private Long fee;
-    private String currency;
-    private String language;
+    @Column(name = "device_id")
+    private String deviceId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_merchant_id")
     private Merchant merchant;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fk_terminal_id")
+    private Terminal terminal;
     //todo: future
     @Transient
     private Client client;
@@ -78,30 +71,6 @@ public class MerchantOrder {
         this.paymentDate = paymentDate;
     }
 
-    public Date getApprovedDate() {
-        return approvedDate;
-    }
-
-    public void setApprovedDate(Date approvedDate) {
-        this.approvedDate = approvedDate;
-    }
-
-    public Date getConfirmedDate() {
-        return confirmedDate;
-    }
-
-    public void setConfirmedDate(Date confirmedDate) {
-        this.confirmedDate = confirmedDate;
-    }
-
-    public Date getExpiredDate() {
-        return expiredDate;
-    }
-
-    public void setExpiredDate(Date expiredDate) {
-        this.expiredDate = expiredDate;
-    }
-
     public Long getAmount() {
         return amount;
     }
@@ -116,14 +85,6 @@ public class MerchantOrder {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public Long getFee() {
-        return fee;
-    }
-
-    public void setFee(Long fee) {
-        this.fee = fee;
     }
 
     public Merchant getMerchant() {
@@ -150,22 +111,6 @@ public class MerchantOrder {
         this.integrationSupport = integrationSupport;
     }
 
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
-    public String getLanguage() {
-        return language;
-    }
-
-    public void setLanguage(String language) {
-        this.language = language;
-    }
-
     public OrderStatus getOrderStatus() {
         return orderStatus;
     }
@@ -188,5 +133,21 @@ public class MerchantOrder {
 
     public void setExternalOrderStatus(String externalOrderStatus) {
         this.externalOrderStatus = externalOrderStatus;
+    }
+
+    public Terminal getTerminal() {
+        return terminal;
+    }
+
+    public void setTerminal(Terminal terminal) {
+        this.terminal = terminal;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 }

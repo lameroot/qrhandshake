@@ -2,6 +2,10 @@ package ru.qrhandshake.qrpos.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.qrhandshake.qrpos.api.MerchantOrderRegisterRequest;
+import ru.qrhandshake.qrpos.api.MerchantOrderRegisterResponse;
+import ru.qrhandshake.qrpos.api.MerchantOrderStatusRequest;
+import ru.qrhandshake.qrpos.api.MerchantOrderStatusResponse;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.Merchant;

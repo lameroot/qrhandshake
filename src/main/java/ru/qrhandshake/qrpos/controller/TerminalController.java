@@ -40,9 +40,15 @@ public class TerminalController {
 
     @RequestMapping(value = "/register")
     @ResponseBody
-    public TerminalRegisterResponse register(Principal principal, @Valid TerminalRegisterRequest terminalRegisterRequest) {
+    public TerminalRegisterResponse register(Principal principal, TerminalRegisterRequest terminalRegisterRequest) {
         User user = (User)((Authentication) principal).getPrincipal();
-        return terminalService.create(user, terminalRegisterRequest);
+        if ( !user.canCreateTerminal() ) {
+            TerminalRegisterResponse terminalRegisterResponse = new TerminalRegisterResponse();
+            terminalRegisterResponse.setStatus(ResponseStatus.FAIL);
+            terminalRegisterResponse.setMessage("User: " + user.getUsername() + " can't create terminal");
+            return terminalRegisterResponse;
+        }
+        return terminalService.create(user.getMerchant(), terminalRegisterRequest);
     }
 
 

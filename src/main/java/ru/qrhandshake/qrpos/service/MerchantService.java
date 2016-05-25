@@ -13,6 +13,7 @@ import ru.qrhandshake.qrpos.dto.MerchantDto;
 import ru.qrhandshake.qrpos.dto.AuthRequest;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.repository.MerchantRepository;
+import ru.qrhandshake.qrpos.repository.TerminalRepository;
 import ru.qrhandshake.qrpos.repository.UserRepository;
 
 import javax.annotation.Resource;
@@ -31,6 +32,8 @@ public class MerchantService {
     private UserService userService;
     @Resource
     private TerminalService terminalService;
+    @Resource
+    private TerminalRepository terminalRepository;
 
     public boolean isExist(String name) {
         return null != merchantRepository.findByName(name);
@@ -57,17 +60,20 @@ public class MerchantService {
             merchant.setName(merchantRegisterRequest.getName());
             merchantRepository.save(merchant);
 
-            User user = userService.create(merchant, merchantRegisterRequest.getAuthName(), merchantRegisterRequest.getAuthPassword());
+            ApiAuth userAuth = new ApiAuth(merchantRegisterRequest.getAuthName(), merchantRegisterRequest.getAuthPassword());
+            User user = userService.create(merchant, userAuth);
+            merchantRegisterResponse.setUserAuth(userAuth);
             //create default terminal
             TerminalRegisterRequest terminalRegisterRequest = new TerminalRegisterRequest();
             terminalRegisterRequest.setAuthName(merchantRegisterRequest.getAuthName());
             terminalRegisterRequest.setAuthPassword(merchantRegisterRequest.getAuthPassword());
-            TerminalRegisterResponse terminalRegisterResponse = terminalService.create(user, terminalRegisterRequest);
+            TerminalRegisterResponse terminalRegisterResponse = terminalService.create(merchant, new ApiAuth(merchantRegisterRequest.getAuthName(), merchantRegisterRequest.getAuthPassword()));
 
             ApiAuth apiAuth = new ApiAuth(merchantRegisterRequest.getAuthName(), merchantRegisterRequest.getAuthPassword());
             merchantRegisterResponse.setAuth(apiAuth);
             merchantRegisterResponse.setMerchantId(merchant.getMerchantId());
             merchantRegisterResponse.setStatus(ResponseStatus.SUCCESS);
+            merchantRegisterResponse.setTerminalAuth(terminalRegisterResponse.getAuth());
 
             if ( ResponseStatus.SUCCESS.equals(terminalRegisterResponse.getStatus()) ) {
                 merchantRegisterResponse.setMessage("Merchant created");

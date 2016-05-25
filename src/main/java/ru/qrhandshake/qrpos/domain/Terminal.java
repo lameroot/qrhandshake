@@ -19,7 +19,7 @@ public class Terminal {
     @SequenceGenerator(name = "terminalSequence", sequenceName = "seq_terminal", allocationSize = 1)
     private Long id;
     @ManyToOne
-    @JoinColumn(name = "fk_merchant_id")
+    @JoinColumn(name = "fk_merchant_id", nullable = false)
     private Merchant merchant;
     @Column(name = "auth_name", nullable = false, unique = true)
     private String authName;

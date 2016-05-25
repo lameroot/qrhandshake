@@ -1,9 +1,10 @@
-package ru.qrhandshake.qrpos.dto;
+package ru.qrhandshake.qrpos.api;
+
 
 /**
  * Created by lameroot on 18.05.16.
  */
-public class MerchantOrderRegisterResponse extends MerchantResponse {
+public class MerchantOrderRegisterResponse extends ApiResponse {
 
     private String orderId;
     private String paymentUrl;

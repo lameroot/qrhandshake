@@ -1,17 +1,17 @@
-package ru.qrhandshake.qrpos.dto;
+package ru.qrhandshake.qrpos.api;
+
 
 import javax.validation.constraints.NotNull;
 
 /**
  * Created by lameroot on 18.05.16.
  */
-public class MerchantOrderRegisterRequest extends AuthRequest {
+public class MerchantOrderRegisterRequest extends ApiAuth {
 
     @NotNull
     private Long amount;
     private String description;
-    private byte[] img;
-    private ClientDto client;
+    private String deviceId;
 
     public Long getAmount() {
         return amount;
@@ -29,19 +29,11 @@ public class MerchantOrderRegisterRequest extends AuthRequest {
         this.description = description;
     }
 
-    public byte[] getImg() {
-        return img;
+    public String getDeviceId() {
+        return deviceId;
     }
 
-    public void setImg(byte[] img) {
-        this.img = img;
-    }
-
-    public ClientDto getClient() {
-        return client;
-    }
-
-    public void setClient(ClientDto client) {
-        this.client = client;
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 }

@@ -27,8 +27,7 @@ public class SecurityServiceTest extends GeneralTest {
         encodedPasswords.add(securityService.encodePassword(password));
 
         for (String encodedPassword : encodedPasswords) {
-            System.out.println(encodedPassword);
-            assertTrue(securityService.match(password,password));
+            assertTrue(securityService.match(password,encodedPassword));
         }
     }
 }

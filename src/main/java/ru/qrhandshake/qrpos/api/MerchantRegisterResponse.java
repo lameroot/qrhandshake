@@ -7,6 +7,8 @@ public class MerchantRegisterResponse extends ApiResponse {
 
     private String merchantId;
     private ApiAuth auth;
+    private ApiAuth terminalAuth;
+    private ApiAuth userAuth;
 
     public String getMerchantId() {
         return merchantId;
@@ -22,5 +24,21 @@ public class MerchantRegisterResponse extends ApiResponse {
 
     public void setAuth(ApiAuth auth) {
         this.auth = auth;
+    }
+
+    public ApiAuth getTerminalAuth() {
+        return terminalAuth;
+    }
+
+    public void setTerminalAuth(ApiAuth terminalAuth) {
+        this.terminalAuth = terminalAuth;
+    }
+
+    public ApiAuth getUserAuth() {
+        return userAuth;
+    }
+
+    public void setUserAuth(ApiAuth userAuth) {
+        this.userAuth = userAuth;
     }
 }

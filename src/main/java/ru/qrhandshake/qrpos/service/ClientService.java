@@ -17,7 +17,7 @@ public class ClientService {
     @Resource
     private ClientRepository clientRepository;
     @Resource
-    private PasswordEncoder passwordEncoder;
+    private SecurityService securityService;
 
     public Client findByUsername(String username) {
         return clientRepository.findByUsername(username);
@@ -73,7 +73,7 @@ public class ClientService {
                 break;
             }
         }
-        client.setPassword(passwordEncoder.encode(clientRegisterRequest.getAuthPassword()));
+        client.setPassword(securityService.encodePassword(clientRegisterRequest.getAuthPassword()));
         clientRepository.save(client);
 
         ClientRegisterResponse clientRegisterResponse = new ClientRegisterResponse();
