@@ -1,17 +1,22 @@
 package ru.qrhandshake.qrpos.integration;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Created by lameroot on 20.05.16.
  */
-public class IntegrationOrderStatusRequest {
+public class IntegrationOrderStatusRequest extends IntegrationRequest {
 
     private String orderId;
+    @NotNull
     private String externalId;
 
-    public IntegrationOrderStatusRequest() {
+    public IntegrationOrderStatusRequest(IntegrationSupport integrationSupport) {
+        super(integrationSupport);
 
     }
-    public IntegrationOrderStatusRequest(String externalId) {
+    public IntegrationOrderStatusRequest(IntegrationSupport integrationSupport, String externalId) {
+        super(integrationSupport);
         this.externalId = externalId;
     }
 

@@ -6,7 +6,7 @@ import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
 /**
  * Created by lameroot on 20.05.16.
  */
-public class IntegrationOrderStatusResponse {
+public class IntegrationOrderStatusResponse extends IntegrationResponse {
 
     private String externalId;
     private IntegrationOrderStatus integrationOrderStatus;

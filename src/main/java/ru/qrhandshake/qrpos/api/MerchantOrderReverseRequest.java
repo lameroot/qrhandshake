@@ -1,19 +1,23 @@
 package ru.qrhandshake.qrpos.api;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Created by lameroot on 26.05.16.
  */
 public class MerchantOrderReverseRequest extends ApiAuth {
 
-    private String terminalSessionId;
+    @NotNull
+    private String sessionId;
+    @NotNull
     private String orderId;
 
-    public String getTerminalSessionId() {
-        return terminalSessionId;
+    public String getSessionId() {
+        return sessionId;
     }
 
-    public void setTerminalSessionId(String terminalSessionId) {
-        this.terminalSessionId = terminalSessionId;
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 
     public String getOrderId() {

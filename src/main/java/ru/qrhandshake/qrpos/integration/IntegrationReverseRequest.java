@@ -3,10 +3,14 @@ package ru.qrhandshake.qrpos.integration;
 /**
  * Created by lameroot on 26.05.16.
  */
-public class IntegrationReverseRequest {
+public class IntegrationReverseRequest extends IntegrationRequest {
 
     private String orderId;
     private String externalId;
+
+    public IntegrationReverseRequest(IntegrationSupport integrationSupport) {
+        super(integrationSupport);
+    }
 
     public String getOrderId() {
         return orderId;

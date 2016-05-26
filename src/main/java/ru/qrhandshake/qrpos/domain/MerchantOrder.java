@@ -48,6 +48,8 @@ public class MerchantOrder {
     @Column(name = "orderStatus")
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus = OrderStatus.REGISTERED;
+    @Column(name = "session_id", unique = true)
+    private String sessionId;
 
     public Long getId() {
         return id;
@@ -159,5 +161,13 @@ public class MerchantOrder {
 
     public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
+    }
+
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 }

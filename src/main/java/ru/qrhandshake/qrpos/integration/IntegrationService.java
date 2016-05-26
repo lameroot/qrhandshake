@@ -18,60 +18,38 @@ import java.util.Optional;
  */
 public class IntegrationService {
 
-
-    @Resource
-    private OrderService orderService;
     private final Map<IntegrationSupport, IntegrationFacade> integrationFacades;
 
     public IntegrationService(Map<IntegrationSupport, IntegrationFacade> integrationFacades) {
         this.integrationFacades = integrationFacades;
     }
 
-    public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException, IllegalOrderStatusException {
-        OrderStatus orderStatus = integrationPaymentRequest.getOrderStatus();
-        if ( null == orderStatus ) {
-            throw new IntegrationException("Unknown status of order:" + integrationPaymentRequest.getOrderId());
-        }
-        if ( !orderStatus.equals(OrderStatus.REGISTERED) ) {
-            throw new IllegalOrderStatusException("Illegal order status for payment order with orderId: " + integrationPaymentRequest.getOrderId(), orderStatus);
-        }
+    public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException {
         IntegrationSupport integrationSupport = checkIntegrationSupport(integrationPaymentRequest);
-        IntegrationPaymentResponse integrationPaymentResponse = Optional.ofNullable(integrationFacades.get(integrationSupport))
-                .orElseThrow(() -> new IntegrationException("Unknown integration type: " + integrationSupport))
-                .payment(integrationPaymentRequest);
+        IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationSupport).payment(integrationPaymentRequest);
         integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport,integrationPaymentResponse.getIntegrationOrderStatus()));
         return integrationPaymentResponse;
     }
 
     public IntegrationOrderStatusResponse getOrderStatus(IntegrationOrderStatusRequest integrationOrderStatusRequest) throws IntegrationException {
-        if ( StringUtils.isBlank(integrationOrderStatusRequest.getOrderId()) ) {
-            throw new IntegrationException("Unknown orderId");
-        }
-        if (StringUtils.isBlank(integrationOrderStatusRequest.getExternalId()) ) {
-            throw new IntegrationException("Unknown externalId");
-        }
-        MerchantOrder merchantOrder = orderService.findByOrderId(integrationOrderStatusRequest.getOrderId());
-        if ( null == merchantOrder ) {
-            throw new IntegrationException("Unknown order with id:" + integrationOrderStatusRequest.getOrderId());
-        }
-        IntegrationSupport integrationSupport = merchantOrder.getIntegrationSupport();
-        if ( null == integrationSupport ) {
-            throw new IntegrationException("Unknown integration type for order with id: " + integrationOrderStatusRequest.getOrderId());
-        }
-        IntegrationOrderStatusResponse integrationOrderStatusResponse = Optional.ofNullable(integrationFacades.get(integrationSupport))
-                .orElseThrow(()-> new IntegrationException("Unknown integration type:" + integrationSupport))
-                .getOrderStatus(integrationOrderStatusRequest);
+        IntegrationSupport integrationSupport = integrationOrderStatusRequest.getIntegrationSupport();
+        IntegrationOrderStatusResponse integrationOrderStatusResponse = getFacade(integrationSupport).getOrderStatus(integrationOrderStatusRequest);
         integrationOrderStatusResponse.setOrderStatus(toOrderStatus(integrationSupport, integrationOrderStatusResponse.getIntegrationOrderStatus()));
         return integrationOrderStatusResponse;
+    }
+
+    public IntegrationReverseResponse reverse(IntegrationReverseRequest integrationReverseRequest) throws IntegrationException {
+        IntegrationSupport integrationSupport = integrationReverseRequest.getIntegrationSupport();
+        return getFacade(integrationSupport).reverse(integrationReverseRequest);
     }
 
     public void back(Model model, HttpServletRequest request) {
 
     }
 
-    public IntegrationReverseResponse reverse(IntegrationReverseRequest integrationReverseRequest) {
-        //todo: here
-        return null;
+    private IntegrationFacade getFacade(IntegrationSupport integrationSupport) throws IntegrationException {
+        return Optional.ofNullable(integrationFacades.get(integrationSupport))
+                .orElseThrow(() -> new IntegrationException("Unknown integration type: " + integrationSupport));
     }
 
     private OrderStatus toOrderStatus(IntegrationSupport integrationSupport, IntegrationOrderStatus integrationOrderStatus) throws IntegrationException {

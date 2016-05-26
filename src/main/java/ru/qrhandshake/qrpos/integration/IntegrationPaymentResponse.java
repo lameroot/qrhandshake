@@ -6,9 +6,10 @@ import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
 /**
  * Created by lameroot on 19.05.16.
  */
-public class IntegrationPaymentResponse {
+public class IntegrationPaymentResponse extends IntegrationResponse {
 
     private String orderId;
+    private String externalId;
     private String acsUrl;
     private String paReq;
     private String termUrl;
@@ -61,5 +62,13 @@ public class IntegrationPaymentResponse {
 
     public void setIntegrationOrderStatus(IntegrationOrderStatus integrationOrderStatus) {
         this.integrationOrderStatus = integrationOrderStatus;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 }

@@ -12,6 +12,8 @@ public class MerchantOrderRegisterRequest extends ApiAuth {
     private Long amount;
     private String description;
     private String deviceId;
+    @NotNull
+    private String sessionId;
 
     public Long getAmount() {
         return amount;
@@ -35,5 +37,13 @@ public class MerchantOrderRegisterRequest extends ApiAuth {
 
     public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
+    }
+
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 }
