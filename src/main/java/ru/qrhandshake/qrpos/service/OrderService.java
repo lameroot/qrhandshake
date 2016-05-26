@@ -185,7 +185,7 @@ public class OrderService {
             merchantOrderReverseResponse.setMessage("Order with id: " + merchantOrderReverseResponse.getOrderId() + " not found");
             return merchantOrderReverseResponse;
         }
-        if ( !merchantOrder.getSessionId().equals(merchantOrderReverseRequest.getSessionId()) ) {
+        if ( !isSessionValid(merchantOrder, merchantOrderReverseRequest.getSessionId()) ) {
             throw new AuthException("Invalid sessionId");
         }
         if ( !terminal.getMerchant().equals(merchantOrder.getMerchant()) ) {
@@ -227,5 +227,9 @@ public class OrderService {
 
     private String generateUniqueIdOrder(MerchantOrder merchantOrder) {
         return String.valueOf(merchantOrder.getId());
+    }
+
+    private boolean isSessionValid(MerchantOrder merchantOrder, String sessionId) {
+        return merchantOrder.getSessionId().equals(sessionId);
     }
 }
