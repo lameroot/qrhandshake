@@ -8,13 +8,11 @@ import ru.bpc.phoenix.proxy.api.MerchantServiceProvider;
 import ru.bpc.phoenix.proxy.api.NamePasswordToken;
 import ru.bpc.phoenix.web.api.merchant.soap.MerchantService;
 import ru.paymentgate.engine.webservices.merchant.*;
-import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
-import ru.qrhandshake.qrpos.dto.IntegrationOrderStatusRequest;
-import ru.qrhandshake.qrpos.dto.IntegrationOrderStatusResponse;
+import ru.qrhandshake.qrpos.integration.IntegrationOrderStatusRequest;
+import ru.qrhandshake.qrpos.integration.IntegrationOrderStatusResponse;
 import ru.qrhandshake.qrpos.dto.IntegrationPaymentRequest;
 import ru.qrhandshake.qrpos.dto.IntegrationPaymentResponse;
-import ru.qrhandshake.qrpos.exception.IllegalOrderStatusException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.integration.IntegrationFacade;
 import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
@@ -51,12 +49,15 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         return merchantService;
     }
 
+    private String language = "ru";
+    private String currency = "643";
+
     @Override
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException{
         OrderParams rbsParams = new OrderParams();
         //rbsParams.setCurrency(integrationPaymentRequest.getCurrency());
-        rbsParams.setCurrency("643");
-        rbsParams.setLanguage(integrationPaymentRequest.getLanguage());
+        rbsParams.setCurrency(currency);
+        rbsParams.setLanguage(language);
         rbsParams.setDescription(integrationPaymentRequest.getDescription());
         rbsParams.setAmount(integrationPaymentRequest.getAmount());
         //rbsParams.setReturnUrl(integrationPaymentRequest.getReturnUrl());
@@ -78,7 +79,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         paymentOrderParams.setPan(integrationPaymentRequest.getPan());
         paymentOrderParams.setCardholderName(integrationPaymentRequest.getCardHolderName());
         paymentOrderParams.setCvc(integrationPaymentRequest.getCvc());
-        paymentOrderParams.setLanguage(integrationPaymentRequest.getLanguage());
+        paymentOrderParams.setLanguage(language);
         paymentOrderParams.setMonth(integrationPaymentRequest.getMonth());
         paymentOrderParams.setYear(integrationPaymentRequest.getYear());
         paymentOrderParams.setOrderId(orderId);
@@ -97,7 +98,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         response.setPaReq(paymentOrderResult.getPaReq());
         response.setTermUrl(paymentOrderResult.getRedirect());
         if (StringUtils.isNotBlank(paymentOrderResult.getAcsUrl()) ) {
-            response.setOrderStatus(RbsOrderStatus.REDIRECTED_TO_ACS);
+            response.setIntegrationOrderStatus(RbsOrderStatus.REDIRECTED_TO_ACS);
         }
         else {
             IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(orderId));
@@ -119,7 +120,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             integrationOrderStatusResponse.setOrderStatus(null);
         }
         RbsOrderStatus rbsOrderStatus = RbsOrderStatus.valueOf(getOrderStatusExtendedResponse.getOrderStatus());
-        integrationOrderStatusResponse.setOrderStatus(rbsOrderStatus);
+        integrationOrderStatusResponse.setIntegrationOrderStatus(rbsOrderStatus);
 
         return integrationOrderStatusResponse;
     }

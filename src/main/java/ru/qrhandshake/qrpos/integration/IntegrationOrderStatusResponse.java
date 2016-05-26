@@ -1,4 +1,4 @@
-package ru.qrhandshake.qrpos.dto;
+package ru.qrhandshake.qrpos.integration;
 
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
@@ -9,7 +9,8 @@ import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
 public class IntegrationOrderStatusResponse {
 
     private String externalId;
-    private IntegrationOrderStatus orderStatus;
+    private IntegrationOrderStatus integrationOrderStatus;
+    private OrderStatus orderStatus;
     //todo: добавить сюда поля которые могут приходить из запроса к процессингу
 
     public String getExternalId() {
@@ -20,11 +21,19 @@ public class IntegrationOrderStatusResponse {
         this.externalId = externalId;
     }
 
-    public IntegrationOrderStatus getOrderStatus() {
+    public IntegrationOrderStatus getIntegrationOrderStatus() {
+        return integrationOrderStatus;
+    }
+
+    public void setIntegrationOrderStatus(IntegrationOrderStatus integrationOrderStatus) {
+        this.integrationOrderStatus = integrationOrderStatus;
+    }
+
+    public OrderStatus getOrderStatus() {
         return orderStatus;
     }
 
-    public void setOrderStatus(IntegrationOrderStatus orderStatus) {
+    public void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
     }
 }

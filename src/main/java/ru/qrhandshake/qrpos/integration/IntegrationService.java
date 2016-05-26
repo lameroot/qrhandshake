@@ -3,14 +3,11 @@ package ru.qrhandshake.qrpos.integration;
 import org.apache.commons.lang.StringUtils;
 import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
-import ru.qrhandshake.qrpos.dto.IntegrationOrderStatusRequest;
-import ru.qrhandshake.qrpos.dto.IntegrationOrderStatusResponse;
 import ru.qrhandshake.qrpos.dto.IntegrationPaymentRequest;
 import ru.qrhandshake.qrpos.dto.IntegrationPaymentResponse;
 import ru.qrhandshake.qrpos.exception.IllegalOrderStatusException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
-import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 import ru.qrhandshake.qrpos.service.MerchantOrderService;
 
 import javax.annotation.Resource;
@@ -42,6 +39,7 @@ public class IntegrationService {
         IntegrationPaymentResponse integrationPaymentResponse = Optional.ofNullable(integrationFacades.get(integrationSupport))
                 .orElseThrow(() -> new IntegrationException("Unknown integration type: " + integrationSupport))
                 .payment(integrationPaymentRequest);
+        integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport,integrationPaymentResponse.getIntegrationOrderStatus()));
         return integrationPaymentResponse;
     }
 
@@ -65,9 +63,15 @@ public class IntegrationService {
         IntegrationOrderStatusResponse integrationOrderStatusResponse = Optional.ofNullable(integrationFacades.get(integrationSupport))
                 .orElseThrow(()-> new IntegrationException("Unknown integration type:" + integrationSupport))
                 .getOrderStatus(integrationOrderStatusRequest);
+        integrationOrderStatusResponse.setOrderStatus(toOrderStatus(integrationSupport, integrationOrderStatusResponse.getIntegrationOrderStatus()));
         return integrationOrderStatusResponse;
     }
 
+    private OrderStatus toOrderStatus(IntegrationSupport integrationSupport, IntegrationOrderStatus integrationOrderStatus) throws IntegrationException {
+        return Optional.ofNullable(integrationFacades.get(integrationSupport))
+                .orElseThrow(()-> new IntegrationException("Unknown integration type: " + integrationSupport))
+                .toOrderStatus(integrationOrderStatus);
+    }
 
     private IntegrationSupport checkIntegrationSupport(IntegrationPaymentRequest paymentRequest) {
         switch (paymentRequest.getPaymentWay()) {

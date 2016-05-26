@@ -17,6 +17,8 @@ public class MerchantOrder {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "orderSequence")
     @SequenceGenerator(name = "orderSequence", sequenceName = "seq_order", allocationSize = 1)
     private Long id;
+    @Column(name = "order_id", unique = true, nullable = false)
+    private String orderId;
     @Column(name = "external_id")
     private String externalId;
     @Column(name = "external_order_status")
@@ -53,6 +55,14 @@ public class MerchantOrder {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 
     public Date getCreatedDate() {

@@ -18,8 +18,6 @@ public class IntegrationPaymentRequest {
     private String cardHolderName;
     private String cvc;
     private String returnUrl;
-    private String currency = "643";
-    private String language;
     private String description;
     private Long amount;
     private ClientDto client;
@@ -89,22 +87,6 @@ public class IntegrationPaymentRequest {
 
     public void setReturnUrl(String returnUrl) {
         this.returnUrl = returnUrl;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
-    public String getLanguage() {
-        return language;
-    }
-
-    public void setLanguage(String language) {
-        this.language = language;
     }
 
     public String getDescription() {

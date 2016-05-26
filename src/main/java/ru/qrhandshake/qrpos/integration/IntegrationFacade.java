@@ -1,8 +1,6 @@
 package ru.qrhandshake.qrpos.integration;
 
 import ru.qrhandshake.qrpos.domain.OrderStatus;
-import ru.qrhandshake.qrpos.dto.IntegrationOrderStatusRequest;
-import ru.qrhandshake.qrpos.dto.IntegrationOrderStatusResponse;
 import ru.qrhandshake.qrpos.dto.IntegrationPaymentRequest;
 import ru.qrhandshake.qrpos.dto.IntegrationPaymentResponse;
 import ru.qrhandshake.qrpos.exception.IntegrationException;

@@ -1,4 +1,4 @@
-package ru.qrhandshake.qrpos.dto;
+package ru.qrhandshake.qrpos.integration;
 
 /**
  * Created by lameroot on 20.05.16.

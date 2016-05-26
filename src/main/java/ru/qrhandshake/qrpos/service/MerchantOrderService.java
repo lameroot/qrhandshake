@@ -2,10 +2,7 @@ package ru.qrhandshake.qrpos.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.qrhandshake.qrpos.api.MerchantOrderRegisterRequest;
-import ru.qrhandshake.qrpos.api.MerchantOrderRegisterResponse;
-import ru.qrhandshake.qrpos.api.MerchantOrderStatusRequest;
-import ru.qrhandshake.qrpos.api.MerchantOrderStatusResponse;
+import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.Merchant;
@@ -16,6 +13,8 @@ import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IllegalOrderStatusException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
+import ru.qrhandshake.qrpos.integration.IntegrationOrderStatusRequest;
+import ru.qrhandshake.qrpos.integration.IntegrationOrderStatusResponse;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 

@@ -1,19 +1,17 @@
-package ru.qrhandshake.qrpos.dto;
+package ru.qrhandshake.qrpos.api;
 
 import ru.qrhandshake.qrpos.domain.OrderStatus;
-import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
 
 /**
- * Created by lameroot on 19.05.16.
+ * Created by lameroot on 26.05.16.
  */
-public class IntegrationPaymentResponse {
+public class PaymentResponse extends ApiResponse {
 
     private String orderId;
     private String acsUrl;
     private String paReq;
     private String termUrl;
     private OrderStatus orderStatus;
-    private IntegrationOrderStatus integrationOrderStatus;
 
     public String getOrderId() {
         return orderId;
@@ -53,13 +51,5 @@ public class IntegrationPaymentResponse {
 
     public void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
-    }
-
-    public IntegrationOrderStatus getIntegrationOrderStatus() {
-        return integrationOrderStatus;
-    }
-
-    public void setIntegrationOrderStatus(IntegrationOrderStatus integrationOrderStatus) {
-        this.integrationOrderStatus = integrationOrderStatus;
     }
 }

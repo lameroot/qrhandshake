@@ -9,4 +9,6 @@ import ru.qrhandshake.qrpos.domain.MerchantOrder;
  */
 @Repository
 public interface MerchantOrderRepository extends CrudRepository<MerchantOrder, Long> {
+
+    MerchantOrder findByOrderId(String orderId);
 }

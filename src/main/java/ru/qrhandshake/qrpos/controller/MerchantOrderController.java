@@ -7,10 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import ru.qrhandshake.qrpos.api.MerchantOrderRegisterRequest;
-import ru.qrhandshake.qrpos.api.MerchantOrderRegisterResponse;
-import ru.qrhandshake.qrpos.api.MerchantOrderStatusRequest;
-import ru.qrhandshake.qrpos.api.MerchantOrderStatusResponse;
+import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.dto.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
@@ -19,6 +16,7 @@ import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.service.MerchantOrderService;
+import ru.qrhandshake.qrpos.service.OrderService;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -40,6 +38,8 @@ public class MerchantOrderController {
     private MerchantOrderService merchantOrderService;
     @Resource
     private IntegrationService integrationService;
+    @Resource
+    private OrderService orderService;
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -70,6 +70,8 @@ public class MerchantOrderController {
     public String payment(@Valid PaymentRequest paymentRequest,
                           HttpServletRequest request,
                           Model model) throws MerchantOrderNotFoundException, IntegrationException, IllegalOrderStatusException {
+        PaymentResponse paymentResponse = orderService.payment(paymentRequest);
+
         IntegrationPaymentRequest integrationPaymentRequest = merchantOrderService.toIntegrationPaymentRequest(request.getContextPath(), paymentRequest);
         IntegrationPaymentResponse integrationPaymentResponse = integrationService.payment(integrationPaymentRequest);
         merchantOrderService.toMerchantOrder(integrationPaymentResponse);

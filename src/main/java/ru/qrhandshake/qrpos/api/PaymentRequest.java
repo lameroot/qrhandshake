@@ -1,4 +1,4 @@
-package ru.qrhandshake.qrpos.dto;
+package ru.qrhandshake.qrpos.api;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
