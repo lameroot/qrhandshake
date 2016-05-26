@@ -1,4 +1,4 @@
-package ru.qrhandshake.qrpos.dto;
+package ru.qrhandshake.qrpos.integration;
 
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;

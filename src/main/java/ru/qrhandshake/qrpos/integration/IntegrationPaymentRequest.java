@@ -1,7 +1,8 @@
-package ru.qrhandshake.qrpos.dto;
+package ru.qrhandshake.qrpos.integration;
 
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.domain.PaymentWay;
+import ru.qrhandshake.qrpos.dto.ClientDto;
 
 import java.util.HashMap;
 import java.util.Map;

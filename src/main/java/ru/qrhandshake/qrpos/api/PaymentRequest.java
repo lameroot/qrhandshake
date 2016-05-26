@@ -22,6 +22,7 @@ public class PaymentRequest {
     private String cardHolderName;
     @NotNull
     private String cvc;
+    private String returnUrl;
 
     public String getOrderId() {
         return orderId;
@@ -73,5 +74,13 @@ public class PaymentRequest {
 
     public String getExpiry() {
         return year + month;
+    }
+
+    public String getReturnUrl() {
+        return returnUrl;
+    }
+
+    public void setReturnUrl(String returnUrl) {
+        this.returnUrl = returnUrl;
     }
 }

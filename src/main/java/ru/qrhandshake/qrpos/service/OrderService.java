@@ -4,23 +4,21 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.Merchant;
 import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.domain.Terminal;
-import ru.qrhandshake.qrpos.dto.IntegrationPaymentRequest;
-import ru.qrhandshake.qrpos.dto.IntegrationPaymentResponse;
+import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.exception.IllegalOrderStatusException;
-import ru.qrhandshake.qrpos.integration.IntegrationOrderStatusRequest;
-import ru.qrhandshake.qrpos.integration.IntegrationOrderStatusResponse;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
-import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -171,14 +169,27 @@ public class OrderService {
         }
     }
 
+    public void back(Model model, HttpServletRequest request) {
+        integrationService.back(model, request);
+    }
+
+    public MerchantOrderReverseResponse reverse(MerchantOrderReverseRequest merchantOrderReverseRequest) throws AuthException {
+        //todo: здесь надо искать merchantOrder и делать проверки и удалить это изи integrationServie
+        IntegrationReverseRequest integrationReverseRequest = new IntegrationReverseRequest();
+        integrationReverseRequest.setOrderId(merchantOrderReverseRequest.getOrderId());
+        integrationService.reverse(integrationReverseRequest);
+        return null;
+    }
+
+    public MerchantOrder findByOrderId(String orderId) {
+        return merchantOrderRepository.findByOrderId(orderId);
+    }
+
     private boolean doExternalOrderStatusRequest(MerchantOrder merchantOrder) {
         OrderStatus orderStatus = merchantOrder.getOrderStatus();
         return null != orderStatus && orderStatus.equals(OrderStatus.REGISTERED) && StringUtils.isNotBlank(merchantOrder.getExternalId());
     }
 
-    private MerchantOrder findByOrderId(String orderId) {
-        return merchantOrderRepository.findByOrderId(orderId);
-    }
     private String buildPaymentUrl(MerchantOrder merchantOrder, String orderId) {
         return MerchantOrderController.PAYMENT_PATH + "/" + orderId;
     }

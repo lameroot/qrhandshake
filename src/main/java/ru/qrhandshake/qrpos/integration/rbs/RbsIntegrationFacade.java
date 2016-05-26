@@ -9,14 +9,8 @@ import ru.bpc.phoenix.proxy.api.NamePasswordToken;
 import ru.bpc.phoenix.web.api.merchant.soap.MerchantService;
 import ru.paymentgate.engine.webservices.merchant.*;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
-import ru.qrhandshake.qrpos.integration.IntegrationOrderStatusRequest;
-import ru.qrhandshake.qrpos.integration.IntegrationOrderStatusResponse;
-import ru.qrhandshake.qrpos.dto.IntegrationPaymentRequest;
-import ru.qrhandshake.qrpos.dto.IntegrationPaymentResponse;
+import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
-import ru.qrhandshake.qrpos.integration.IntegrationFacade;
-import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
-import ru.qrhandshake.qrpos.integration.IntegrationSupport;
 
 import javax.annotation.Resource;
 import java.util.Map;
@@ -27,6 +21,9 @@ import java.util.Map;
 public class RbsIntegrationFacade implements IntegrationFacade {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    private String language = "ru";
+    private String currency = "643";
 
     @Resource
     private Environment environment;
@@ -49,13 +46,9 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         return merchantService;
     }
 
-    private String language = "ru";
-    private String currency = "643";
-
     @Override
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException{
         OrderParams rbsParams = new OrderParams();
-        //rbsParams.setCurrency(integrationPaymentRequest.getCurrency());
         rbsParams.setCurrency(currency);
         rbsParams.setLanguage(language);
         rbsParams.setDescription(integrationPaymentRequest.getDescription());
@@ -108,6 +101,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         return response;
     }
 
+    //todo: try-catch для всех блоков, где может вылезти ошибка
     @Override
     public IntegrationOrderStatusResponse getOrderStatus(IntegrationOrderStatusRequest integrationOrderStatusRequest) throws IntegrationException {
         IntegrationOrderStatusResponse integrationOrderStatusResponse = new IntegrationOrderStatusResponse();
@@ -123,6 +117,25 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         integrationOrderStatusResponse.setIntegrationOrderStatus(rbsOrderStatus);
 
         return integrationOrderStatusResponse;
+    }
+
+    @Override
+    public IntegrationReverseResponse reverse(IntegrationReverseRequest integrationReverseRequest) throws IntegrationException {
+        ReversalOrderParams reversalOrderParams = new ReversalOrderParams();
+        reversalOrderParams.setOrderId(integrationReverseRequest.getExternalId());
+        try {
+            IntegrationReverseResponse integrationReverseResponse = new IntegrationReverseResponse();
+            integrationReverseResponse.setOrderId(integrationReverseRequest.getOrderId());
+            integrationReverseResponse.setExternalId(integrationReverseRequest.getExternalId());
+            OrderResult orderResult = getMerchantService().reverseOrder(reversalOrderParams);
+            if ( 0 == orderResult.getErrorCode() ) {
+                integrationReverseResponse.setSuccess(true);
+            }
+            integrationReverseResponse.setMessage(orderResult.getErrorMessage());
+            return integrationReverseResponse;
+        } catch (Exception e) {
+            throw new IntegrationException("Error reverse orderId: " + integrationReverseRequest.getExternalId() + " by system: " + integrationSupport,e);
+        }
     }
 
     @Override

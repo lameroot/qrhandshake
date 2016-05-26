@@ -1,16 +1,15 @@
 package ru.qrhandshake.qrpos.integration;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.ui.Model;
 import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
-import ru.qrhandshake.qrpos.dto.IntegrationPaymentRequest;
-import ru.qrhandshake.qrpos.dto.IntegrationPaymentResponse;
 import ru.qrhandshake.qrpos.exception.IllegalOrderStatusException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
-import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
-import ru.qrhandshake.qrpos.service.MerchantOrderService;
+import ru.qrhandshake.qrpos.service.OrderService;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.Optional;
 
@@ -19,8 +18,9 @@ import java.util.Optional;
  */
 public class IntegrationService {
 
+
     @Resource
-    private MerchantOrderService merchantOrderService;
+    private OrderService orderService;
     private final Map<IntegrationSupport, IntegrationFacade> integrationFacades;
 
     public IntegrationService(Map<IntegrationSupport, IntegrationFacade> integrationFacades) {
@@ -50,11 +50,9 @@ public class IntegrationService {
         if (StringUtils.isBlank(integrationOrderStatusRequest.getExternalId()) ) {
             throw new IntegrationException("Unknown externalId");
         }
-        MerchantOrder merchantOrder = null;
-        try {
-            merchantOrder = merchantOrderService.findMerchantOrderByGeneratedId(integrationOrderStatusRequest.getOrderId());
-        } catch (MerchantOrderNotFoundException e) {
-            throw new IntegrationException("Unknown order with id:" + integrationOrderStatusRequest.getOrderId(),e);
+        MerchantOrder merchantOrder = orderService.findByOrderId(integrationOrderStatusRequest.getOrderId());
+        if ( null == merchantOrder ) {
+            throw new IntegrationException("Unknown order with id:" + integrationOrderStatusRequest.getOrderId());
         }
         IntegrationSupport integrationSupport = merchantOrder.getIntegrationSupport();
         if ( null == integrationSupport ) {
@@ -65,6 +63,15 @@ public class IntegrationService {
                 .getOrderStatus(integrationOrderStatusRequest);
         integrationOrderStatusResponse.setOrderStatus(toOrderStatus(integrationSupport, integrationOrderStatusResponse.getIntegrationOrderStatus()));
         return integrationOrderStatusResponse;
+    }
+
+    public void back(Model model, HttpServletRequest request) {
+
+    }
+
+    public IntegrationReverseResponse reverse(IntegrationReverseRequest integrationReverseRequest) {
+        //todo: here
+        return null;
     }
 
     private OrderStatus toOrderStatus(IntegrationSupport integrationSupport, IntegrationOrderStatus integrationOrderStatus) throws IntegrationException {
