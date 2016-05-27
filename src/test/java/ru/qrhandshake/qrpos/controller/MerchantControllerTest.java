@@ -35,7 +35,7 @@ public class MerchantControllerTest extends ServletConfigTest {
 
     @Test
     public void testExists() throws Exception {
-        String name = "merchant_1";
+        String name = "merchant";
         mockMvc.perform(get("/merchant/is_exists")
         .param("name",name))
                 .andDo(print());
@@ -45,7 +45,7 @@ public class MerchantControllerTest extends ServletConfigTest {
     @Transactional
     @Rollback(false)
     public void testRegister() throws Exception {
-        String name = "merchant_1";
+        String name = "merchant";
         Merchant merchant = merchantRepository.findByName(name);
         /*
         if ( null != merchant ) {
@@ -55,8 +55,8 @@ public class MerchantControllerTest extends ServletConfigTest {
         }
         */
         mockMvc.perform(post("/merchant/register")
-            .param("authName","auth")
-            .param("authPassword","password")
+            .param("authName","merchant.auth")
+            .param("authPassword","merchant.password")
             .param("name",name))
                 .andDo(print());
     }

@@ -1,20 +1,5 @@
 package ru.qrhandshake.qrpos.config;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.*;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.crypto.password.StandardPasswordEncoder;
-import ru.qrhandshake.qrpos.integration.IntegrationFacade;
-import ru.qrhandshake.qrpos.integration.IntegrationService;
-import ru.qrhandshake.qrpos.integration.IntegrationSupport;
-import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationConfig;
-
-import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Created by lameroot on 20.05.16.
  */
@@ -30,7 +15,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import ru.qrhandshake.qrpos.integration.IntegrationFacade;
-import ru.qrhandshake.qrpos.integration.IntegrationSupport;
+import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationConfig;
 

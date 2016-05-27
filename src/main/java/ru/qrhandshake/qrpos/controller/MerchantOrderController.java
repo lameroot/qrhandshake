@@ -75,10 +75,10 @@ public class MerchantOrderController {
                 //todo: set term and params to acs page
                 return "acs";
             }
-            return paymentResponse.getTermUrl();
+            return "redirect:" + paymentResponse.getTermUrl();
         }
         else {
-            logger.error("Error payment of order: {}, cause: ",paymentRequest.getOrderId(),paymentResponse.getMessage());
+            logger.error("Error payment of order: {}, cause: {}",paymentRequest.getOrderId(),paymentResponse.getMessage());
             return "redirect:" + PAYMENT_PATH + "/" + paymentRequest.getOrderId();
         }
     }
@@ -89,7 +89,7 @@ public class MerchantOrderController {
         return "";//todo: страница на которой должно отображаться состояние оплаченного заказа
     }
 
-    @RequestMapping(value = REVERSE_PATH)
+    @RequestMapping(value = REVERSE_PATH, method = RequestMethod.POST)
     @ResponseBody
     public MerchantOrderReverseResponse reverse(@Valid MerchantOrderReverseRequest merchantOrderReverseRequest) throws AuthException {
         return orderService.reverse(merchantOrderReverseRequest);

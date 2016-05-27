@@ -1,12 +1,10 @@
 package ru.qrhandshake.qrpos.integration;
 
-import org.apache.commons.lang.StringUtils;
 import org.springframework.ui.Model;
-import ru.qrhandshake.qrpos.domain.MerchantOrder;
+import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
-import ru.qrhandshake.qrpos.exception.IllegalOrderStatusException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
-import ru.qrhandshake.qrpos.service.OrderService;
+import ru.qrhandshake.qrpos.service.IntegrationSupportService;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +16,7 @@ import java.util.Optional;
  */
 public class IntegrationService {
 
+
     private final Map<IntegrationSupport, IntegrationFacade> integrationFacades;
 
     public IntegrationService(Map<IntegrationSupport, IntegrationFacade> integrationFacades) {
@@ -25,7 +24,7 @@ public class IntegrationService {
     }
 
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException {
-        IntegrationSupport integrationSupport = checkIntegrationSupport(integrationPaymentRequest);
+        IntegrationSupport integrationSupport = integrationPaymentRequest.getIntegrationSupport();
         IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationSupport).payment(integrationPaymentRequest);
         integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport,integrationPaymentResponse.getIntegrationOrderStatus()));
         return integrationPaymentResponse;
@@ -58,23 +57,6 @@ public class IntegrationService {
                 .toOrderStatus(integrationOrderStatus);
     }
 
-    private IntegrationSupport checkIntegrationSupport(IntegrationPaymentRequest paymentRequest) {
-        switch (paymentRequest.getPaymentWay()) {
-            case CARD: {
-                return IntegrationSupport.RBS_SBRF;//todo: hardcode only sber
-            }
-            case YANDEX_WALLET: {
-                return IntegrationSupport.YANDEX_WALLET;
-            }
-            case QIWI_WALLET: {
-                return IntegrationSupport.QIWI_WALLET;
-            }
-            case GOOGLE_WALLET: {
-                return IntegrationSupport.GOOGLE_WALLET;
-            }
-        }
-        throw new IllegalArgumentException("Unknown payment way: " + paymentRequest.getPaymentWay());
-        //тут может быть проверка на тип карты и взависимости от этого выбор, через кого проводить операцию
-    }
+
 
 }

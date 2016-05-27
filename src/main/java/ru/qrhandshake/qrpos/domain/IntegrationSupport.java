@@ -1,4 +1,4 @@
-package ru.qrhandshake.qrpos.integration;
+package ru.qrhandshake.qrpos.domain;
 
 /**
  * Created by lameroot on 19.05.16.

@@ -1,5 +1,7 @@
 package ru.qrhandshake.qrpos.api;
 
+import ru.qrhandshake.qrpos.domain.PaymentWay;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -23,6 +25,7 @@ public class PaymentRequest {
     @NotNull
     private String cvc;
     private String returnUrl;
+    private PaymentWay paymentWay = PaymentWay.CARD;
 
     public String getOrderId() {
         return orderId;
@@ -82,5 +85,13 @@ public class PaymentRequest {
 
     public void setReturnUrl(String returnUrl) {
         this.returnUrl = returnUrl;
+    }
+
+    public PaymentWay getPaymentWay() {
+        return paymentWay;
+    }
+
+    public void setPaymentWay(PaymentWay paymentWay) {
+        this.paymentWay = paymentWay;
     }
 }

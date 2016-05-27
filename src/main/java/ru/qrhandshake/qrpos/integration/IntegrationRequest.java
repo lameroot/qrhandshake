@@ -1,5 +1,7 @@
 package ru.qrhandshake.qrpos.integration;
 
+import ru.qrhandshake.qrpos.domain.IntegrationSupport;
+
 import javax.validation.constraints.NotNull;
 
 /**

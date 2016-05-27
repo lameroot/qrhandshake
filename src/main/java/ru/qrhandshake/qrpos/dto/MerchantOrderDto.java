@@ -1,7 +1,7 @@
 package ru.qrhandshake.qrpos.dto;
 
 import ru.qrhandshake.qrpos.domain.MerchantOrder;
-import ru.qrhandshake.qrpos.integration.IntegrationSupport;
+import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 
 import java.util.Date;
 
@@ -24,15 +24,14 @@ public class MerchantOrderDto {
     public MerchantOrderDto(){}
     public MerchantOrderDto(MerchantOrder merchantOrder){
         this.id = merchantOrder.getId();
-        this.expiredDate = merchantOrder.getExpiredDate();
+
         this.amount = merchantOrder.getAmount();
         this.description = merchantOrder.getDescription();
-        this.fee = merchantOrder.getFee();
+
         this.merchant = new MerchantDto(merchantOrder.getMerchant());
         this.client = new ClientDto(merchantOrder.getClient());
         this.integrationSupport = merchantOrder.getIntegrationSupport();
-        this.currency = merchantOrder.getCurrency();
-        this.language = merchantOrder.getLanguage();
+
     }
 
     public Long getId() {

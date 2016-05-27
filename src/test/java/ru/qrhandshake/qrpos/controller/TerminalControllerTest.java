@@ -32,8 +32,8 @@ public class TerminalControllerTest extends ServletConfigTest {
     @Test
     public void testAuth() throws Exception {
         mockMvc.perform(post("/terminal/auth")
-        .param("authName","WBJa9M4Z")
-        .param("authPassword","FMLa9QEW"))
+        .param("authName","merchant.auth")
+        .param("authPassword","merchant.password"))
                 .andDo(print());
     }
 
@@ -41,13 +41,13 @@ public class TerminalControllerTest extends ServletConfigTest {
     @Transactional
     @Rollback(false)
     public void testRegister() throws Exception {
-        User user = userRepository.findByUsername("auth");
+        User user = userRepository.findByUsername("merchant.auth");
         assertNotNull(user);
         Authentication authentication = new TestingAuthenticationToken(user, null);
         mockMvc.perform(get(TerminalController.TERMINAL_PATH + TerminalController.REGISTER_PATH)
                 .principal(authentication)
-                .param("authName","terminal1")
-                .param("authPassword","terminal1")
+                .param("authName","merchant.auth")
+                .param("authPassword","merchant.auth")
         ).andDo(print());
     }
 }

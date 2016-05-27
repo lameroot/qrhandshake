@@ -10,10 +10,10 @@ public class MerchantOrderRegisterRequest extends ApiAuth {
 
     @NotNull
     private Long amount;
-    private String description;
-    private String deviceId;
     @NotNull
     private String sessionId;
+    private String description;
+    private String deviceId;
 
     public Long getAmount() {
         return amount;

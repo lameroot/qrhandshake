@@ -1,6 +1,8 @@
 package ru.qrhandshake.qrpos.service;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -28,6 +30,8 @@ import java.util.Random;
  */
 @Service
 public class TerminalService {
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Resource
     private TerminalRepository terminalRepository;
@@ -79,6 +83,7 @@ public class TerminalService {
             terminalAuth = apiAuth;
         }
         else {
+            logger.debug("ApiAuth either null or terminal with this name already exists. Generate authName and authPassword for new terminal.");
             terminalAuth = new ApiAuth(generateUniqueAuthName(), generateAuthPassword());
         }
 

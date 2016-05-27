@@ -1,12 +1,6 @@
 package ru.qrhandshake.qrpos.domain;
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import ru.qrhandshake.qrpos.integration.IntegrationSupport;
-
 import javax.persistence.*;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
 

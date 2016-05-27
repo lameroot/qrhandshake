@@ -6,7 +6,7 @@ package ru.qrhandshake.qrpos.api;
 public class MerchantRegisterResponse extends ApiResponse {
 
     private String merchantId;
-    private ApiAuth auth;
+    private ApiAuth auth;//тот под который производился запрос
     private ApiAuth terminalAuth;
     private ApiAuth userAuth;
 

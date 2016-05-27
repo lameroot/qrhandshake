@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.integration;
 
+import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.domain.PaymentWay;
 import ru.qrhandshake.qrpos.dto.ClientDto;
@@ -10,7 +11,7 @@ import java.util.Map;
 /**
  * Created by lameroot on 19.05.16.
  */
-public class IntegrationPaymentRequest {
+public class IntegrationPaymentRequest extends IntegrationRequest {
 
     private String orderId;
     private String pan;
@@ -25,6 +26,10 @@ public class IntegrationPaymentRequest {
     private OrderStatus orderStatus;
     private Map<String, String> params = new HashMap<>();
     private PaymentWay paymentWay = PaymentWay.CARD;
+
+    public IntegrationPaymentRequest(IntegrationSupport integrationSupport) {
+        super(integrationSupport);
+    }
 
     public String getOrderId() {
         return orderId;

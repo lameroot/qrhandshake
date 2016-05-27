@@ -1,7 +1,5 @@
 package ru.qrhandshake.qrpos.domain;
 
-import ru.qrhandshake.qrpos.integration.IntegrationSupport;
-
 import javax.persistence.*;
 import java.util.Date;
 
@@ -17,7 +15,7 @@ public class MerchantOrder {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "orderSequence")
     @SequenceGenerator(name = "orderSequence", sequenceName = "seq_order", allocationSize = 1)
     private Long id;
-    @Column(name = "order_id", unique = true, nullable = false)
+    @Column(name = "order_id", unique = true)
     private String orderId;
     @Column(name = "external_id")
     private String externalId;

@@ -8,6 +8,7 @@ import ru.bpc.phoenix.proxy.api.MerchantServiceProvider;
 import ru.bpc.phoenix.proxy.api.NamePasswordToken;
 import ru.bpc.phoenix.web.api.merchant.soap.MerchantService;
 import ru.paymentgate.engine.webservices.merchant.*;
+import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
@@ -22,7 +23,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private String language = "ru";
+    private String language = "en";
     private String currency = "643";
 
     @Resource
@@ -73,6 +74,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                 integrationPaymentResponse.setSuccess(false);
                 return integrationPaymentResponse;
             }
+            integrationPaymentResponse.setSuccess(true);
             externalOrderId = registerOrderResponse.getOrderId();
             integrationPaymentResponse.setExternalId(externalOrderId);
         } catch (Exception e) {
@@ -99,6 +101,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                 integrationPaymentResponse.setSuccess(false);
                 return integrationPaymentResponse;
             }
+            integrationPaymentResponse.setSuccess(true);
             integrationPaymentResponse.setAcsUrl(paymentOrderResult.getAcsUrl());
             integrationPaymentResponse.setPaReq(paymentOrderResult.getPaReq());
             integrationPaymentResponse.setTermUrl(paymentOrderResult.getRedirect());
@@ -106,7 +109,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                 integrationPaymentResponse.setIntegrationOrderStatus(RbsOrderStatus.REDIRECTED_TO_ACS);
             }
             else {
-                IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(externalOrderId));
+                IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(integrationPaymentRequest.getIntegrationSupport(), externalOrderId));
                 integrationPaymentResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
                 integrationOrderStatusResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
             }
@@ -135,6 +138,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                 integrationOrderStatusResponse.setOrderStatus(null);
                 integrationOrderStatusResponse.setSuccess(false);
             }
+            integrationOrderStatusResponse.setSuccess(true);
             RbsOrderStatus rbsOrderStatus = RbsOrderStatus.valueOf(getOrderStatusExtendedResponse.getOrderStatus());
             integrationOrderStatusResponse.setIntegrationOrderStatus(rbsOrderStatus);
             return integrationOrderStatusResponse;
@@ -147,6 +151,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
     public IntegrationReverseResponse reverse(IntegrationReverseRequest integrationReverseRequest) throws IntegrationException {
         ReversalOrderParams reversalOrderParams = new ReversalOrderParams();
         reversalOrderParams.setOrderId(integrationReverseRequest.getExternalId());
+        reversalOrderParams.setLanguage(language);
         try {
             IntegrationReverseResponse integrationReverseResponse = new IntegrationReverseResponse();
             integrationReverseResponse.setOrderId(integrationReverseRequest.getOrderId());
@@ -154,8 +159,10 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             OrderResult orderResult = getMerchantService().reverseOrder(reversalOrderParams);
             integrationReverseResponse.setMessage(orderResult.getErrorMessage());
             if ( 0 == orderResult.getErrorCode() ) {
-                logger.error("Error integration reverse by orderId: {}, cause: {}", integrationReverseRequest.getExternalId(), orderResult.getErrorMessage());
                 integrationReverseResponse.setSuccess(true);
+            }
+            else {
+                logger.error("Error integration reverse by orderId: {}, cause: {}", integrationReverseRequest.getExternalId(), orderResult.getErrorMessage());
             }
             return integrationReverseResponse;
         } catch (Exception e) {

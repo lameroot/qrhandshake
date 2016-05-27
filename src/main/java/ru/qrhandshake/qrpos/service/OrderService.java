@@ -7,10 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
-import ru.qrhandshake.qrpos.domain.Merchant;
-import ru.qrhandshake.qrpos.domain.MerchantOrder;
-import ru.qrhandshake.qrpos.domain.OrderStatus;
-import ru.qrhandshake.qrpos.domain.Terminal;
+import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
@@ -35,6 +32,8 @@ public class OrderService {
     private MerchantOrderRepository merchantOrderRepository;
     @Resource
     private IntegrationService integrationService;
+    @Resource
+    private IntegrationSupportService integrationSupportService;
 
     public MerchantOrderRegisterResponse register(MerchantOrderRegisterRequest merchantOrderRegisterRequest) throws AuthException {
         Terminal terminal = null;
@@ -56,6 +55,7 @@ public class OrderService {
         String orderId = generateUniqueIdOrder(merchantOrder);
         String paymentUrl = buildPaymentUrl(merchantOrder, orderId);
         merchantOrder.setOrderId(orderId);
+        merchantOrderRepository.save(merchantOrder);
 
         MerchantOrderRegisterResponse merchantOrderRegisterResponse = new MerchantOrderRegisterResponse();
         merchantOrderRegisterResponse.setStatus(ResponseStatus.SUCCESS);
@@ -81,7 +81,7 @@ public class OrderService {
         if ( !terminal.getMerchant().equals(merchantOrder.getMerchant()) ) {
             throw new AuthException("Order with id:" + merchantOrderStatusRequest.getOrderId() + " not belongs to own merchant");
         }
-        if ( doExternalOrderStatusRequest(merchantOrder) ) {//делаем в этом случае всегда запрос к внешней системе
+        if ( doExternalOrderStatusRequest(merchantOrder) || merchantOrderStatusRequest.isExternalRequest() ) {//делаем в этом случае всегда запрос к внешней системе
             IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(merchantOrder.getIntegrationSupport(),merchantOrder.getExternalId());
             try {
                 IntegrationOrderStatusResponse integrationOrderStatusResponse = integrationService.getOrderStatus(integrationOrderStatusRequest);
@@ -121,13 +121,21 @@ public class OrderService {
             paymentResponse.setOrderId(paymentRequest.getOrderId());
             return paymentResponse;
         }
-        if ( null != merchantOrder.getOrderStatus() && OrderStatus.REGISTERED.equals(merchantOrder.getOrderStatus()) ) {
+        if ( null != merchantOrder.getOrderStatus() && !OrderStatus.REGISTERED.equals(merchantOrder.getOrderStatus()) ) {
             paymentResponse.setStatus(ResponseStatus.FAIL);
             paymentResponse.setOrderStatus(merchantOrder.getOrderStatus());
-            paymentResponse.setMessage("Order: " + merchantOrder.getOrderId() + " has already paid");
+            paymentResponse.setMessage("Order: " + merchantOrder.getOrderId() + " has invalid status: " + merchantOrder.getOrderStatus() + " for payment.");
             return paymentResponse;
         }
-        IntegrationPaymentRequest integrationPaymentRequest = new IntegrationPaymentRequest();
+        IntegrationSupport integrationSupport = integrationSupportService.checkIntegrationSupport(paymentRequest);
+        if ( null == integrationSupport ) {
+            paymentResponse.setStatus(ResponseStatus.FAIL);
+            paymentResponse.setOrderStatus(merchantOrder.getOrderStatus());
+            paymentResponse.setMessage("Unknown integration support for orderId: " + paymentRequest.getOrderId());
+            return paymentResponse;
+        }
+        merchantOrder.setIntegrationSupport(integrationSupport);
+        IntegrationPaymentRequest integrationPaymentRequest = new IntegrationPaymentRequest(integrationSupport);
         integrationPaymentRequest.setAmount(merchantOrder.getAmount());
         integrationPaymentRequest.setCardHolderName(paymentRequest.getCardHolderName());
         integrationPaymentRequest.setClient(null);//todo: set data as ip
@@ -140,6 +148,7 @@ public class OrderService {
         integrationPaymentRequest.setReturnUrl(paymentRequest.getReturnUrl());
         integrationPaymentRequest.setParams(new HashMap<>());//todo: set params
         integrationPaymentRequest.setOrderStatus(merchantOrder.getOrderStatus());
+        integrationPaymentRequest.setPaymentWay(paymentRequest.getPaymentWay());
 
         try {
             IntegrationPaymentResponse integrationPaymentResponse = integrationService.payment(integrationPaymentRequest);
@@ -149,6 +158,7 @@ public class OrderService {
             if ( !merchantOrder.getOrderStatus().equals(integrationPaymentResponse.getOrderStatus()) ) {
                 merchantOrder.setOrderStatus(integrationPaymentResponse.getOrderStatus());
                 merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());
+                merchantOrder.setExternalId(integrationPaymentResponse.getExternalId());
                 if ( merchantOrder.getOrderStatus().equals(OrderStatus.PAID) ) {
                     merchantOrder.setPaymentDate(new Date());
                 }
@@ -191,13 +201,30 @@ public class OrderService {
         if ( !terminal.getMerchant().equals(merchantOrder.getMerchant()) ) {
             throw new AuthException("Order with id:" + merchantOrderReverseRequest.getOrderId() + " not belongs to own merchant");
         }
-
+        if ( !merchantOrder.getOrderStatus().equals(OrderStatus.PAID) ) {
+            merchantOrderReverseResponse.setStatus(ResponseStatus.FAIL);
+            merchantOrderReverseResponse.setMessage("Order with id: " + merchantOrderReverseRequest.getOrderId() + " has invalid status: " + merchantOrder.getOrderStatus() + ", must be PAID");
+            return merchantOrderReverseResponse;
+        }
         try {
-            IntegrationReverseRequest integrationReverseRequest = new IntegrationReverseRequest(merchantOrder.getIntegrationSupport());
+            IntegrationReverseRequest integrationReverseRequest = new IntegrationReverseRequest(merchantOrder.getIntegrationSupport(),merchantOrder.getExternalId());
             integrationReverseRequest.setOrderId(merchantOrderReverseRequest.getOrderId());
 
             IntegrationReverseResponse integrationReverseResponse = integrationService.reverse(integrationReverseRequest);
-            merchantOrderReverseResponse.setStatus(ResponseStatus.SUCCESS);
+            if ( integrationReverseResponse.isSuccess() ) {
+                MerchantOrderStatusRequest merchantOrderStatusRequest = new MerchantOrderStatusRequest();
+                merchantOrderStatusRequest.setOrderId(merchantOrder.getOrderId());
+                merchantOrderStatusRequest.setAuthName(merchantOrderReverseRequest.getAuthName());
+                merchantOrderStatusRequest.setAuthPassword(merchantOrderReverseRequest.getAuthPassword());
+                merchantOrderStatusRequest.setExternalRequest(true);
+                MerchantOrderStatusResponse merchantOrderStatusResponse = getOrderStatus(merchantOrderStatusRequest);
+                if ( merchantOrderStatusResponse.getStatus().equals(ResponseStatus.SUCCESS) ) {
+                    merchantOrderReverseResponse.setStatus(ResponseStatus.SUCCESS);
+                }
+                else {
+                    merchantOrderReverseResponse.setMessage(merchantOrderStatusResponse.getMessage());
+                }
+            }
             merchantOrderReverseResponse.setMessage(integrationReverseResponse.getMessage());
         } catch (IntegrationException e) {
             logger.error("Error reverse order by orderId: " + merchantOrderReverseRequest.getOrderId(),e);
@@ -222,7 +249,7 @@ public class OrderService {
     }
 
     private String buildPaymentUrl(MerchantOrder merchantOrder, String orderId) {
-        return MerchantOrderController.PAYMENT_PATH + "/" + orderId;
+        return MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.PAYMENT_PATH + "/" + orderId;
     }
 
     private String generateUniqueIdOrder(MerchantOrder merchantOrder) {

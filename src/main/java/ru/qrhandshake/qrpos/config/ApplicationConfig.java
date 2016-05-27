@@ -10,7 +10,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import ru.qrhandshake.qrpos.integration.IntegrationFacade;
-import ru.qrhandshake.qrpos.integration.IntegrationSupport;
+import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationConfig;
 import ru.rbs.util.SyncSimpleDateFormat;
@@ -19,8 +19,6 @@ import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Configuration
 @PropertySource(value = {"classpath:config.properties"})

@@ -1,15 +1,18 @@
 package ru.qrhandshake.qrpos.integration;
 
+import ru.qrhandshake.qrpos.domain.IntegrationSupport;
+
 /**
  * Created by lameroot on 26.05.16.
  */
 public class IntegrationReverseRequest extends IntegrationRequest {
 
     private String orderId;
-    private String externalId;
+    private final String externalId;
 
-    public IntegrationReverseRequest(IntegrationSupport integrationSupport) {
+    public IntegrationReverseRequest(IntegrationSupport integrationSupport, String externalId) {
         super(integrationSupport);
+        this.externalId = externalId;
     }
 
     public String getOrderId() {
@@ -24,7 +27,4 @@ public class IntegrationReverseRequest extends IntegrationRequest {
         return externalId;
     }
 
-    public void setExternalId(String externalId) {
-        this.externalId = externalId;
-    }
 }

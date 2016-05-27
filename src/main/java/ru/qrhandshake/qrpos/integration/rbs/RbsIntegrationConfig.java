@@ -1,6 +1,8 @@
 package ru.qrhandshake.qrpos.integration.rbs;
 
 
+import org.apache.cxf.interceptor.LoggingInInterceptor;
+import org.apache.cxf.interceptor.LoggingOutInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -8,7 +10,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import ru.bpc.phoenix.proxy.api.NamePasswordToken;
 import ru.qrhandshake.qrpos.integration.IntegrationFacade;
-import ru.qrhandshake.qrpos.integration.IntegrationSupport;
+import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 
 import javax.annotation.Resource;
 
@@ -34,5 +36,15 @@ public class RbsIntegrationConfig {
     @Bean
     public IntegrationFacade rbsSbrfIntegrationService() {
         return new RbsIntegrationFacade(rbsSbrfNamePasswordToken(), environment.getRequiredProperty("rbs.sbrf.wsdlLocation"), IntegrationSupport.RBS_SBRF);
+    }
+
+    @Bean(name = "loggingInInterceptor")
+    public LoggingInInterceptor loggingInInterceptor() {
+        return new LoggingInInterceptor();
+    }
+
+    @Bean(name = "loggingOutInterceptor")
+    public LoggingOutInterceptor loggingOutInterceptor() {
+        return new LoggingOutInterceptor();
     }
 }
