@@ -112,7 +112,7 @@ public class OrderService {
         return merchantOrderStatusResponse;
     }
 
-    public PaymentResponse payment(PaymentRequest paymentRequest) {
+    public PaymentResponse payment(PaymentRequest paymentRequest, Model model) {
         PaymentResponse paymentResponse = new PaymentResponse();
         MerchantOrder merchantOrder = findByOrderId(paymentRequest.getOrderId());
         if ( null == merchantOrder ) {
@@ -149,6 +149,7 @@ public class OrderService {
         integrationPaymentRequest.setParams(new HashMap<>());//todo: set params
         integrationPaymentRequest.setOrderStatus(merchantOrder.getOrderStatus());
         integrationPaymentRequest.setPaymentWay(paymentRequest.getPaymentWay());
+        integrationPaymentRequest.setModel(model);
 
         try {
             IntegrationPaymentResponse integrationPaymentResponse = integrationService.payment(integrationPaymentRequest);
@@ -169,9 +170,7 @@ public class OrderService {
                 paymentResponse.setMessage("Paid successfully but external status wasn't changed");
             }
             paymentResponse.setOrderStatus(merchantOrder.getOrderStatus());
-            paymentResponse.setAcsUrl(integrationPaymentResponse.getAcsUrl());
-            paymentResponse.setPaReq(integrationPaymentResponse.getPaReq());
-            paymentResponse.setTermUrl(integrationPaymentResponse.getTermUrl());
+            paymentResponse.setRedirectUrlOrPagePath(integrationPaymentResponse.getRedirectUrlOrPagePath());
         } catch (IntegrationException e) {
             logger.error("Error payment by orderId:" + paymentRequest.getOrderId(),e);
             paymentResponse.setStatus(ResponseStatus.FAIL);
@@ -235,8 +234,36 @@ public class OrderService {
         return merchantOrderReverseResponse;
     }
 
-    public void back(Model model, HttpServletRequest request) {
-        integrationService.back(model, request);
+    public FinishResponse finish(FinishRequest finishRequest) {
+        FinishResponse finishResponse = new FinishResponse();
+        MerchantOrder merchantOrder = findByOrderId(finishRequest.getOrderId());
+        if ( null == merchantOrder ) {
+            finishResponse.setStatus(ResponseStatus.FAIL);
+            finishResponse.setMessage("Order with id:" + finishRequest.getOrderId() + " doesn't exists");
+            return finishResponse;
+        }
+        if ( null == merchantOrder.getIntegrationSupport() || StringUtils.isBlank(merchantOrder.getExternalId()) ) {
+            finishResponse.setStatus(ResponseStatus.FAIL);
+            finishResponse.setMessage("Order with id: " + finishRequest.getOrderId() + " has invalid params");
+            return finishResponse;
+        }
+        IntegrationFinishRequest integrationFinishRequest = new IntegrationFinishRequest(merchantOrder.getIntegrationSupport(),merchantOrder.getExternalId());
+        try {
+            IntegrationFinishResponse integrationFinishResponse = integrationService.finish(integrationFinishRequest);
+            if ( integrationFinishResponse.isSuccess() ) {
+                finishResponse.setStatus(ResponseStatus.SUCCESS);
+            }
+            else {
+                finishResponse.setStatus(ResponseStatus.FAIL);
+            }
+            finishResponse.setOrderStatus(integrationFinishResponse.getOrderStatus());
+            finishResponse.setOrderId(integrationFinishResponse.getOrderId());
+            finishResponse.setMessage(integrationFinishResponse.getMessage());
+        } catch (IntegrationException e) {
+            finishResponse.setStatus(ResponseStatus.FAIL);
+            finishResponse.setMessage("Error finish payment with order:" + finishRequest.getOrderId() + ", cause: " + e.getMessage());
+        }
+        return finishResponse;
     }
 
     public MerchantOrder findByOrderId(String orderId) {

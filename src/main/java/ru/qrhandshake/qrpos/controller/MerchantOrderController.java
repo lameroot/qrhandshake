@@ -1,6 +1,5 @@
 package ru.qrhandshake.qrpos.controller;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -12,8 +11,6 @@ import ru.qrhandshake.qrpos.api.ResponseStatus;
 import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.dto.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
-import ru.qrhandshake.qrpos.exception.IllegalOrderStatusException;
-import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
 import ru.qrhandshake.qrpos.service.OrderService;
 
@@ -32,7 +29,7 @@ public class MerchantOrderController {
     public final static String REGISTER_PATH = "/register";
     public final static String ORDER_STATUS_PATH = "/status";
     public final static String PAYMENT_PATH = "/payment";
-    public final static String RETURN_PATH = "/back";
+    public final static String FINISH_PATH = "/finish";
     public final static String REVERSE_PATH = "/reverse";
 
     @Resource
@@ -54,7 +51,7 @@ public class MerchantOrderController {
     }
 
     @RequestMapping(value = PAYMENT_PATH + "/{orderId}", method = RequestMethod.GET)
-    public String paymentPage(@PathVariable("orderId") String orderId, Model model) throws MerchantOrderNotFoundException {
+    public String paymentPage(@PathVariable(value = "orderId") String orderId, Model model) throws MerchantOrderNotFoundException {
         MerchantOrder merchantOrder = orderService.findByOrderId(orderId);
         if ( null == merchantOrder ) throw new MerchantOrderNotFoundException("Order: " + orderId + " not found");
 
@@ -66,16 +63,12 @@ public class MerchantOrderController {
     @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST)
     public String payment(@Valid PaymentRequest paymentRequest,
                           HttpServletRequest request,
-                          Model model) throws MerchantOrderNotFoundException, IntegrationException, IllegalOrderStatusException {
-        paymentRequest.setReturnUrl(request.getScheme() + "://" + request.getServerName() + request.getRequestURI() + RETURN_PATH);
-        PaymentResponse paymentResponse = orderService.payment(paymentRequest);
+                          Model model) {
+        paymentRequest.setReturnUrl(request.getScheme() + "://" + request.getServerName() + request.getRequestURI() + FINISH_PATH + "/" + paymentRequest.getOrderId());
+        PaymentResponse paymentResponse = orderService.payment(paymentRequest, model);
         if ( ResponseStatus.SUCCESS.equals(paymentResponse.getStatus()) ) {
-            if ( StringUtils.isNotBlank(paymentResponse.getAcsUrl()) ) {
-                //todo: return acs_page.jsp
-                //todo: set term and params to acs page
-                return "acs";
-            }
-            return "redirect:" + paymentResponse.getTermUrl();
+            logger.debug("Return success payment page: {}", paymentResponse.getRedirectUrlOrPagePath());
+            return paymentResponse.getRedirectUrlOrPagePath();
         }
         else {
             logger.error("Error payment of order: {}, cause: {}",paymentRequest.getOrderId(),paymentResponse.getMessage());
@@ -83,10 +76,14 @@ public class MerchantOrderController {
         }
     }
 
-    @RequestMapping(value = RETURN_PATH)
-    public String back(Model model, HttpServletRequest request) {
-        orderService.back(model, request);
-        return "";//todo: страница на которой должно отображаться состояние оплаченного заказа
+    @RequestMapping(value = FINISH_PATH + "/{orderId}")
+    public String finish(@PathVariable(value = "orderId") String orderId, Model model) {
+        FinishRequest finishRequest = new FinishRequest(orderId);
+        FinishResponse finishResponse = orderService.finish(finishRequest);
+        model.addAttribute("orderStatus",finishResponse.getOrderStatus());
+        model.addAttribute("orderId",finishResponse.getOrderId());
+        model.addAttribute("status",finishResponse.getStatus());
+        return "finish";
     }
 
     @RequestMapping(value = REVERSE_PATH, method = RequestMethod.POST)

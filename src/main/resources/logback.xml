@@ -15,4 +15,5 @@
     <logger name="org.springframework.context" level="debug" />
     <logger name="org.hibernate.tool" level="debug" />
     <logger name="ru.qrhandshake.qrpos" level="debug" />
+    <logger name="ru.bpc" level="debug" />
 </configuration>

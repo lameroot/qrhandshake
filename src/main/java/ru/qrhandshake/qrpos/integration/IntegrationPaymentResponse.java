@@ -10,9 +10,7 @@ public class IntegrationPaymentResponse extends IntegrationResponse {
 
     private String orderId;
     private String externalId;
-    private String acsUrl;
-    private String paReq;
-    private String termUrl;
+    private String redirectUrlOrPagePath;
     private OrderStatus orderStatus;
     private IntegrationOrderStatus integrationOrderStatus;
 
@@ -24,28 +22,12 @@ public class IntegrationPaymentResponse extends IntegrationResponse {
         this.orderId = orderId;
     }
 
-    public String getAcsUrl() {
-        return acsUrl;
+    public String getRedirectUrlOrPagePath() {
+        return redirectUrlOrPagePath;
     }
 
-    public void setAcsUrl(String acsUrl) {
-        this.acsUrl = acsUrl;
-    }
-
-    public String getPaReq() {
-        return paReq;
-    }
-
-    public void setPaReq(String paReq) {
-        this.paReq = paReq;
-    }
-
-    public String getTermUrl() {
-        return termUrl;
-    }
-
-    public void setTermUrl(String termUrl) {
-        this.termUrl = termUrl;
+    public void setRedirectUrlOrPagePath(String redirectUrlOrPagePath) {
+        this.redirectUrlOrPagePath = redirectUrlOrPagePath;
     }
 
     public OrderStatus getOrderStatus() {

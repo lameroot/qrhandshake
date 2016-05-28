@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.integration;
 
+import org.springframework.ui.Model;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.domain.PaymentWay;
@@ -26,6 +27,7 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
     private OrderStatus orderStatus;
     private Map<String, String> params = new HashMap<>();
     private PaymentWay paymentWay = PaymentWay.CARD;
+    private Model model;
 
     public IntegrationPaymentRequest(IntegrationSupport integrationSupport) {
         super(integrationSupport);
@@ -133,5 +135,13 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
 
     public void setPaymentWay(PaymentWay paymentWay) {
         this.paymentWay = paymentWay;
+    }
+
+    public Model getModel() {
+        return model;
+    }
+
+    public void setModel(Model model) {
+        this.model = model;
     }
 }

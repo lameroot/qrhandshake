@@ -4,6 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
+import org.springframework.ui.Model;
 import ru.bpc.phoenix.proxy.api.MerchantServiceProvider;
 import ru.bpc.phoenix.proxy.api.NamePasswordToken;
 import ru.bpc.phoenix.web.api.merchant.soap.MerchantService;
@@ -23,8 +24,9 @@ public class RbsIntegrationFacade implements IntegrationFacade {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private String language = "en";
-    private String currency = "643";
+    private final static String language = "en";
+    private final static String currency = "643";
+    private final static String ACS_REDIRECT_PAGE = "rbs/acs_redirect";
 
     @Resource
     private Environment environment;
@@ -36,6 +38,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
     public RbsIntegrationFacade(NamePasswordToken namePasswordToken, String wsdlLocation, IntegrationSupport integrationSupport) {
         this.namePasswordToken = namePasswordToken;
         this.merchantServiceProvider = new MerchantServiceProvider();
+        this.merchantServiceProvider.setDebugSoap(true);
         this.merchantServiceProvider.setWsdlLocation(wsdlLocation);
         this.integrationSupport = integrationSupport;
     }
@@ -102,16 +105,21 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                 return integrationPaymentResponse;
             }
             integrationPaymentResponse.setSuccess(true);
-            integrationPaymentResponse.setAcsUrl(paymentOrderResult.getAcsUrl());
-            integrationPaymentResponse.setPaReq(paymentOrderResult.getPaReq());
-            integrationPaymentResponse.setTermUrl(paymentOrderResult.getRedirect());
-            if (StringUtils.isNotBlank(paymentOrderResult.getAcsUrl()) ) {
+            Model model = integrationPaymentRequest.getModel();
+            if ( StringUtils.isNotBlank(paymentOrderResult.getAcsUrl()) && StringUtils.isNotBlank(paymentOrderResult.getPaReq()) ) {
+                model.addAttribute("acsUrl", paymentOrderResult.getAcsUrl());
+                model.addAttribute("mdOrder", externalOrderId);
+                model.addAttribute("paReq", paymentOrderResult.getPaReq());
+                model.addAttribute("termUrl", paymentOrderResult.getRedirect());
+                model.addAttribute("language", language);
+                integrationPaymentResponse.setRedirectUrlOrPagePath(ACS_REDIRECT_PAGE);
                 integrationPaymentResponse.setIntegrationOrderStatus(RbsOrderStatus.REDIRECTED_TO_ACS);
             }
             else {
                 IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(integrationPaymentRequest.getIntegrationSupport(), externalOrderId));
                 integrationPaymentResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
                 integrationOrderStatusResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
+                integrationPaymentResponse.setRedirectUrlOrPagePath("redirect:" + paymentOrderResult.getRedirect());
             }
         } catch (Exception e) {
             throw new IntegrationException("Error integration payment order by orderId: " + integrationPaymentRequest.getOrderId(),e);

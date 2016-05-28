@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.integration;
 
 import org.springframework.ui.Model;
+import ru.qrhandshake.qrpos.api.FinishRequest;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
@@ -33,6 +34,7 @@ public class IntegrationService {
     public IntegrationOrderStatusResponse getOrderStatus(IntegrationOrderStatusRequest integrationOrderStatusRequest) throws IntegrationException {
         IntegrationSupport integrationSupport = integrationOrderStatusRequest.getIntegrationSupport();
         IntegrationOrderStatusResponse integrationOrderStatusResponse = getFacade(integrationSupport).getOrderStatus(integrationOrderStatusRequest);
+        integrationOrderStatusResponse.setOrderId(integrationOrderStatusRequest.getOrderId());
         integrationOrderStatusResponse.setOrderStatus(toOrderStatus(integrationSupport, integrationOrderStatusResponse.getIntegrationOrderStatus()));
         return integrationOrderStatusResponse;
     }
@@ -42,8 +44,16 @@ public class IntegrationService {
         return getFacade(integrationSupport).reverse(integrationReverseRequest);
     }
 
-    public void back(Model model, HttpServletRequest request) {
+    public IntegrationFinishResponse finish(IntegrationFinishRequest integrationFinishRequest) throws IntegrationException {
+        IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(integrationFinishRequest.getIntegrationSupport(), integrationFinishRequest.getExternalId());
+        IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(integrationOrderStatusRequest);
+        IntegrationFinishResponse integrationFinishResponse = new IntegrationFinishResponse();
+        integrationFinishResponse.setOrderId(integrationOrderStatusResponse.getOrderId());
+        integrationFinishResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
+        integrationFinishResponse.setSuccess(true);
+        integrationFinishResponse.setMessage("Finish payment for orderId: " + integrationFinishRequest.getOrderId() + " success");
 
+        return integrationFinishResponse;
     }
 
     private IntegrationFacade getFacade(IntegrationSupport integrationSupport) throws IntegrationException {

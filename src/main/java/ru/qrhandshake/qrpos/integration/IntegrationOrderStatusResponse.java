@@ -8,10 +8,20 @@ import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
  */
 public class IntegrationOrderStatusResponse extends IntegrationResponse {
 
+    private String orderId;
     private String externalId;
     private IntegrationOrderStatus integrationOrderStatus;
     private OrderStatus orderStatus;
     //todo: добавить сюда поля которые могут приходить из запроса к процессингу
+
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
 
     public String getExternalId() {
         return externalId;
