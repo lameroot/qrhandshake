@@ -3,6 +3,7 @@ package ru.qrhandshake.qrpos.service;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.PaymentRequest;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
+import ru.qrhandshake.qrpos.domain.Merchant;
 
 /**
  * Created by lameroot on 27.05.16.
@@ -10,18 +11,19 @@ import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 @Service
 public class IntegrationSupportService {
 
-    public IntegrationSupport checkIntegrationSupport(PaymentRequest paymentRequest) {
+    public IntegrationSupport checkIntegrationSupport(Merchant merchant, PaymentRequest paymentRequest) {
+        if ( null != merchant && null != merchant.getIntegrationSupport() ) return merchant.getIntegrationSupport();
         switch (paymentRequest.getPaymentWay()) {
-            case CARD: {
+            case card: {
                 return IntegrationSupport.RBS_SBRF;//todo: hardcode only sber
             }
-            case YANDEX_WALLET: {
+            case yandex_wallet: {
                 return IntegrationSupport.YANDEX_WALLET;
             }
-            case QIWI_WALLET: {
+            case qiwi_wallet: {
                 return IntegrationSupport.QIWI_WALLET;
             }
-            case GOOGLE_WALLET: {
+            case google_wallet: {
                 return IntegrationSupport.GOOGLE_WALLET;
             }
         }

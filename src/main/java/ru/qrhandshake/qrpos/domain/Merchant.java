@@ -22,6 +22,9 @@ public class Merchant {
     @Column(name = "created_date")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdDate = new Date();
+    @Column(name = "integration_support", nullable = true)
+    @Enumerated(EnumType.STRING)
+    private IntegrationSupport integrationSupport;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
     private Set<Terminal> terminals;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
@@ -74,6 +77,14 @@ public class Merchant {
 
     public void setUsers(Set<User> users) {
         this.users = users;
+    }
+
+    public IntegrationSupport getIntegrationSupport() {
+        return integrationSupport;
+    }
+
+    public void setIntegrationSupport(IntegrationSupport integrationSupport) {
+        this.integrationSupport = integrationSupport;
     }
 
     @Transient

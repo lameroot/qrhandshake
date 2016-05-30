@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.integration;
 
 import org.springframework.ui.Model;
+import ru.qrhandshake.qrpos.api.PaymentParams;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.domain.PaymentWay;
@@ -15,19 +16,20 @@ import java.util.Map;
 public class IntegrationPaymentRequest extends IntegrationRequest {
 
     private String orderId;
-    private String pan;
-    private String month;
-    private String year;
-    private String cardHolderName;
-    private String cvc;
+//    private String pan;
+//    private String month;
+//    private String year;
+//    private String cardHolderName;
+//    private String cvc;
     private String returnUrl;
     private String description;
     private Long amount;
     private ClientDto client;
     private OrderStatus orderStatus;
     private Map<String, String> params = new HashMap<>();
-    private PaymentWay paymentWay = PaymentWay.CARD;
+    private PaymentWay paymentWay = PaymentWay.card;
     private Model model;
+    private PaymentParams paymentParams;
 
     public IntegrationPaymentRequest(IntegrationSupport integrationSupport) {
         super(integrationSupport);
@@ -41,6 +43,7 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
         this.orderId = orderId;
     }
 
+    /*
     public String getPan() {
         return pan;
     }
@@ -80,6 +83,7 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
     public void setCvc(String cvc) {
         this.cvc = cvc;
     }
+    */
 
     public Map<String, String> getParams() {
         return params;
@@ -143,5 +147,13 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
 
     public void setModel(Model model) {
         this.model = model;
+    }
+
+    public PaymentParams getPaymentParams() {
+        return paymentParams;
+    }
+
+    public void setPaymentParams(PaymentParams paymentParams) {
+        this.paymentParams = paymentParams;
     }
 }

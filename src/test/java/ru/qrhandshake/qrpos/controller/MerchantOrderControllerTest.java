@@ -140,11 +140,12 @@ public class MerchantOrderControllerTest extends ServletConfigTest {
 
         mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
                         .param("orderId", orderId)
-                        .param("pan","5555555555555599")
-                        .param("month","12")
-                        .param("year","2019")
-                        .param("cardHolderName","test test")
-                        .param("cvc","123")
+                        .param("paymentParams.pan","5555555555555599")
+                        .param("paymentParams.month","12")
+                        .param("paymentParams.year","2019")
+                        .param("paymentParams.cardHolderName","test test")
+                        .param("paymentParams.cvc","123")
+                .param("paymentWay","card")
         ).andDo(print());
 
         String getOrderStatusResponse = mockMvc.perform(get("/order" + MerchantOrderController.ORDER_STATUS_PATH)

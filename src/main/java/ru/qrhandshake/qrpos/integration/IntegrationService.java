@@ -1,14 +1,9 @@
 package ru.qrhandshake.qrpos.integration;
 
-import org.springframework.ui.Model;
-import ru.qrhandshake.qrpos.api.FinishRequest;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
-import ru.qrhandshake.qrpos.service.IntegrationSupportService;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.Optional;
 
@@ -27,6 +22,7 @@ public class IntegrationService {
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException {
         IntegrationSupport integrationSupport = integrationPaymentRequest.getIntegrationSupport();
         IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationSupport).payment(integrationPaymentRequest);
+        if ( !integrationPaymentResponse.isSuccess() ) throw new IntegrationException(integrationPaymentResponse.getMessage());
         integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport,integrationPaymentResponse.getIntegrationOrderStatus()));
         return integrationPaymentResponse;
     }
@@ -35,13 +31,16 @@ public class IntegrationService {
         IntegrationSupport integrationSupport = integrationOrderStatusRequest.getIntegrationSupport();
         IntegrationOrderStatusResponse integrationOrderStatusResponse = getFacade(integrationSupport).getOrderStatus(integrationOrderStatusRequest);
         integrationOrderStatusResponse.setOrderId(integrationOrderStatusRequest.getOrderId());
+        if ( !integrationOrderStatusResponse.isSuccess() ) throw new IntegrationException(integrationOrderStatusResponse.getMessage());
         integrationOrderStatusResponse.setOrderStatus(toOrderStatus(integrationSupport, integrationOrderStatusResponse.getIntegrationOrderStatus()));
         return integrationOrderStatusResponse;
     }
 
     public IntegrationReverseResponse reverse(IntegrationReverseRequest integrationReverseRequest) throws IntegrationException {
         IntegrationSupport integrationSupport = integrationReverseRequest.getIntegrationSupport();
-        return getFacade(integrationSupport).reverse(integrationReverseRequest);
+        IntegrationReverseResponse integrationReverseResponse = getFacade(integrationSupport).reverse(integrationReverseRequest);
+        if ( !integrationReverseResponse.isSuccess() ) throw new IntegrationException(integrationReverseResponse.getMessage());
+        return integrationReverseResponse;
     }
 
     public IntegrationFinishResponse finish(IntegrationFinishRequest integrationFinishRequest) throws IntegrationException {

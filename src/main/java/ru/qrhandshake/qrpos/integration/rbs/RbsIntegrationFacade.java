@@ -9,6 +9,8 @@ import ru.bpc.phoenix.proxy.api.MerchantServiceProvider;
 import ru.bpc.phoenix.proxy.api.NamePasswordToken;
 import ru.bpc.phoenix.web.api.merchant.soap.MerchantService;
 import ru.paymentgate.engine.webservices.merchant.*;
+import ru.qrhandshake.qrpos.api.CardPaymentParams;
+import ru.qrhandshake.qrpos.api.PaymentParams;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.integration.*;
@@ -84,13 +86,20 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             throw new IntegrationException("Error integration register order by orderId:" + integrationPaymentRequest.getOrderId(),e);
         }
 
+        CardPaymentParams paymentParams = (CardPaymentParams)integrationPaymentRequest.getPaymentParams();
+        if ( null == paymentParams || !paymentParams.isNotBlank() ) {
+            integrationPaymentResponse.setSuccess(false);
+            integrationPaymentResponse.setMessage("Invalid payment params");
+            return integrationPaymentResponse;
+        }
+
         PaymentOrderParams paymentOrderParams = new PaymentOrderParams();
-        paymentOrderParams.setPan(integrationPaymentRequest.getPan());
-        paymentOrderParams.setCardholderName(integrationPaymentRequest.getCardHolderName());
-        paymentOrderParams.setCvc(integrationPaymentRequest.getCvc());
+        paymentOrderParams.setPan(paymentParams.getPan());
+        paymentOrderParams.setCardholderName(paymentParams.getCardHolderName());
+        paymentOrderParams.setCvc(paymentParams.getCvc());
         paymentOrderParams.setLanguage(language);
-        paymentOrderParams.setMonth(integrationPaymentRequest.getMonth());
-        paymentOrderParams.setYear(integrationPaymentRequest.getYear());
+        paymentOrderParams.setMonth(paymentParams.getMonth());
+        paymentOrderParams.setYear(paymentParams.getYear());
         paymentOrderParams.setOrderId(externalOrderId);
         if ( null != integrationPaymentRequest.getClient() ) {
             paymentOrderParams.setEmail(integrationPaymentRequest.getClient().getEmail());

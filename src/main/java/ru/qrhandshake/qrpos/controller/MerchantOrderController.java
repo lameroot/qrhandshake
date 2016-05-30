@@ -60,10 +60,14 @@ public class MerchantOrderController {
         return "payment";//return payment page as jsp
     }
 
-    @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST)
-    public String payment(@Valid PaymentRequest paymentRequest,
-                          HttpServletRequest request,
-                          Model model) {
+    @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST, params = {"paymentWay=card"})
+    public String cardPayment(@Valid CardPaymentRequest paymentRequest,
+                              HttpServletRequest request,
+                              Model model) {
+        return handlePaymentRequest(paymentRequest,request,model);
+    }
+
+    private String handlePaymentRequest(PaymentRequest paymentRequest, HttpServletRequest request, Model model) {
         paymentRequest.setReturnUrl(request.getScheme() + "://" + request.getServerName() + request.getRequestURI() + FINISH_PATH + "/" + paymentRequest.getOrderId());
         PaymentResponse paymentResponse = orderService.payment(paymentRequest, model);
         if ( ResponseStatus.SUCCESS.equals(paymentResponse.getStatus()) ) {

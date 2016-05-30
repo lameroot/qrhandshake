@@ -127,7 +127,7 @@ public class OrderService {
             paymentResponse.setMessage("Order: " + merchantOrder.getOrderId() + " has invalid status: " + merchantOrder.getOrderStatus() + " for payment.");
             return paymentResponse;
         }
-        IntegrationSupport integrationSupport = integrationSupportService.checkIntegrationSupport(paymentRequest);
+        IntegrationSupport integrationSupport = integrationSupportService.checkIntegrationSupport(merchantOrder.getMerchant(), paymentRequest);
         if ( null == integrationSupport ) {
             paymentResponse.setStatus(ResponseStatus.FAIL);
             paymentResponse.setOrderStatus(merchantOrder.getOrderStatus());
@@ -136,15 +136,11 @@ public class OrderService {
         }
         merchantOrder.setIntegrationSupport(integrationSupport);
         IntegrationPaymentRequest integrationPaymentRequest = new IntegrationPaymentRequest(integrationSupport);
+        integrationPaymentRequest.setPaymentParams(paymentRequest.getPaymentParams());
         integrationPaymentRequest.setAmount(merchantOrder.getAmount());
-        integrationPaymentRequest.setCardHolderName(paymentRequest.getCardHolderName());
         integrationPaymentRequest.setClient(null);//todo: set data as ip
-        integrationPaymentRequest.setCvc(paymentRequest.getCvc());
         integrationPaymentRequest.setDescription(merchantOrder.getDescription());
         integrationPaymentRequest.setOrderId(paymentRequest.getOrderId());
-        integrationPaymentRequest.setMonth(paymentRequest.getMonth());
-        integrationPaymentRequest.setYear(paymentRequest.getYear());
-        integrationPaymentRequest.setPan(paymentRequest.getPan());
         integrationPaymentRequest.setReturnUrl(paymentRequest.getReturnUrl());
         integrationPaymentRequest.setParams(new HashMap<>());//todo: set params
         integrationPaymentRequest.setOrderStatus(merchantOrder.getOrderStatus());

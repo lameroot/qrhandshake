@@ -2,30 +2,22 @@ package ru.qrhandshake.qrpos.api;
 
 import ru.qrhandshake.qrpos.domain.PaymentWay;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 /**
  * Created by lameroot on 19.05.16.
  */
-public class PaymentRequest {
+public class PaymentRequest<P extends PaymentParams> {
 
     @NotNull
     private String orderId;
     @NotNull
-    private String pan;
+    private PaymentWay paymentWay = PaymentWay.card;
     @NotNull
-    @Size(min = 2, max = 2)
-    private String month;
-    @NotNull
-    @Size(min = 4, max = 4)
-    private String year;
-    @NotNull
-    private String cardHolderName;
-    @NotNull
-    private String cvc;
+    @Valid
+    private P paymentParams;
     private String returnUrl;
-    private PaymentWay paymentWay = PaymentWay.CARD;
 
     public String getOrderId() {
         return orderId;
@@ -35,49 +27,6 @@ public class PaymentRequest {
         this.orderId = orderId;
     }
 
-    public String getPan() {
-        return pan;
-    }
-
-    public void setPan(String pan) {
-        this.pan = pan;
-    }
-
-    public String getMonth() {
-        return month;
-    }
-
-    public void setMonth(String month) {
-        this.month = month;
-    }
-
-    public String getYear() {
-        return year;
-    }
-
-    public void setYear(String year) {
-        this.year = year;
-    }
-
-    public String getCardHolderName() {
-        return cardHolderName;
-    }
-
-    public void setCardHolderName(String cardHolderName) {
-        this.cardHolderName = cardHolderName;
-    }
-
-    public String getCvc() {
-        return cvc;
-    }
-
-    public void setCvc(String cvc) {
-        this.cvc = cvc;
-    }
-
-    public String getExpiry() {
-        return year + month;
-    }
 
     public String getReturnUrl() {
         return returnUrl;
@@ -93,5 +42,13 @@ public class PaymentRequest {
 
     public void setPaymentWay(PaymentWay paymentWay) {
         this.paymentWay = paymentWay;
+    }
+
+    public P getPaymentParams() {
+        return paymentParams;
+    }
+
+    public void setPaymentParams(P paymentParams) {
+        this.paymentParams = paymentParams;
     }
 }
