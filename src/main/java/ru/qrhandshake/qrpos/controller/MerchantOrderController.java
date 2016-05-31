@@ -3,11 +3,13 @@ package ru.qrhandshake.qrpos.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.api.ResponseStatus;
+import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.dto.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
@@ -17,6 +19,7 @@ import ru.qrhandshake.qrpos.service.OrderService;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.security.Principal;
 
 /**
  * Created by lameroot on 18.05.16.
@@ -61,13 +64,19 @@ public class MerchantOrderController {
     }
 
     @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST, params = {"paymentWay=card"})
-    public String cardPayment(@Valid CardPaymentRequest paymentRequest,
+    public String cardPayment(Principal principal, @Valid CardPaymentRequest paymentRequest,
                               HttpServletRequest request,
                               Model model) {
-        return handlePaymentRequest(paymentRequest,request,model);
+        paymentRequest.setIp(request.getRemoteUser());
+        return handlePaymentRequest(principal,paymentRequest,request,model);
     }
 
-    private String handlePaymentRequest(PaymentRequest paymentRequest, HttpServletRequest request, Model model) {
+    private String handlePaymentRequest(Principal principal, PaymentRequest paymentRequest, HttpServletRequest request, Model model) {
+        Client client = null;
+        if ( null != principal ) {
+            client = (Client) ((Authentication) principal).getPrincipal();
+            paymentRequest.setClient(client);
+        }
         paymentRequest.setReturnUrl(request.getScheme() + "://" + request.getServerName() + request.getRequestURI() + FINISH_PATH + "/" + paymentRequest.getOrderId());
         PaymentResponse paymentResponse = orderService.payment(paymentRequest, model);
         if ( ResponseStatus.SUCCESS.equals(paymentResponse.getStatus()) ) {

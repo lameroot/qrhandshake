@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.integration;
 
 import ru.qrhandshake.qrpos.domain.OrderStatus;
+import ru.qrhandshake.qrpos.domain.PaymentSecureType;
 import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
 
 /**
@@ -13,6 +14,7 @@ public class IntegrationPaymentResponse extends IntegrationResponse {
     private String redirectUrlOrPagePath;
     private OrderStatus orderStatus;
     private IntegrationOrderStatus integrationOrderStatus;
+    private PaymentSecureType paymentSecureType;
 
     public String getOrderId() {
         return orderId;
@@ -52,5 +54,13 @@ public class IntegrationPaymentResponse extends IntegrationResponse {
 
     public void setExternalId(String externalId) {
         this.externalId = externalId;
+    }
+
+    public PaymentSecureType getPaymentSecureType() {
+        return paymentSecureType;
+    }
+
+    public void setPaymentSecureType(PaymentSecureType paymentSecureType) {
+        this.paymentSecureType = paymentSecureType;
     }
 }

@@ -10,6 +10,7 @@ public class PaymentResponse extends ApiResponse {
     private String orderId;
     private String redirectUrlOrPagePath;
     private OrderStatus orderStatus;
+    private PaymentAuthType paymentAuthType = PaymentAuthType.ANONYMOUS;
 
     public String getOrderId() {
         return orderId;
@@ -33,5 +34,13 @@ public class PaymentResponse extends ApiResponse {
 
     public void setRedirectUrlOrPagePath(String redirectUrlOrPagePath) {
         this.redirectUrlOrPagePath = redirectUrlOrPagePath;
+    }
+
+    public PaymentAuthType getPaymentAuthType() {
+        return paymentAuthType;
+    }
+
+    public void setPaymentAuthType(PaymentAuthType paymentAuthType) {
+        this.paymentAuthType = paymentAuthType;
     }
 }

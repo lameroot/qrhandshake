@@ -34,6 +34,8 @@ public class OrderService {
     private IntegrationService integrationService;
     @Resource
     private IntegrationSupportService integrationSupportService;
+    @Resource
+    private ClientService clientService;
 
     public MerchantOrderRegisterResponse register(MerchantOrderRegisterRequest merchantOrderRegisterRequest) throws AuthException {
         Terminal terminal = null;
@@ -114,6 +116,9 @@ public class OrderService {
 
     public PaymentResponse payment(PaymentRequest paymentRequest, Model model) {
         PaymentResponse paymentResponse = new PaymentResponse();
+        if ( null != paymentRequest.getClient() ) {
+            paymentResponse.setPaymentAuthType(PaymentAuthType.CLIENT_AUTH);
+        }
         MerchantOrder merchantOrder = findByOrderId(paymentRequest.getOrderId());
         if ( null == merchantOrder ) {
             paymentResponse.setStatus(ResponseStatus.FAIL);
@@ -158,6 +163,7 @@ public class OrderService {
                 merchantOrder.setExternalId(integrationPaymentResponse.getExternalId());
                 if ( merchantOrder.getOrderStatus().equals(OrderStatus.PAID) ) {
                     merchantOrder.setPaymentDate(new Date());
+                    //todo: сделать проверку, что заказл оплачен и сделать связку
                 }
                 merchantOrderRepository.save(merchantOrder);
                 paymentResponse.setMessage("Paid successfully");

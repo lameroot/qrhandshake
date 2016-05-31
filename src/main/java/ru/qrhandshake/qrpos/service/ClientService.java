@@ -32,6 +32,14 @@ public class ClientService {
     }
 
 
+    public Client auth(ApiAuth apiAuth) {
+        Client client = clientRepository.findByUsername(apiAuth.getAuthName());
+        if ( null != client && client.isEnabled() && securityService.match(apiAuth.getAuthPassword(), client.getPassword())) {
+            return client;
+        }
+        return null;
+    }
+
     public ClientRegisterResponse register(ClientRegisterRequest clientRegisterRequest) {
         Client client = null;
         if ( null != clientRegisterRequest.getAuthType() ) {

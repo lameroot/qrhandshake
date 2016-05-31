@@ -1,6 +1,10 @@
 package ru.qrhandshake.qrpos.api;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import ru.qrhandshake.qrpos.util.MaskUtil;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -10,6 +14,7 @@ import javax.validation.constraints.Size;
 public class CardPaymentParams implements PaymentParams {
 
     @NotNull
+    @JsonIgnore
     private String pan;
     @NotNull
     @Size(min = 2, max = 2)
@@ -20,8 +25,13 @@ public class CardPaymentParams implements PaymentParams {
     @NotNull
     private String cardHolderName;
     @NotNull
+    @JsonIgnore
     private String cvc;
 
+    @JsonProperty(value = "masked_pan")
+    public String getMaskedPan() {
+        return MaskUtil.getMaskedPan(this.pan);
+    }
     public String getPan() {
         return pan;
     }
@@ -62,6 +72,7 @@ public class CardPaymentParams implements PaymentParams {
         this.cvc = cvc;
     }
 
+    @JsonIgnore
     public boolean isNotBlank() {
         return null != pan && null != month && null != year && null != cardHolderName && null != cvc;
     }

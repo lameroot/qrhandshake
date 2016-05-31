@@ -13,6 +13,7 @@ import ru.qrhandshake.qrpos.api.CardPaymentParams;
 import ru.qrhandshake.qrpos.api.PaymentParams;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
+import ru.qrhandshake.qrpos.domain.PaymentSecureType;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 
@@ -123,11 +124,13 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                 model.addAttribute("language", language);
                 integrationPaymentResponse.setRedirectUrlOrPagePath(ACS_REDIRECT_PAGE);
                 integrationPaymentResponse.setIntegrationOrderStatus(RbsOrderStatus.REDIRECTED_TO_ACS);
+                integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.TDS);
             }
             else {
                 IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(integrationPaymentRequest.getIntegrationSupport(), externalOrderId));
                 integrationPaymentResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
                 integrationOrderStatusResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
+                integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.SSL);
                 integrationPaymentResponse.setRedirectUrlOrPagePath("redirect:" + paymentOrderResult.getRedirect());
             }
         } catch (Exception e) {

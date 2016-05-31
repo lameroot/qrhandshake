@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.api;
 
+import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.PaymentWay;
 
 import javax.validation.Valid;
@@ -17,7 +18,10 @@ public class PaymentRequest<P extends PaymentParams> {
     @NotNull
     @Valid
     private P paymentParams;
+    private String ip;
+    private String email;
     private String returnUrl;
+    private Client client;
 
     public String getOrderId() {
         return orderId;
@@ -50,5 +54,29 @@ public class PaymentRequest<P extends PaymentParams> {
 
     public void setPaymentParams(P paymentParams) {
         this.paymentParams = paymentParams;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
     }
 }
