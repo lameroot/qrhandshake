@@ -191,6 +191,13 @@ public class RbsIntegrationFacade implements IntegrationFacade {
     }
 
     @Override
+    public void getBindings() {
+        GetBindingsRequest getBindingsRequest = new GetBindingsRequest();
+
+
+    }
+
+    @Override
     public IntegrationSupport getIntegrationSupport() {
         return integrationSupport;
     }

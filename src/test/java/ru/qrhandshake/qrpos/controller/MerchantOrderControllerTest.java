@@ -84,11 +84,12 @@ public class MerchantOrderControllerTest extends ServletConfigTest {
     @Transactional
     @Rollback(false)
     public void testPayment() throws Exception {
+        String sessionId = UUID.randomUUID().toString();
         MvcResult mvcResult = mockMvc.perform(get("/order/register")
                         .param("authName","merchant.auth")
                         .param("authPassword", "merchant.password")
                         .param("amount", "1000")
-                        .param("sessionId", UUID.randomUUID().toString())
+                        .param("sessionId", sessionId)
                         .param("deviceId", "11111-2222-333")
         )
                 .andDo(print())
@@ -101,19 +102,20 @@ public class MerchantOrderControllerTest extends ServletConfigTest {
         assertNotNull(orderId);
 
         mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
-            .param("orderId", orderId)
-            .param("pan","5555555555555599")
-                .param("month","12")
-                .param("year","2019")
-                .param("cardHolderName","test test")
-                .param("cvc","123")
+                        .param("orderId", orderId)
+                        .param("paymentParams.pan","5555555555555599")
+                        .param("paymentParams.month","12")
+                        .param("paymentParams.year","2019")
+                        .param("paymentParams.cardHolderName","test test")
+                        .param("paymentParams.cvc","123")
+                        .param("paymentWay","card")
         ).andDo(print());
 
-        mockMvc.perform(get("/order" + MerchantOrderController.ORDER_STATUS_PATH)
-                .param("authName","merchant.auth")
+        String getOrderStatusResponse = mockMvc.perform(get("/order" + MerchantOrderController.ORDER_STATUS_PATH)
+                .param("authName", "merchant.auth")
                 .param("authPassword", "merchant.password")
                 .param("orderId", orderId))
-                .andDo(print());
+                .andDo(print()).andReturn().getResponse().getContentAsString();
 
     }
 

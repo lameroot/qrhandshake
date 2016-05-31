@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.PaymentParams;
 import ru.qrhandshake.qrpos.domain.*;
+import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.repository.BindingRepository;
 
 import javax.annotation.Resource;
@@ -22,6 +23,8 @@ public class BindingService {
     private BindingRepository bindingRepository;
     @Resource
     private JsonService jsonService;
+    @Resource
+    private IntegrationService integrationService;
 
     public Binding register(Client client, PaymentParams paymentParams, MerchantOrder merchantOrder, boolean enabled) {
         try {

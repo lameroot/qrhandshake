@@ -19,6 +19,10 @@ public class IntegrationService {
         this.integrationFacades = integrationFacades;
     }
 
+
+    public IntegrationPaymentBindingResponse paymentBinding(IntegrationPaymentBindingRequest integrationPaymentBindingRequest) throws IntegrationException {
+        return null;
+    }
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException {
         IntegrationSupport integrationSupport = integrationPaymentRequest.getIntegrationSupport();
         IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationSupport).payment(integrationPaymentRequest);

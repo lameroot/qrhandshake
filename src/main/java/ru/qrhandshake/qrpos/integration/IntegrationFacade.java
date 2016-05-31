@@ -14,5 +14,6 @@ public interface IntegrationFacade {
     IntegrationSupport getIntegrationSupport();
     OrderStatus toOrderStatus(IntegrationOrderStatus integrationOrderStatus);
     IntegrationReverseResponse reverse(IntegrationReverseRequest integrationReverseRequest) throws IntegrationException;
+    void getBindings();
     boolean isApplicable();
 }
