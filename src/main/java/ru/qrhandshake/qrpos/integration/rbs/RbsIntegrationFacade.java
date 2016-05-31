@@ -19,6 +19,7 @@ import ru.qrhandshake.qrpos.exception.IntegrationException;
 
 import javax.annotation.Resource;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by lameroot on 19.05.16.
@@ -62,6 +63,8 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         rbsParams.setAmount(integrationPaymentRequest.getAmount());
         rbsParams.setReturnUrl(integrationPaymentRequest.getReturnUrl());
         rbsParams.setMerchantOrderNumber(integrationPaymentRequest.getOrderId());
+        rbsParams.setClientId(UUID.randomUUID().toString());
+        //rbsParams.setBindingId(UUID.randomUUID().toString());
         for (Map.Entry<String, String> entry : integrationPaymentRequest.getParams().entrySet()) {
             ServiceParam serviceParam = new ServiceParam();
             serviceParam.setName(entry.getKey());
