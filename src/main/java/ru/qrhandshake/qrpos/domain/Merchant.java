@@ -29,6 +29,8 @@ public class Merchant {
     private Set<Terminal> terminals;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
     private Set<User> users;
+    @Column(name = "create_binding")
+    private boolean createBinding = true;
 
 
     public Long getId() {
@@ -85,6 +87,14 @@ public class Merchant {
 
     public void setIntegrationSupport(IntegrationSupport integrationSupport) {
         this.integrationSupport = integrationSupport;
+    }
+
+    public boolean isCreateBinding() {
+        return createBinding;
+    }
+
+    public void setCreateBinding(boolean createBinding) {
+        this.createBinding = createBinding;
     }
 
     @Transient

@@ -9,6 +9,7 @@ public class IntegrationFinishResponse extends IntegrationResponse {
 
     private String orderId;
     private OrderStatus orderStatus;
+    private IntegrationOrderStatus integrationOrderStatus;
 
     public String getOrderId() {
         return orderId;
@@ -24,5 +25,13 @@ public class IntegrationFinishResponse extends IntegrationResponse {
 
     public void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
+    }
+
+    public IntegrationOrderStatus getIntegrationOrderStatus() {
+        return integrationOrderStatus;
+    }
+
+    public void setIntegrationOrderStatus(IntegrationOrderStatus integrationOrderStatus) {
+        this.integrationOrderStatus = integrationOrderStatus;
     }
 }

@@ -49,6 +49,7 @@ public class IntegrationService {
         IntegrationFinishResponse integrationFinishResponse = new IntegrationFinishResponse();
         integrationFinishResponse.setOrderId(integrationOrderStatusResponse.getOrderId());
         integrationFinishResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
+        integrationFinishResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
         integrationFinishResponse.setSuccess(true);
         integrationFinishResponse.setMessage("Finish payment for orderId: " + integrationFinishRequest.getOrderId() + " success");
 

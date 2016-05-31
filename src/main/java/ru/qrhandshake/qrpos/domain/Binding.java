@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.domain;
 
 import javax.persistence.*;
+import java.util.Date;
 
 /**
  * Created by lameroot on 24.05.16.
@@ -14,9 +15,11 @@ public class Binding {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bindingSequence")
     @SequenceGenerator(name = "bindingSequence", sequenceName = "seq_binding", allocationSize = 1)
     private Long id;
+    @Column(name = "binding_id", nullable = false, unique = true)
+    private String bindingId;
     @Column(name = "payment_params", nullable = false)
     private String paymentParams;
-    @Column(name = "external_binding_id", nullable = false)
+    @Column(name = "external_binding_id")
     private String externalBindingId;
     @Column(name = "payment_secure_type")
     @Enumerated(EnumType.STRING)
@@ -27,6 +30,13 @@ public class Binding {
     @Column(name = "integration_support", nullable = false)
     @Enumerated(EnumType.STRING)
     private IntegrationSupport integrationSupport;
+    @Column(name = "created_date", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdDate = new Date();
+    @Column(name = "enabled", nullable = false)
+    private boolean enabled = true;
+    @Column(name = "order_id", nullable = false, unique = true)
+    private String orderId;
 
     public Long getId() {
         return id;
@@ -74,5 +84,52 @@ public class Binding {
 
     public void setPaymentSecureType(PaymentSecureType paymentSecureType) {
         this.paymentSecureType = paymentSecureType;
+    }
+
+    public Date getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Date createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
+
+    public String getBindingId() {
+        return bindingId;
+    }
+
+    public void setBindingId(String bindingId) {
+        this.bindingId = bindingId;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Binding{");
+        sb.append("id=").append(id);
+        sb.append(", bindingId='").append(bindingId).append('\'');
+        sb.append(", externalBindingId='").append(externalBindingId).append('\'');
+        sb.append(", paymentSecureType=").append(paymentSecureType);
+        sb.append(", integrationSupport=").append(integrationSupport);
+        sb.append(", createdDate=").append(createdDate);
+        sb.append(", enabled=").append(enabled);
+        sb.append(", orderId='").append(orderId).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 }

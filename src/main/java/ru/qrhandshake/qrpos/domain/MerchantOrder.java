@@ -48,6 +48,9 @@ public class MerchantOrder {
     private OrderStatus orderStatus = OrderStatus.REGISTERED;
     @Column(name = "session_id", unique = true)
     private String sessionId;
+    @Column(name = "payment_secure_type")
+    @Enumerated(EnumType.STRING)
+    private PaymentSecureType paymentSecureType;
 
     public Long getId() {
         return id;
@@ -167,5 +170,31 @@ public class MerchantOrder {
 
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
+    }
+
+    public PaymentSecureType getPaymentSecureType() {
+        return paymentSecureType;
+    }
+
+    public void setPaymentSecureType(PaymentSecureType paymentSecureType) {
+        this.paymentSecureType = paymentSecureType;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("MerchantOrder{");
+        sb.append("id=").append(id);
+        sb.append(", orderId='").append(orderId).append('\'');
+        sb.append(", externalId='").append(externalId).append('\'');
+        sb.append(", externalOrderStatus='").append(externalOrderStatus).append('\'');
+        sb.append(", createdDate=").append(createdDate);
+        sb.append(", paymentDate=").append(paymentDate);
+        sb.append(", amount=").append(amount);
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", integrationSupport=").append(integrationSupport);
+        sb.append(", orderStatus=").append(orderStatus);
+        sb.append(", paymentSecureType=").append(paymentSecureType);
+        sb.append('}');
+        return sb.toString();
     }
 }
