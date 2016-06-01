@@ -55,6 +55,67 @@ public class RbsIntegrationFacade implements IntegrationFacade {
     }
 
     @Override
+    public IntegrationPaymentResponse paymentBinding(IntegrationPaymentBindingRequest integrationPaymentBindingRequest) throws IntegrationException {
+        OrderParams rbsParams = new OrderParams();
+        rbsParams.setCurrency(currency);
+        rbsParams.setLanguage(language);
+        rbsParams.setDescription(integrationPaymentBindingRequest.getDescription());
+        rbsParams.setAmount(integrationPaymentBindingRequest.getAmount());
+        rbsParams.setReturnUrl(integrationPaymentBindingRequest.getReturnUrl());
+        rbsParams.setMerchantOrderNumber(integrationPaymentBindingRequest.getOrderId());
+        rbsParams.setBindingId(integrationPaymentBindingRequest.getBindingId());
+        for (Map.Entry<String, String> entry : integrationPaymentBindingRequest.getParams().entrySet()) {
+            ServiceParam serviceParam = new ServiceParam();
+            serviceParam.setName(entry.getKey());
+            serviceParam.setValue(entry.getValue());
+            rbsParams.getParams().add(serviceParam);
+        }
+        if ( null != integrationPaymentBindingRequest.getClient() ) {
+            Client client = integrationPaymentBindingRequest.getClient();
+            rbsParams.setClientId(client.getClientId());
+            if ( null != integrationPaymentBindingRequest.getIp() ) rbsParams.getParams().add(Util.createServiceParam(Client.IP_PARAM,integrationPaymentBindingRequest.getIp()));
+            if ( null != client.getEmail() ) rbsParams.getParams().add(Util.createServiceParam(Client.EMAIL_PARAM,client.getEmail()));
+            if ( null != client.getPhone() ) rbsParams.getParams().add(Util.createServiceParam(Client.PHONE_PARAM, client.getPhone()));
+        }
+        IntegrationPaymentResponse integrationPaymentResponse = new IntegrationPaymentResponse();
+        integrationPaymentResponse.setOrderId(integrationPaymentBindingRequest.getOrderId());
+
+        String externalOrderId = null;
+        try {
+            RegisterOrderResponse registerOrderResponse = getMerchantService().registerOrder(rbsParams);
+            integrationPaymentResponse.setMessage(registerOrderResponse.getErrorMessage());
+            if ( 0 != registerOrderResponse.getErrorCode() ) {
+                logger.error("Error register order: " + integrationPaymentBindingRequest.getOrderId() + " because : " + registerOrderResponse.getErrorMessage());
+                integrationPaymentResponse.setSuccess(false);
+                return integrationPaymentResponse;
+            }
+            integrationPaymentResponse.setSuccess(true);
+            externalOrderId = registerOrderResponse.getOrderId();
+            integrationPaymentResponse.setExternalId(externalOrderId);
+        } catch (Exception e) {
+            throw new IntegrationException("Error integration register order by orderId:" + integrationPaymentBindingRequest.getOrderId(),e);
+        }
+
+        PaymentOrderBindingParams paymentOrderBindingParams = new PaymentOrderBindingParams();
+        paymentOrderBindingParams.setBindingId(integrationPaymentBindingRequest.getBindingId());
+        paymentOrderBindingParams.setCvc(integrationPaymentBindingRequest.getConfirmValue());
+        paymentOrderBindingParams.setEmail(integrationPaymentBindingRequest.getClient().getEmail());
+        paymentOrderBindingParams.setIp(integrationPaymentBindingRequest.getIp());
+        paymentOrderBindingParams.setLanguage(language);
+        paymentOrderBindingParams.setMdOrder(externalOrderId);
+
+        try {
+            PaymentOrderResult paymentOrderResult = getMerchantService().paymentOrderBinding(paymentOrderBindingParams);
+            handlePaymentResult(integrationPaymentResponse, integrationPaymentBindingRequest, externalOrderId, paymentOrderResult);
+        } catch (Exception e) {
+            throw new IntegrationException("Error integration binding payment order by orderId: " + integrationPaymentBindingRequest.getOrderId(),e);
+        }
+        return integrationPaymentResponse;
+    }
+
+
+
+    @Override
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException{
         OrderParams rbsParams = new OrderParams();
         rbsParams.setCurrency(currency);
@@ -63,7 +124,6 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         rbsParams.setAmount(integrationPaymentRequest.getAmount());
         rbsParams.setReturnUrl(integrationPaymentRequest.getReturnUrl());
         rbsParams.setMerchantOrderNumber(integrationPaymentRequest.getOrderId());
-        rbsParams.setClientId(UUID.randomUUID().toString());
         for (Map.Entry<String, String> entry : integrationPaymentRequest.getParams().entrySet()) {
             ServiceParam serviceParam = new ServiceParam();
             serviceParam.setName(entry.getKey());
@@ -117,6 +177,8 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         }
         try {
             PaymentOrderResult paymentOrderResult = getMerchantService().paymentOrder(paymentOrderParams);
+            handlePaymentResult(integrationPaymentResponse,integrationPaymentRequest,externalOrderId,paymentOrderResult);
+            /*
             integrationPaymentResponse.setMessage(paymentOrderResult.getErrorMessage());
             if ( 0 != paymentOrderResult.getErrorCode() ) {
                 logger.error("Error payment order: " + integrationPaymentRequest.getOrderId() + " because: " + paymentOrderResult.getErrorMessage());
@@ -142,11 +204,40 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                 integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.SSL);
                 integrationPaymentResponse.setRedirectUrlOrPagePath("redirect:" + paymentOrderResult.getRedirect());
             }
+            */
         } catch (Exception e) {
             throw new IntegrationException("Error integration payment order by orderId: " + integrationPaymentRequest.getOrderId(),e);
         }
 
         return integrationPaymentResponse;
+    }
+
+    private void handlePaymentResult(IntegrationPaymentResponse integrationPaymentResponse, IntegrationPaymentRequest integrationPaymentRequest, String externalOrderId, PaymentOrderResult paymentOrderResult) throws IntegrationException {
+        integrationPaymentResponse.setMessage(paymentOrderResult.getErrorMessage());
+        if ( 0 != paymentOrderResult.getErrorCode() ) {
+            logger.error("Error payment order: " + integrationPaymentRequest.getOrderId() + " because: " + paymentOrderResult.getErrorMessage());
+            integrationPaymentResponse.setSuccess(false);
+            return;
+        }
+        integrationPaymentResponse.setSuccess(true);
+        Model model = integrationPaymentRequest.getModel();
+        if ( StringUtils.isNotBlank(paymentOrderResult.getAcsUrl()) && StringUtils.isNotBlank(paymentOrderResult.getPaReq()) ) {
+            model.addAttribute("acsUrl", paymentOrderResult.getAcsUrl());
+            model.addAttribute("mdOrder", externalOrderId);
+            model.addAttribute("paReq", paymentOrderResult.getPaReq());
+            model.addAttribute("termUrl", paymentOrderResult.getRedirect());
+            model.addAttribute("language", language);
+            integrationPaymentResponse.setRedirectUrlOrPagePath(ACS_REDIRECT_PAGE);
+            integrationPaymentResponse.setIntegrationOrderStatus(RbsOrderStatus.REDIRECTED_TO_ACS);
+            integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.TDS);
+        }
+        else {
+            IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(integrationPaymentRequest.getIntegrationSupport(), externalOrderId));
+            integrationPaymentResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
+            integrationOrderStatusResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
+            integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.SSL);
+            integrationPaymentResponse.setRedirectUrlOrPagePath("redirect:" + paymentOrderResult.getRedirect());
+        }
     }
 
     @Override

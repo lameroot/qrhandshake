@@ -118,6 +118,10 @@ public class Binding {
         this.bindingId = bindingId;
     }
 
+    public boolean isCompleted() {
+        return isEnabled() && null != externalBindingId;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Binding{");

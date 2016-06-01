@@ -5,6 +5,7 @@ package ru.qrhandshake.qrpos.domain;
  */
 public enum PaymentWay {
     card,
+    binding,
     yandex_wallet,
     qiwi_wallet,
     google_wallet;

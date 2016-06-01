@@ -53,6 +53,10 @@ public class BindingService {
             logger.warn("Unable to find binding by orderId: {}", merchantOrder.getOrderId());
             return;
         }
+        if ( binding.isCompleted() ) {
+            logger.debug("{} has already competed");
+            return;
+        }
         if ( OrderStatus.PAID.equals(merchantOrder.getOrderStatus()) && binding.getClient().getClientId().equals(bindingInfo.getClientId())) {
             binding.setEnabled(true);
             binding.setExternalBindingId(bindingInfo.getBindingId());
@@ -62,6 +66,10 @@ public class BindingService {
             binding.setEnabled(false);
             bindingRepository.save(binding);
         }
+    }
+
+    public Binding findByBindingId(String bindingId) {
+        return bindingRepository.findByBindingId(bindingId);
     }
 
     //todo: должен быть крон который проверяет новые биндинги и делает внешние запросы на получение внешнего binding_id

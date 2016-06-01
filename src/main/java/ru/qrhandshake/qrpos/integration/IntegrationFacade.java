@@ -10,6 +10,7 @@ import ru.qrhandshake.qrpos.exception.IntegrationException;
 public interface IntegrationFacade {
 
     IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException;
+    IntegrationPaymentResponse paymentBinding(IntegrationPaymentBindingRequest integrationPaymentBindingRequest) throws IntegrationException;
     IntegrationOrderStatusResponse getOrderStatus(IntegrationOrderStatusRequest integrationOrderStatusRequest) throws IntegrationException;
     IntegrationSupport getIntegrationSupport();
     OrderStatus toOrderStatus(IntegrationOrderStatus integrationOrderStatus);

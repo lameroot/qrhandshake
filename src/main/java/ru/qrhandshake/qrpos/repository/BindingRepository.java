@@ -12,5 +12,6 @@ import java.util.List;
 @Repository
 public interface BindingRepository extends CrudRepository<Binding, Long> {
 
-    public Binding findByOrderId(String orderId);
+    Binding findByOrderId(String orderId);
+    Binding findByBindingId(String bindingId);
 }

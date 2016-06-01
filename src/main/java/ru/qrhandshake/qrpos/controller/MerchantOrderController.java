@@ -67,7 +67,13 @@ public class MerchantOrderController {
     public String cardPayment(Principal principal, @Valid CardPaymentRequest paymentRequest,
                               HttpServletRequest request,
                               Model model) {
-        paymentRequest.setIp(request.getRemoteUser());
+        return handlePaymentRequest(principal,paymentRequest,request,model);
+    }
+
+    @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST, params = {"paymentWay=binding"})
+    public String bindingPayment(Principal principal, @Valid BindingPaymentRequest paymentRequest,
+                                 HttpServletRequest request,
+                                 Model model) {
         return handlePaymentRequest(principal,paymentRequest,request,model);
     }
 
@@ -89,6 +95,7 @@ public class MerchantOrderController {
     }
 
     private String handlePaymentRequest(Principal principal, PaymentRequest paymentRequest, HttpServletRequest request, Model model) {
+        paymentRequest.setIp(request.getRemoteUser());
         Client client = null;
         if ( null != principal ) {
             client = (Client) ((Authentication) principal).getPrincipal();
