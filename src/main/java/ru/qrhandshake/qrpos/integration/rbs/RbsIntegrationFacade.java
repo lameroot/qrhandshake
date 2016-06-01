@@ -11,11 +11,11 @@ import ru.bpc.phoenix.web.api.merchant.soap.MerchantService;
 import ru.paymentgate.engine.webservices.merchant.*;
 import ru.qrhandshake.qrpos.api.CardPaymentParams;
 import ru.qrhandshake.qrpos.api.PaymentParams;
-import ru.qrhandshake.qrpos.domain.IntegrationSupport;
-import ru.qrhandshake.qrpos.domain.OrderStatus;
-import ru.qrhandshake.qrpos.domain.PaymentSecureType;
+import ru.qrhandshake.qrpos.domain.*;
+import ru.qrhandshake.qrpos.dto.ClientDto;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
+import ru.qrhandshake.qrpos.util.Util;
 
 import javax.annotation.Resource;
 import java.util.Map;
@@ -64,12 +64,18 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         rbsParams.setReturnUrl(integrationPaymentRequest.getReturnUrl());
         rbsParams.setMerchantOrderNumber(integrationPaymentRequest.getOrderId());
         rbsParams.setClientId(UUID.randomUUID().toString());
-        //rbsParams.setBindingId(UUID.randomUUID().toString());
         for (Map.Entry<String, String> entry : integrationPaymentRequest.getParams().entrySet()) {
             ServiceParam serviceParam = new ServiceParam();
             serviceParam.setName(entry.getKey());
             serviceParam.setValue(entry.getValue());
             rbsParams.getParams().add(serviceParam);
+        }
+        if ( null != integrationPaymentRequest.getClient() ) {
+            Client client = integrationPaymentRequest.getClient();
+            rbsParams.setClientId(client.getClientId());
+            if ( null != integrationPaymentRequest.getIp() ) rbsParams.getParams().add(Util.createServiceParam(Client.IP_PARAM,integrationPaymentRequest.getIp()));
+            if ( null != client.getEmail() ) rbsParams.getParams().add(Util.createServiceParam(Client.EMAIL_PARAM,client.getEmail()));
+            if ( null != client.getPhone() ) rbsParams.getParams().add(Util.createServiceParam(Client.PHONE_PARAM, client.getPhone()));
         }
         IntegrationPaymentResponse integrationPaymentResponse = new IntegrationPaymentResponse();
         integrationPaymentResponse.setOrderId(integrationPaymentRequest.getOrderId());
@@ -105,9 +111,9 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         paymentOrderParams.setMonth(paymentParams.getMonth());
         paymentOrderParams.setYear(paymentParams.getYear());
         paymentOrderParams.setOrderId(externalOrderId);
+        paymentOrderParams.setIp(integrationPaymentRequest.getIp());
         if ( null != integrationPaymentRequest.getClient() ) {
             paymentOrderParams.setEmail(integrationPaymentRequest.getClient().getEmail());
-            paymentOrderParams.setIp(integrationPaymentRequest.getClient().getIp());
         }
         try {
             PaymentOrderResult paymentOrderResult = getMerchantService().paymentOrder(paymentOrderParams);
@@ -160,6 +166,10 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                                 getOrderStatusExtendedResponse.getErrorCode()});
                 integrationOrderStatusResponse.setOrderStatus(null);
                 integrationOrderStatusResponse.setSuccess(false);
+            }
+            CardBindingInfo cardBindingInfo = getOrderStatusExtendedResponse.getBindingInfo();
+            if ( null != cardBindingInfo ) {
+                integrationOrderStatusResponse.setBindingInfo(new BindingInfo(cardBindingInfo.getClientId(), cardBindingInfo.getBindingId()));
             }
             integrationOrderStatusResponse.setSuccess(true);
             RbsOrderStatus rbsOrderStatus = RbsOrderStatus.valueOf(getOrderStatusExtendedResponse.getOrderStatus());

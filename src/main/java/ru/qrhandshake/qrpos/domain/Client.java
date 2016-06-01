@@ -14,20 +14,26 @@ import java.util.Collection;
 @Table(name = "client")
 public class Client implements UserDetails {
 
+    public final static String IP_PARAM = "ip";
+    public final static String PHONE_PARAM = "phone";
+    public final static String EMAIL_PARAM = "email";
+
+
     @Id
     @Column(updatable = false, name="id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "clientSequence")
     @SequenceGenerator(name = "clientSequence", sequenceName = "seq_client", allocationSize = 1)
     private Long id;
+    @Column(name = "client_id", nullable = false, unique = true)
+    private String clientId;
     private String username;//todo: возмоно сделать по телефону
     private String password;
     private String name;
     private String phone;//unique
     private String email;//unique
     private String address;
-    private String ip;
-    private double lat;
-    private double lon;
+    private Double lat;
+    private Double lon;
 
     public String getName() {
         return name;
@@ -69,28 +75,28 @@ public class Client implements UserDetails {
         this.id = id;
     }
 
-    public double getLat() {
+    public Double getLat() {
         return lat;
     }
 
-    public void setLat(double lat) {
+    public void setLat(Double lat) {
         this.lat = lat;
     }
 
-    public double getLon() {
+    public Double getLon() {
         return lon;
     }
 
-    public void setLon(double lon) {
+    public void setLon(Double lon) {
         this.lon = lon;
     }
 
-    public String getIp() {
-        return ip;
+    public String getClientId() {
+        return clientId;
     }
 
-    public void setIp(String ip) {
-        this.ip = ip;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     @Override

@@ -18,8 +18,7 @@ public class PaymentRequest<P extends PaymentParams> {
     @NotNull
     @Valid
     private P paymentParams;
-    private String ip;
-    private String email;
+    private String ip;//todo: перенести в общий класс на уровень выше
     private String returnUrl;
     private Client client;
 
@@ -62,14 +61,6 @@ public class PaymentRequest<P extends PaymentParams> {
 
     public void setIp(String ip) {
         this.ip = ip;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public Client getClient() {

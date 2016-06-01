@@ -3,14 +3,18 @@ package ru.qrhandshake.qrpos.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.ServletConfigTest;
 import ru.qrhandshake.qrpos.api.MerchantOrderStatusResponse;
+import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.dto.MerchantDto;
 import ru.qrhandshake.qrpos.api.MerchantOrderRegisterResponse;
+import ru.qrhandshake.qrpos.service.ClientService;
 import ru.qrhandshake.qrpos.service.MerchantService;
 import ru.qrhandshake.qrpos.service.UserService;
 
@@ -32,6 +36,8 @@ public class MerchantOrderControllerTest extends ServletConfigTest {
     private MerchantService merchantService;
     @Resource
     private UserService userService;
+    @Resource
+    private ClientService clientService;
 
     private final static String MERCHANT_LOGIN = "merchant";
     private final static String MERCHANT_PASSWORD = "password";
@@ -101,7 +107,13 @@ public class MerchantOrderControllerTest extends ServletConfigTest {
         String orderId = merchantOrderRegisterResponse.getOrderId();
         assertNotNull(orderId);
 
+        Client client = clientService.findByUsername("client");
+        assertNotNull(client);
+
+        Authentication authentication = new TestingAuthenticationToken(client, null);
+
         mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .principal(authentication)
                         .param("orderId", orderId)
                         .param("paymentParams.pan","5555555555555599")
                         .param("paymentParams.month","12")
@@ -114,7 +126,8 @@ public class MerchantOrderControllerTest extends ServletConfigTest {
         String getOrderStatusResponse = mockMvc.perform(get("/order" + MerchantOrderController.ORDER_STATUS_PATH)
                 .param("authName", "merchant.auth")
                 .param("authPassword", "merchant.password")
-                .param("orderId", orderId))
+                .param("orderId", orderId)
+                .param("externalRequest","true"))
                 .andDo(print()).andReturn().getResponse().getContentAsString();
 
     }

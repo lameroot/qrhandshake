@@ -71,6 +71,23 @@ public class MerchantOrderController {
         return handlePaymentRequest(principal,paymentRequest,request,model);
     }
 
+
+    @RequestMapping(value = FINISH_PATH + "/{orderId}")
+    public String finish(@PathVariable(value = "orderId") String orderId, Model model) {
+        FinishRequest finishRequest = new FinishRequest(orderId);
+        FinishResponse finishResponse = orderService.finish(finishRequest);
+        model.addAttribute("orderStatus",finishResponse.getOrderStatus());
+        model.addAttribute("orderId",finishResponse.getOrderId());
+        model.addAttribute("status",finishResponse.getStatus());
+        return "finish";
+    }
+
+    @RequestMapping(value = REVERSE_PATH, method = RequestMethod.POST)
+    @ResponseBody
+    public MerchantOrderReverseResponse reverse(@Valid MerchantOrderReverseRequest merchantOrderReverseRequest) throws AuthException {
+        return orderService.reverse(merchantOrderReverseRequest);
+    }
+
     private String handlePaymentRequest(Principal principal, PaymentRequest paymentRequest, HttpServletRequest request, Model model) {
         Client client = null;
         if ( null != principal ) {
@@ -87,22 +104,6 @@ public class MerchantOrderController {
             logger.error("Error payment of order: {}, cause: {}",paymentRequest.getOrderId(),paymentResponse.getMessage());
             return "redirect:" + PAYMENT_PATH + "/" + paymentRequest.getOrderId();
         }
-    }
-
-    @RequestMapping(value = FINISH_PATH + "/{orderId}")
-    public String finish(@PathVariable(value = "orderId") String orderId, Model model) {
-        FinishRequest finishRequest = new FinishRequest(orderId);
-        FinishResponse finishResponse = orderService.finish(finishRequest);
-        model.addAttribute("orderStatus",finishResponse.getOrderStatus());
-        model.addAttribute("orderId",finishResponse.getOrderId());
-        model.addAttribute("status",finishResponse.getStatus());
-        return "finish";
-    }
-
-    @RequestMapping(value = REVERSE_PATH, method = RequestMethod.POST)
-    @ResponseBody
-    public MerchantOrderReverseResponse reverse(@Valid MerchantOrderReverseRequest merchantOrderReverseRequest) throws AuthException {
-        return orderService.reverse(merchantOrderReverseRequest);
     }
 
 }

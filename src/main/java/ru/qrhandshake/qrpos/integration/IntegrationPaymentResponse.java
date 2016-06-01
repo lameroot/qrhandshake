@@ -15,6 +15,7 @@ public class IntegrationPaymentResponse extends IntegrationResponse {
     private OrderStatus orderStatus;
     private IntegrationOrderStatus integrationOrderStatus;
     private PaymentSecureType paymentSecureType;
+    private String externalBindingId;
 
     public String getOrderId() {
         return orderId;
@@ -62,5 +63,13 @@ public class IntegrationPaymentResponse extends IntegrationResponse {
 
     public void setPaymentSecureType(PaymentSecureType paymentSecureType) {
         this.paymentSecureType = paymentSecureType;
+    }
+
+    public String getExternalBindingId() {
+        return externalBindingId;
+    }
+
+    public void setExternalBindingId(String externalBindingId) {
+        this.externalBindingId = externalBindingId;
     }
 }

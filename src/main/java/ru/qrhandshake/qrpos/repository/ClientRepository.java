@@ -10,7 +10,7 @@ import ru.qrhandshake.qrpos.domain.Client;
 @Repository
 public interface ClientRepository extends CrudRepository<Client, Long> {
 
-    public Client findByUsername(String username);
-    public Client findByPhone(String phone);
-    public Client findByEmail(String email);
+    Client findByUsername(String username);
+    Client findByPhone(String phone);
+    Client findByEmail(String email);
 }

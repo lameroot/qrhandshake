@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.integration;
 
+import ru.qrhandshake.qrpos.domain.BindingInfo;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.integration.IntegrationOrderStatus;
 
@@ -12,6 +13,7 @@ public class IntegrationOrderStatusResponse extends IntegrationResponse {
     private String externalId;
     private IntegrationOrderStatus integrationOrderStatus;
     private OrderStatus orderStatus;
+    private BindingInfo bindingInfo;
     //todo: добавить сюда поля которые могут приходить из запроса к процессингу
 
 
@@ -45,5 +47,13 @@ public class IntegrationOrderStatusResponse extends IntegrationResponse {
 
     public void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
+    }
+
+    public BindingInfo getBindingInfo() {
+        return bindingInfo;
+    }
+
+    public void setBindingInfo(BindingInfo bindingInfo) {
+        this.bindingInfo = bindingInfo;
     }
 }

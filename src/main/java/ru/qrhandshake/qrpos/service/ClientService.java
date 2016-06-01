@@ -7,6 +7,7 @@ import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.repository.ClientRepository;
 
 import javax.annotation.Resource;
+import java.util.UUID;
 
 /**
  * Created by lameroot on 25.05.16.
@@ -65,6 +66,7 @@ public class ClientService {
             return clientRegisterResponse;
         }
         client = new Client();
+        client.setClientId(UUID.randomUUID().toString());
         AuthType authType = clientRegisterRequest.getAuthType();
         if ( null == authType ) authType = AuthType.PASSWORD;
         switch (authType) {

@@ -47,19 +47,6 @@ public class IntegrationService {
         return integrationReverseResponse;
     }
 
-    public IntegrationFinishResponse finish(IntegrationFinishRequest integrationFinishRequest) throws IntegrationException {
-        IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(integrationFinishRequest.getIntegrationSupport(), integrationFinishRequest.getExternalId());
-        IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(integrationOrderStatusRequest);
-        IntegrationFinishResponse integrationFinishResponse = new IntegrationFinishResponse();
-        integrationFinishResponse.setOrderId(integrationOrderStatusResponse.getOrderId());
-        integrationFinishResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
-        integrationFinishResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
-        integrationFinishResponse.setSuccess(true);
-        integrationFinishResponse.setMessage("Finish payment for orderId: " + integrationFinishRequest.getOrderId() + " success");
-
-        return integrationFinishResponse;
-    }
-
     private IntegrationFacade getFacade(IntegrationSupport integrationSupport) throws IntegrationException {
         return Optional.ofNullable(integrationFacades.get(integrationSupport))
                 .orElseThrow(() -> new IntegrationException("Unknown integration type: " + integrationSupport));

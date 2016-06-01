@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.service;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -45,18 +46,21 @@ public class BindingService {
         }
     }
 
-    public void updateOrDelete(MerchantOrder merchantOrder) {
+    public void update(MerchantOrder merchantOrder, BindingInfo bindingInfo) {
+        if ( null == merchantOrder || null == bindingInfo ) return;
         Binding binding = bindingRepository.findByOrderId(merchantOrder.getOrderId());
         if ( null == binding ) {
             logger.warn("Unable to find binding by orderId: {}", merchantOrder.getOrderId());
             return;
         }
-        if ( OrderStatus.PAID.equals(merchantOrder.getOrderStatus()) ) {
+        if ( OrderStatus.PAID.equals(merchantOrder.getOrderStatus()) && binding.getClient().getClientId().equals(bindingInfo.getClientId())) {
             binding.setEnabled(true);
+            binding.setExternalBindingId(bindingInfo.getBindingId());
             bindingRepository.save(binding);
         }
-        else {
-            bindingRepository.delete(binding);
+        else if ( binding.isEnabled() ) {
+            binding.setEnabled(false);
+            bindingRepository.save(binding);
         }
     }
 

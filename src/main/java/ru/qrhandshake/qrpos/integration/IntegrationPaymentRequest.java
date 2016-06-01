@@ -2,6 +2,7 @@ package ru.qrhandshake.qrpos.integration;
 
 import org.springframework.ui.Model;
 import ru.qrhandshake.qrpos.api.PaymentParams;
+import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.domain.PaymentWay;
@@ -16,20 +17,16 @@ import java.util.Map;
 public class IntegrationPaymentRequest extends IntegrationRequest {
 
     private String orderId;
-//    private String pan;
-//    private String month;
-//    private String year;
-//    private String cardHolderName;
-//    private String cvc;
     private String returnUrl;
     private String description;
     private Long amount;
-    private ClientDto client;
+    private Client client;
     private OrderStatus orderStatus;
     private Map<String, String> params = new HashMap<>();
     private PaymentWay paymentWay = PaymentWay.card;
     private Model model;
     private PaymentParams paymentParams;
+    private String ip;
 
     public IntegrationPaymentRequest(IntegrationSupport integrationSupport) {
         super(integrationSupport);
@@ -42,48 +39,6 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
-
-    /*
-    public String getPan() {
-        return pan;
-    }
-
-    public void setPan(String pan) {
-        this.pan = pan;
-    }
-
-    public String getMonth() {
-        return month;
-    }
-
-    public void setMonth(String month) {
-        this.month = month;
-    }
-
-    public String getYear() {
-        return year;
-    }
-
-    public void setYear(String year) {
-        this.year = year;
-    }
-
-    public String getCardHolderName() {
-        return cardHolderName;
-    }
-
-    public void setCardHolderName(String cardHolderName) {
-        this.cardHolderName = cardHolderName;
-    }
-
-    public String getCvc() {
-        return cvc;
-    }
-
-    public void setCvc(String cvc) {
-        this.cvc = cvc;
-    }
-    */
 
     public Map<String, String> getParams() {
         return params;
@@ -117,11 +72,11 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
         this.amount = amount;
     }
 
-    public ClientDto getClient() {
+    public Client getClient() {
         return client;
     }
 
-    public void setClient(ClientDto client) {
+    public void setClient(Client client) {
         this.client = client;
     }
 
@@ -155,5 +110,13 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
 
     public void setPaymentParams(PaymentParams paymentParams) {
         this.paymentParams = paymentParams;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
     }
 }

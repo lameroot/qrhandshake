@@ -11,10 +11,10 @@ import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
+import ru.qrhandshake.qrpos.repository.ClientRepository;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -36,6 +36,8 @@ public class OrderService {
     private IntegrationSupportService integrationSupportService;
     @Resource
     private BindingService bindingService;
+    @Resource
+    private ClientRepository clientRepository;
 
     public MerchantOrderRegisterResponse register(MerchantOrderRegisterRequest merchantOrderRegisterRequest) throws AuthException {
         Terminal terminal = null;
@@ -84,17 +86,14 @@ public class OrderService {
             throw new AuthException("Order with id:" + merchantOrderStatusRequest.getOrderId() + " not belongs to own merchant");
         }
         if ( doExternalOrderStatusRequest(merchantOrder) || merchantOrderStatusRequest.isExternalRequest() ) {//делаем в этом случае всегда запрос к внешней системе
-            IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(merchantOrder.getIntegrationSupport(),merchantOrder.getExternalId());
             try {
-                IntegrationOrderStatusResponse integrationOrderStatusResponse = integrationService.getOrderStatus(integrationOrderStatusRequest);
+                IntegrationOrderStatusResponse integrationOrderStatusResponse = doInnerGetOrderStatus(merchantOrder);
                 merchantOrderStatusResponse.setMessage(integrationOrderStatusResponse.getMessage());
-                if ( !merchantOrder.getOrderStatus().equals(integrationOrderStatusResponse.getOrderStatus()) ) {
-                    merchantOrder.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
-                    merchantOrder.setExternalOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus().getStatus());
-                    if ( merchantOrder.getOrderStatus().equals(OrderStatus.PAID) ) {
-                        merchantOrder.setPaymentDate(new Date());
-                    }
-                    merchantOrderRepository.save(merchantOrder);
+                if ( integrationOrderStatusResponse.isSuccess() ) {
+                    merchantOrderStatusResponse.setStatus(ResponseStatus.SUCCESS);
+                }
+                else {
+                    merchantOrderStatusResponse.setStatus(ResponseStatus.FAIL);
                 }
             } catch (IntegrationException e) {
                 merchantOrderStatusResponse.setStatus(ResponseStatus.FAIL);
@@ -118,6 +117,7 @@ public class OrderService {
         PaymentResponse paymentResponse = new PaymentResponse();
         Client client = null;
         if ( null != (client = paymentRequest.getClient()) ) {
+            client = clientRepository.findOne(client.getId());//attach to session (//todo: проверить может и не надо)
             paymentResponse.setPaymentAuthType(PaymentAuthType.CLIENT_AUTH);
         }
         MerchantOrder merchantOrder = findByOrderId(paymentRequest.getOrderId());
@@ -144,7 +144,7 @@ public class OrderService {
         IntegrationPaymentRequest integrationPaymentRequest = new IntegrationPaymentRequest(integrationSupport);
         integrationPaymentRequest.setPaymentParams(paymentRequest.getPaymentParams());
         integrationPaymentRequest.setAmount(merchantOrder.getAmount());
-        integrationPaymentRequest.setClient(null);//todo: set data as ip
+        integrationPaymentRequest.setClient(client);
         integrationPaymentRequest.setDescription(merchantOrder.getDescription());
         integrationPaymentRequest.setOrderId(paymentRequest.getOrderId());
         integrationPaymentRequest.setReturnUrl(paymentRequest.getReturnUrl());
@@ -152,6 +152,7 @@ public class OrderService {
         integrationPaymentRequest.setOrderStatus(merchantOrder.getOrderStatus());
         integrationPaymentRequest.setPaymentWay(paymentRequest.getPaymentWay());
         integrationPaymentRequest.setModel(model);
+        integrationPaymentRequest.setIp(paymentRequest.getIp());
 
         try {
             IntegrationPaymentResponse integrationPaymentResponse = integrationService.payment(integrationPaymentRequest);
@@ -260,25 +261,12 @@ public class OrderService {
             finishResponse.setMessage("Order with id: " + finishRequest.getOrderId() + " has invalid params");
             return finishResponse;
         }
-        IntegrationFinishRequest integrationFinishRequest = new IntegrationFinishRequest(merchantOrder.getIntegrationSupport(),merchantOrder.getExternalId());
         try {
-            IntegrationFinishResponse integrationFinishResponse = integrationService.finish(integrationFinishRequest);
-            if ( integrationFinishResponse.isSuccess() ) {
-                finishResponse.setStatus(ResponseStatus.SUCCESS);
-                merchantOrder.setOrderStatus(integrationFinishResponse.getOrderStatus());
-                merchantOrder.setExternalOrderStatus(integrationFinishResponse.getIntegrationOrderStatus().getStatus());
-                if ( OrderStatus.PAID.equals(merchantOrder.getOrderStatus()) ) {
-                    merchantOrder.setPaymentDate(new Date());
-                }
-                merchantOrderRepository.save(merchantOrder);
-            }
-            else {
-                finishResponse.setStatus(ResponseStatus.FAIL);
-            }
-            bindingService.updateOrDelete(merchantOrder);
-            finishResponse.setOrderStatus(integrationFinishResponse.getOrderStatus());
-            finishResponse.setOrderId(integrationFinishResponse.getOrderId());
-            finishResponse.setMessage(integrationFinishResponse.getMessage());
+            IntegrationOrderStatusResponse integrationOrderStatusResponse = doInnerGetOrderStatus(merchantOrder);
+            finishResponse.setStatus(integrationOrderStatusResponse.isSuccess() ? ResponseStatus.SUCCESS : ResponseStatus.FAIL);
+            finishResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
+            finishResponse.setOrderId(integrationOrderStatusResponse.getOrderId());
+            finishResponse.setMessage(integrationOrderStatusResponse.getMessage());
         } catch (IntegrationException e) {
             finishResponse.setStatus(ResponseStatus.FAIL);
             finishResponse.setMessage("Error finish payment with order:" + finishRequest.getOrderId() + ", cause: " + e.getMessage());
@@ -288,6 +276,21 @@ public class OrderService {
 
     public MerchantOrder findByOrderId(String orderId) {
         return merchantOrderRepository.findByOrderId(orderId);
+    }
+
+    private IntegrationOrderStatusResponse doInnerGetOrderStatus(MerchantOrder merchantOrder) throws IntegrationException {
+        IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(merchantOrder.getIntegrationSupport(),merchantOrder.getExternalId());
+        IntegrationOrderStatusResponse integrationOrderStatusResponse = integrationService.getOrderStatus(integrationOrderStatusRequest);
+        if ( !merchantOrder.getOrderStatus().equals(integrationOrderStatusResponse.getOrderStatus()) ) {
+            merchantOrder.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
+            merchantOrder.setExternalOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus().getStatus());
+            if ( merchantOrder.getOrderStatus().equals(OrderStatus.PAID) ) {
+                merchantOrder.setPaymentDate(new Date());
+            }
+            merchantOrderRepository.save(merchantOrder);
+        }
+        bindingService.update(merchantOrder, integrationOrderStatusResponse.getBindingInfo());
+        return integrationOrderStatusResponse;
     }
 
     private boolean doExternalOrderStatusRequest(MerchantOrder merchantOrder) {

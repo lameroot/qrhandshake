@@ -7,6 +7,7 @@ import ru.qrhandshake.qrpos.domain.Client;
  */
 public class ClientDto extends AuthRequest {
 
+    private String clientId;
     private String name;
     private String phone;
     private String email;
@@ -22,7 +23,6 @@ public class ClientDto extends AuthRequest {
             this.email = client.getEmail();
             this.address = client.getAddress();
             this.location = new Location(client.getLat(), client.getLon());
-            this.ip = client.getIp();
         }
     }
 
