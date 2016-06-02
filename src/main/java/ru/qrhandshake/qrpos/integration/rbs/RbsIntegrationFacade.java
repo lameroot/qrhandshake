@@ -9,6 +9,7 @@ import ru.bpc.phoenix.proxy.api.MerchantServiceProvider;
 import ru.bpc.phoenix.proxy.api.NamePasswordToken;
 import ru.bpc.phoenix.web.api.merchant.soap.MerchantService;
 import ru.paymentgate.engine.webservices.merchant.*;
+import ru.qrhandshake.qrpos.api.BindingPaymentParams;
 import ru.qrhandshake.qrpos.api.CardPaymentParams;
 import ru.qrhandshake.qrpos.api.PaymentParams;
 import ru.qrhandshake.qrpos.domain.*;
@@ -63,7 +64,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         rbsParams.setAmount(integrationPaymentBindingRequest.getAmount());
         rbsParams.setReturnUrl(integrationPaymentBindingRequest.getReturnUrl());
         rbsParams.setMerchantOrderNumber(integrationPaymentBindingRequest.getOrderId());
-        rbsParams.setBindingId(integrationPaymentBindingRequest.getBindingId());
+        //rbsParams.setBindingId(integrationPaymentBindingRequest.getBindingId());
         for (Map.Entry<String, String> entry : integrationPaymentBindingRequest.getParams().entrySet()) {
             ServiceParam serviceParam = new ServiceParam();
             serviceParam.setName(entry.getKey());
@@ -96,9 +97,16 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             throw new IntegrationException("Error integration register order by orderId:" + integrationPaymentBindingRequest.getOrderId(),e);
         }
 
+        BindingPaymentParams paymentParams = (BindingPaymentParams)integrationPaymentBindingRequest.getPaymentParams();
+        if ( null == paymentParams ) {
+            integrationPaymentResponse.setSuccess(false);
+            integrationPaymentResponse.setMessage("Invalid payment params");
+            return integrationPaymentResponse;
+        }
+
         PaymentOrderBindingParams paymentOrderBindingParams = new PaymentOrderBindingParams();
-        paymentOrderBindingParams.setBindingId(integrationPaymentBindingRequest.getBindingId());
-        paymentOrderBindingParams.setCvc(integrationPaymentBindingRequest.getConfirmValue());
+        paymentOrderBindingParams.setBindingId(integrationPaymentBindingRequest.getExternalBindingId());
+        paymentOrderBindingParams.setCvc(paymentParams.getConfirmValue());
         paymentOrderBindingParams.setEmail(integrationPaymentBindingRequest.getClient().getEmail());
         paymentOrderBindingParams.setIp(integrationPaymentBindingRequest.getIp());
         paymentOrderBindingParams.setLanguage(language);

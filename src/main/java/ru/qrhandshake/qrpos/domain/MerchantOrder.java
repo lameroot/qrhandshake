@@ -51,6 +51,9 @@ public class MerchantOrder {
     @Column(name = "payment_secure_type")
     @Enumerated(EnumType.STRING)
     private PaymentSecureType paymentSecureType;
+    @Column(name = "payment_way")
+    @Enumerated(EnumType.STRING)
+    private PaymentWay paymentWay;
 
     public Long getId() {
         return id;
@@ -180,6 +183,14 @@ public class MerchantOrder {
         this.paymentSecureType = paymentSecureType;
     }
 
+    public PaymentWay getPaymentWay() {
+        return paymentWay;
+    }
+
+    public void setPaymentWay(PaymentWay paymentWay) {
+        this.paymentWay = paymentWay;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("MerchantOrder{");
@@ -194,6 +205,7 @@ public class MerchantOrder {
         sb.append(", integrationSupport=").append(integrationSupport);
         sb.append(", orderStatus=").append(orderStatus);
         sb.append(", paymentSecureType=").append(paymentSecureType);
+        sb.append(", paymentWay=").append(paymentWay);
         sb.append('}');
         return sb.toString();
     }

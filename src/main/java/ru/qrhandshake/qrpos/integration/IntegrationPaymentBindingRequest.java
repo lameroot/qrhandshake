@@ -12,7 +12,6 @@ public class IntegrationPaymentBindingRequest extends IntegrationPaymentRequest 
 
     private final String externalBindingId;
     private String bindingId;
-    private String confirmValue;
 
     public IntegrationPaymentBindingRequest(IntegrationSupport integrationSupport, String externalBindingId) {
         super(integrationSupport);
@@ -21,14 +20,6 @@ public class IntegrationPaymentBindingRequest extends IntegrationPaymentRequest 
 
     public String getBindingId() {
         return bindingId;
-    }
-
-    public String getConfirmValue() {
-        return confirmValue;
-    }
-
-    public void setConfirmValue(String confirmValue) {
-        this.confirmValue = confirmValue;
     }
 
     public String getExternalBindingId() {

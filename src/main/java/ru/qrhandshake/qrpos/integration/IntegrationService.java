@@ -20,8 +20,11 @@ public class IntegrationService {
     }
 
     public IntegrationPaymentResponse paymentBinding(IntegrationPaymentBindingRequest integrationPaymentBindingRequest) throws IntegrationException {
-
-        return null;
+        IntegrationSupport integrationSupport = integrationPaymentBindingRequest.getIntegrationSupport();
+        IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationSupport).paymentBinding(integrationPaymentBindingRequest);
+        if ( !integrationPaymentResponse.isSuccess() ) throw new IntegrationException(integrationPaymentResponse.getMessage());
+        integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport,integrationPaymentResponse.getIntegrationOrderStatus()));
+        return integrationPaymentResponse;
     }
 
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException {

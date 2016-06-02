@@ -37,6 +37,10 @@ public class Binding {
     private boolean enabled = true;
     @Column(name = "order_id", nullable = false, unique = true)
     private String orderId;
+    @Column(name = "payment_way", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private PaymentWay paymentWay;
+
 
     public Long getId() {
         return id;
@@ -122,17 +126,25 @@ public class Binding {
         return isEnabled() && null != externalBindingId;
     }
 
+    public PaymentWay getPaymentWay() {
+        return paymentWay;
+    }
+
+    public void setPaymentWay(PaymentWay paymentWay) {
+        this.paymentWay = paymentWay;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Binding{");
         sb.append("id=").append(id);
         sb.append(", bindingId='").append(bindingId).append('\'');
-        sb.append(", externalBindingId='").append(externalBindingId).append('\'');
         sb.append(", paymentSecureType=").append(paymentSecureType);
         sb.append(", integrationSupport=").append(integrationSupport);
         sb.append(", createdDate=").append(createdDate);
         sb.append(", enabled=").append(enabled);
         sb.append(", orderId='").append(orderId).append('\'');
+        sb.append(", paymentWay=").append(paymentWay);
         sb.append('}');
         return sb.toString();
     }

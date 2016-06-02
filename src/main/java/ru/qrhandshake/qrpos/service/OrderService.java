@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.*;
+import ru.qrhandshake.qrpos.dto.BindingDto;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
@@ -17,6 +18,7 @@ import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by lameroot on 25.05.16.
@@ -185,6 +187,7 @@ public class OrderService {
         integrationPaymentBindingRequest.setPaymentWay(paymentRequest.getPaymentWay());
         integrationPaymentBindingRequest.setModel(model);
         integrationPaymentBindingRequest.setIp(paymentRequest.getIp());
+        integrationPaymentBindingRequest.setBindingId(binding.getBindingId());
 
         try {
             IntegrationPaymentResponse integrationPaymentResponse = integrationService.paymentBinding(integrationPaymentBindingRequest);
@@ -244,6 +247,7 @@ public class OrderService {
             paymentResponse.setMessage("Unknown integration support for orderId: " + paymentRequest.getOrderId());
             return paymentResponse;
         }
+        merchantOrder.setPaymentWay(paymentRequest.getPaymentWay());
         merchantOrder.setIntegrationSupport(integrationSupport);
         IntegrationPaymentRequest integrationPaymentRequest = new IntegrationPaymentRequest(integrationSupport);
         integrationPaymentRequest.setPaymentParams(paymentRequest.getPaymentParams());
@@ -376,6 +380,27 @@ public class OrderService {
             finishResponse.setMessage("Error finish payment with order:" + finishRequest.getOrderId() + ", cause: " + e.getMessage());
         }
         return finishResponse;
+    }
+
+    public GetBindingsResponse getBindings(GetBindingsRequest getBindingsRequest) {
+        GetBindingsResponse getBindingsResponse = new GetBindingsResponse();
+        try {
+            List<Binding> bindings = bindingService.getBindings(getBindingsRequest.getClient(), getBindingsRequest.getPaymentWays());
+            for (Binding binding : bindings) {
+                BindingDto bindingDto = new BindingDto();
+                bindingDto.setBindingId(binding.getBindingId());
+                bindingDto.setPaymentWay(binding.getPaymentWay());
+                bindingDto.setPaymentParams(binding.getPaymentParams());
+                getBindingsResponse.getBindings().add(bindingDto);
+                getBindingsResponse.setStatus(ResponseStatus.SUCCESS);
+                getBindingsResponse.setMessage("Get bindings success");
+            }
+        } catch (Exception e) {
+            logger.error("Error to get bindings",e);
+            getBindingsResponse.setStatus(ResponseStatus.FAIL);
+            getBindingsResponse.setMessage("Error to get bindings");
+        }
+        return getBindingsResponse;
     }
 
     public MerchantOrder findByOrderId(String orderId) {

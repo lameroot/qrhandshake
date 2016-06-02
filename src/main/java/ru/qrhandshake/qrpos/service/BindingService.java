@@ -10,6 +10,8 @@ import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.repository.BindingRepository;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -38,6 +40,7 @@ public class BindingService {
             binding.setEnabled(enabled);
             binding.setBindingId(UUID.randomUUID().toString());
             binding.setOrderId(merchantOrder.getOrderId());
+            binding.setPaymentWay(merchantOrder.getPaymentWay());
 
             return bindingRepository.save(binding);
         } catch (Exception e) {
@@ -66,6 +69,10 @@ public class BindingService {
             binding.setEnabled(false);
             bindingRepository.save(binding);
         }
+    }
+
+    public List<Binding> getBindings(Client client, Set<PaymentWay> paymentWays) {
+        return bindingRepository.findByClientAndPaymentsWays(client, paymentWays);
     }
 
     public Binding findByBindingId(String bindingId) {

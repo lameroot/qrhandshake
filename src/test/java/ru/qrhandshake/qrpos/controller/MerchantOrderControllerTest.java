@@ -10,10 +10,12 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.ServletConfigTest;
 import ru.qrhandshake.qrpos.api.MerchantOrderStatusResponse;
+import ru.qrhandshake.qrpos.domain.Binding;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.dto.MerchantDto;
 import ru.qrhandshake.qrpos.api.MerchantOrderRegisterResponse;
+import ru.qrhandshake.qrpos.repository.BindingRepository;
 import ru.qrhandshake.qrpos.service.ClientService;
 import ru.qrhandshake.qrpos.service.MerchantService;
 import ru.qrhandshake.qrpos.service.UserService;
@@ -38,6 +40,8 @@ public class MerchantOrderControllerTest extends ServletConfigTest {
     private UserService userService;
     @Resource
     private ClientService clientService;
+    @Resource
+    private BindingRepository bindingRepository;
 
     private final static String MERCHANT_LOGIN = "merchant";
     private final static String MERCHANT_PASSWORD = "password";
@@ -121,6 +125,54 @@ public class MerchantOrderControllerTest extends ServletConfigTest {
                         .param("paymentParams.cardHolderName","test test")
                         .param("paymentParams.cvc","123")
                         .param("paymentWay","card")
+        ).andDo(print());
+
+        String getOrderStatusResponse = mockMvc.perform(get("/order" + MerchantOrderController.ORDER_STATUS_PATH)
+                .param("authName", "merchant.auth")
+                .param("authPassword", "merchant.password")
+                .param("orderId", orderId)
+                .param("externalRequest","true"))
+                .andDo(print()).andReturn().getResponse().getContentAsString();
+
+    }
+
+    @Test
+    @Rollback(false)
+    @Transactional
+    public void testPaymentBinding() throws Exception {
+        String sessionId = UUID.randomUUID().toString();
+        MvcResult mvcResult = mockMvc.perform(get("/order/register")
+                        .param("authName","merchant.auth")
+                        .param("authPassword", "merchant.password")
+                        .param("amount", "1000")
+                        .param("sessionId", sessionId)
+                        .param("deviceId", "11111-2222-333")
+        )
+                .andDo(print())
+                .andReturn();
+        String response = mvcResult.getResponse().getContentAsString();
+        ObjectMapper objectMapper = new ObjectMapper();
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = objectMapper.readValue(response, MerchantOrderRegisterResponse.class);
+        assertNotNull(merchantOrderRegisterResponse);
+        String orderId = merchantOrderRegisterResponse.getOrderId();
+        assertNotNull(orderId);
+
+        Client client = clientService.findByUsername("client");
+        assertNotNull(client);
+
+        Binding binding = bindingRepository.findByEnabled(true).stream().findFirst().get();
+        if ( null == binding ) {
+            return;
+        }
+
+        Authentication authentication = new TestingAuthenticationToken(client, null);
+
+        mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .principal(authentication)
+                        .param("orderId", orderId)
+                        .param("paymentParams.bindingId",binding.getBindingId())
+                        .param("paymentParams.confirmValue", "123")
+                        .param("paymentWay","binding")
         ).andDo(print());
 
         String getOrderStatusResponse = mockMvc.perform(get("/order" + MerchantOrderController.ORDER_STATUS_PATH)
