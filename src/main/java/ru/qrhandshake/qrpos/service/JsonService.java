@@ -45,4 +45,13 @@ public class JsonService {
             return null;
         }
     }
+
+    public <P extends PaymentParams> P jsonToPaymentParams(String str, Class<P> clazz) {
+        try {
+            return objectMapper.readValue(str, clazz);
+        } catch (IOException e) {
+            logger.error("Error read str: " + str,e);
+            return null;
+        }
+    }
 }

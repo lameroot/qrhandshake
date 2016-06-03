@@ -6,11 +6,14 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.api.ResponseStatus;
+import ru.qrhandshake.qrpos.converter.PaymentWayConverter;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.MerchantOrder;
+import ru.qrhandshake.qrpos.domain.PaymentWay;
 import ru.qrhandshake.qrpos.dto.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
@@ -34,6 +37,7 @@ public class MerchantOrderController {
     public final static String PAYMENT_PATH = "/payment";
     public final static String FINISH_PATH = "/finish";
     public final static String REVERSE_PATH = "/reverse";
+    public final static String GET_BINDINGS_PATH = "/getBindings";
 
     @Resource
     private OrderService orderService;
@@ -61,6 +65,12 @@ public class MerchantOrderController {
         MerchantOrderDto merchantOrderDto = new MerchantOrderDto(merchantOrder);
         model.addAttribute("merchantOrder", merchantOrderDto);
         return "payment";//return payment page as jsp
+    }
+
+    @InitBinder
+    public void init(WebDataBinder webDataBinder) {
+        webDataBinder.registerCustomEditor(PaymentWay.class, new PaymentWayConverter());
+        //todo: сделать в верхнем регистре
     }
 
     @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST, params = {"paymentWay=card"})
@@ -92,6 +102,17 @@ public class MerchantOrderController {
     @ResponseBody
     public MerchantOrderReverseResponse reverse(@Valid MerchantOrderReverseRequest merchantOrderReverseRequest) throws AuthException {
         return orderService.reverse(merchantOrderReverseRequest);
+    }
+
+    @RequestMapping(value = GET_BINDINGS_PATH)
+    @ResponseBody
+    public GetBindingsResponse getBindings(Principal principal, @Valid GetBindingsRequest getBindingsRequest) throws AuthException {
+        Client client = null;
+        if ( null != principal ) {
+            client = (Client) ((Authentication) principal).getPrincipal();
+            getBindingsRequest.setClient(client);
+        }
+        return orderService.getBindings(getBindingsRequest);
     }
 
     private String handlePaymentRequest(Principal principal, PaymentRequest paymentRequest, HttpServletRequest request, Model model) {

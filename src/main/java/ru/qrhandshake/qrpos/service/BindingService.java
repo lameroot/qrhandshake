@@ -29,6 +29,8 @@ public class BindingService {
     @Resource
     private IntegrationService integrationService;
 
+
+
     public Binding register(Client client, PaymentParams paymentParams, MerchantOrder merchantOrder, boolean enabled) {
         try {
             Binding binding = new Binding();
@@ -71,8 +73,16 @@ public class BindingService {
         }
     }
 
-    public List<Binding> getBindings(Client client, Set<PaymentWay> paymentWays) {
-        return bindingRepository.findByClientAndPaymentsWays(client, paymentWays);
+    public List<Binding> getBindings(Client client, PaymentWay... paymentWays) {
+        return null != paymentWays && paymentWays.length > 0
+                ? bindingRepository.findByClientAndPaymentsWays(client, paymentWays)
+                : bindingRepository.findByClient(client);
+    }
+
+    public boolean isExists(Client client, PaymentParams paymentParams, PaymentWay paymentWay) {
+        return getBindings(client,paymentWay).stream()
+                .filter(b-> jsonService.jsonToPaymentParams(b.getPaymentParams()).equals(paymentParams))
+                .findFirst().isPresent();
     }
 
     public Binding findByBindingId(String bindingId) {

@@ -160,7 +160,7 @@ public class MerchantOrderControllerTest extends ServletConfigTest {
         Client client = clientService.findByUsername("client");
         assertNotNull(client);
 
-        Binding binding = bindingRepository.findByEnabled(true).stream().findFirst().get();
+        Binding binding = bindingRepository.findByEnabled(true).stream().findFirst().orElse(null);
         if ( null == binding ) {
             return;
         }
@@ -234,5 +234,20 @@ public class MerchantOrderControllerTest extends ServletConfigTest {
             System.out.println("order not paid");
         }
 
+    }
+
+    @Test
+    @Rollback(false)
+    @Transactional
+    public void testGetBindings() throws Exception {
+        Client client = clientService.findByUsername("client");
+        assertNotNull(client);
+        Authentication authentication = new TestingAuthenticationToken(client, null);
+
+        mockMvc.perform(get("/order/getBindings")
+                .principal(authentication)
+        //        .param("", "")
+        )
+                .andDo(print());
     }
 }

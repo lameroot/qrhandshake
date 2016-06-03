@@ -40,6 +40,8 @@ public class ServletConfig extends WebMvcConfigurationSupport {
         converters.add(mappingJackson2HttpMessageConverter);
     }
 
+
+
     @Bean
     public ViewResolver viewResolver() {
         InternalResourceViewResolver resolver = new InternalResourceViewResolver();

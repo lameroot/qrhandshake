@@ -21,5 +21,7 @@ public interface BindingRepository extends CrudRepository<Binding, Long> {
     Binding findByBindingId(String bindingId);
     List<Binding> findByEnabled(boolean enabled);
     @Query(value = "from Binding b where b.client = :client and b.paymentWay in (:paymentWays)")
-    List<Binding> findByClientAndPaymentsWays(@Param("client") Client client, @Param("paymentWays")Set<PaymentWay> paymentWays);
+    List<Binding> findByClientAndPaymentsWays(@Param("client") Client client, @Param("paymentWays")PaymentWay... paymentWays);
+    List<Binding> findByClient(Client client);
+    List<Binding> findByClientAndEnabled(Client client, boolean enabled);
 }
