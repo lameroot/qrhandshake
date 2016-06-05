@@ -19,18 +19,21 @@
 <body>
 Оплата заказа на сумму ${merchantOrder.amount} руб. <br/>
 
-<form action="/payment" method="post">
+<form action="${pageContext.request.contextPath}/order/payment" method="post">
     <table>
         <tr>
             <td>PAN</td>
             <td colspan="2">
-                <input name="pan"/>
+                <select name="paymentParams.pan">
+                    <option value="5555555555555599">5555555555555599</option>
+                    <option value="4111111111111111">4111111111111111</option>
+                </select>
             </td>
         </tr>
         <tr>
             <td>Expiry</td>
             <td>
-                <select name="month">
+                <select name="paymentParams.month">
                     <option value="01">01</option>
                     <option value="02">02</option>
                     <option value="03">03</option>
@@ -42,15 +45,15 @@
                     <option value="09">09</option>
                     <option value="10">10</option>
                     <option value="11">11</option>
-                    <option value="12">12</option>
+                    <option selected="true" value="12">12</option>
                 </select>
             </td>
             <td>
-                <select name="year">
+                <select name="paymentParams.year">
                     <option value="2016">2016</option>
                     <option value="2017">2017</option>
                     <option value="2018">2018</option>
-                    <option value="2019">2019</option>
+                    <option selected="true" value="2019">2019</option>
                     <option value="2020">2020</option>
                 </select>
             </td>
@@ -58,13 +61,13 @@
         <tr>
             <td>CARD HOLDER</td>
             <td colspan="2">
-                <input name="cardHolderName"/>
+                <input name="paymentParams.cardHolderName" value="test test"/>
             </td>
         </tr>
         <tr>
             <td>Cvc</td>
             <td colspan="2">
-                <input name="cvc" size="4"/>
+                <input name="paymentParams.cvc" size="4" value="123"/>
             </td>
         </tr>
         <tr>
@@ -73,6 +76,8 @@
             </td>
         </tr>
     </table>
+    <input type="hidden" name="paymentWay" value="card"/>
+    <input type="hidden" name="orderId" value="${merchantOrder.orderId}"/>
 </form>
 
 </body>

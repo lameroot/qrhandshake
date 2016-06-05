@@ -159,7 +159,7 @@ public class OrderService {
         Binding binding = bindingService.findByBindingId(paymentRequest.getPaymentParams().getBindingId());
         if ( null == binding ) {
             paymentResponse.setStatus(ResponseStatus.FAIL);
-            paymentResponse.setMessage("Unable to find binding by bindingId: " + paymentRequest.getPaymentParams().getBindingId());
+            paymentResponse.setMessage("Unable to find BINDING by bindingId: " + paymentRequest.getPaymentParams().getBindingId());
             return paymentResponse;
         }
         if ( !client.getClientId().equals(binding.getClient().getClientId()) ) {
@@ -200,11 +200,10 @@ public class OrderService {
                     merchantOrder.setOrderStatus(integrationPaymentResponse.getOrderStatus());
                     merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());
                     merchantOrder.setExternalId(integrationPaymentResponse.getExternalId());
-                    if ( merchantOrder.getOrderStatus().equals(OrderStatus.PAID) ) merchantOrder.setPaymentDate(new Date());
-                    paymentResponse.setMessage("Paid by binding successfully");
+                    paymentResponse.setMessage("Paid by BINDING successfully");
 
                 } else {
-                    paymentResponse.setMessage("Paid by binding successfully but external status wasn't changed");
+                    paymentResponse.setMessage("Paid by BINDING successfully but external status wasn't changed");
                 }
             } else {
                 paymentResponse.setStatus(ResponseStatus.FAIL);
@@ -213,9 +212,9 @@ public class OrderService {
             paymentResponse.setRedirectUrlOrPagePath(integrationPaymentResponse.getRedirectUrlOrPagePath());
             merchantOrderRepository.save(merchantOrder);
         } catch (IntegrationException e) {
-            logger.error("Error binding payment by orderId:" + paymentRequest.getOrderId(),e);
+            logger.error("Error BINDING payment by orderId:" + paymentRequest.getOrderId(),e);
             paymentResponse.setStatus(ResponseStatus.FAIL);
-            paymentResponse.setMessage("Error external binding payment by id: " + paymentRequest.getOrderId());
+            paymentResponse.setMessage("Error external BINDING payment by id: " + paymentRequest.getOrderId());
             paymentResponse.setOrderId(paymentRequest.getOrderId());
         }
         return paymentResponse;
@@ -269,19 +268,18 @@ public class OrderService {
             paymentResponse.setOrderId(merchantOrder.getOrderId());
             paymentResponse.setMessage(integrationPaymentResponse.getMessage());
             merchantOrder.setPaymentSecureType(integrationPaymentResponse.getPaymentSecureType());
+            merchantOrder.setOrderStatus(integrationPaymentResponse.getOrderStatus());
+            merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());
+            merchantOrder.setExternalId(integrationPaymentResponse.getExternalId());
             if ( integrationPaymentResponse.isSuccess() ) {
                 if (!merchantOrder.getOrderStatus().equals(integrationPaymentResponse.getOrderStatus())) {
-                    merchantOrder.setOrderStatus(integrationPaymentResponse.getOrderStatus());
-                    merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());
-                    merchantOrder.setExternalId(integrationPaymentResponse.getExternalId());
-                    if ( merchantOrder.getOrderStatus().equals(OrderStatus.PAID) ) merchantOrder.setPaymentDate(new Date());
                     paymentResponse.setMessage("Paid successfully");
 
                     if ( null != client && merchantOrder.getMerchant().isCreateBinding()
                             && !bindingService.isExists(client, paymentRequest.getPaymentParams(), paymentRequest.getPaymentWay() )) {
                         Binding binding = bindingService.register(client, paymentRequest.getPaymentParams(), merchantOrder, false);
                         if ( null != binding ) {
-                            logger.debug("Successfully binding created: {}", binding);
+                            logger.debug("Successfully BINDING created: {}", binding);
                         }
                         else {
                             logger.warn("Binding not created for order: {}", merchantOrder);
@@ -418,12 +416,10 @@ public class OrderService {
     private IntegrationOrderStatusResponse doInnerGetOrderStatus(MerchantOrder merchantOrder) throws IntegrationException {
         IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(merchantOrder.getIntegrationSupport(),merchantOrder.getExternalId());
         IntegrationOrderStatusResponse integrationOrderStatusResponse = integrationService.getOrderStatus(integrationOrderStatusRequest);
+        integrationOrderStatusResponse.setOrderId(merchantOrder.getOrderId());
         if ( !merchantOrder.getOrderStatus().equals(integrationOrderStatusResponse.getOrderStatus()) ) {
             merchantOrder.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
             merchantOrder.setExternalOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus().getStatus());
-            if ( null == merchantOrder.getPaymentDate() && merchantOrder.getOrderStatus().equals(OrderStatus.PAID) ) {
-                merchantOrder.setPaymentDate(new Date());
-            }
             merchantOrderRepository.save(merchantOrder);
         }
         bindingService.update(merchantOrder, integrationOrderStatusResponse.getBindingInfo());

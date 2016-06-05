@@ -12,6 +12,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
+import org.springframework.web.client.RestTemplate;
 import ru.qrhandshake.qrpos.integration.IntegrationFacade;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
@@ -50,8 +51,13 @@ public class ApplicationConfig {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS,false);
         objectMapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
-        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        //objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
         return objectMapper;
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 
     @Bean

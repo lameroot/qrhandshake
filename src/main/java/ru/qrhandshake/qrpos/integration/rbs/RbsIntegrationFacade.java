@@ -116,7 +116,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             PaymentOrderResult paymentOrderResult = getMerchantService().paymentOrderBinding(paymentOrderBindingParams);
             handlePaymentResult(integrationPaymentResponse, integrationPaymentBindingRequest, externalOrderId, paymentOrderResult);
         } catch (Exception e) {
-            throw new IntegrationException("Error integration binding payment order by orderId: " + integrationPaymentBindingRequest.getOrderId(),e);
+            throw new IntegrationException("Error integration BINDING payment order by orderId: " + integrationPaymentBindingRequest.getOrderId(),e);
         }
         return integrationPaymentResponse;
     }

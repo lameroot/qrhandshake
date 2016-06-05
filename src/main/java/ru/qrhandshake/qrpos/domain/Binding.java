@@ -7,7 +7,7 @@ import java.util.Date;
  * Created by lameroot on 24.05.16.
  */
 @Entity
-@Table(name = "binding")
+@Table(name = "BINDING")
 public class Binding {
 
     @Id

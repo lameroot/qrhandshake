@@ -10,6 +10,6 @@ public class CardPaymentRequest extends PaymentRequest<CardPaymentParams> {
 
     @Override
     public PaymentWay getPaymentWay() {
-        return PaymentWay.card;
+        return PaymentWay.CARD;
     }
 }

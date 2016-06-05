@@ -14,7 +14,7 @@ public class PaymentRequest<P extends PaymentParams> {
     @NotNull
     private String orderId;
     @NotNull
-    private PaymentWay paymentWay = PaymentWay.card;
+    private PaymentWay paymentWay = PaymentWay.CARD;
     @NotNull
     @Valid
     private P paymentParams;

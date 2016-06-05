@@ -20,11 +20,12 @@ public class MerchantOrderDto {
     private IntegrationSupport integrationSupport;
     private String currency;
     private String language;
+    private String orderId;
 
     public MerchantOrderDto(){}
     public MerchantOrderDto(MerchantOrder merchantOrder){
         this.id = merchantOrder.getId();
-
+        this.orderId = merchantOrder.getOrderId();
         this.amount = merchantOrder.getAmount();
         this.description = merchantOrder.getDescription();
 
@@ -112,5 +113,13 @@ public class MerchantOrderDto {
 
     public void setLanguage(String language) {
         this.language = language;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 }

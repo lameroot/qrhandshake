@@ -4,6 +4,8 @@
     <title>Finish</title>
 </head>
 <body>
-
+    OrderStatus: ${orderStatus} <br/>
+    OrderId: ${orderId} <br/>
+    Status: ${status}
 </body>
 </html>

@@ -45,7 +45,8 @@ public class ServletConfig extends WebMvcConfigurationSupport {
     @Bean
     public ViewResolver viewResolver() {
         InternalResourceViewResolver resolver = new InternalResourceViewResolver();
-        resolver.setPrefix("/WEB-INF/jsp/");
+        //resolver.setPrefix("/WEB-INF/jsp/");
+        resolver.setPrefix("/WEB-INF/");
         resolver.setSuffix(".jsp");
         return resolver;
     }

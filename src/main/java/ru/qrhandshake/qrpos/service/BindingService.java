@@ -46,7 +46,7 @@ public class BindingService {
 
             return bindingRepository.save(binding);
         } catch (Exception e) {
-            logger.error("Error create binding for order: " + merchantOrder + " and client: " + client,e);
+            logger.error("Error create BINDING for order: " + merchantOrder + " and client: " + client,e);
             return null;
         }
     }
@@ -55,7 +55,7 @@ public class BindingService {
         if ( null == merchantOrder || null == bindingInfo ) return;
         Binding binding = bindingRepository.findByOrderId(merchantOrder.getOrderId());
         if ( null == binding ) {
-            logger.warn("Unable to find binding by orderId: {}", merchantOrder.getOrderId());
+            logger.warn("Unable to find BINDING by orderId: {}", merchantOrder.getOrderId());
             return;
         }
         if ( binding.isCompleted() ) {
@@ -81,7 +81,7 @@ public class BindingService {
 
     public boolean isExists(Client client, PaymentParams paymentParams, PaymentWay paymentWay) {
         return getBindings(client,paymentWay).stream()
-                .filter(b-> jsonService.jsonToPaymentParams(b.getPaymentParams()).equals(paymentParams))
+                .filter(b-> jsonService.jsonToPaymentParams(b.getPaymentParams(), paymentWay).equals(paymentParams))
                 .findFirst().isPresent();
     }
 

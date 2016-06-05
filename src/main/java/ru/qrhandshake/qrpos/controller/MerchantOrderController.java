@@ -44,6 +44,10 @@ public class MerchantOrderController {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    @InitBinder
+    public void init(WebDataBinder webDataBinder) {
+        webDataBinder.registerCustomEditor(PaymentWay.class, new PaymentWayConverter());
+    }
 
     @RequestMapping(value = REGISTER_PATH)
     @ResponseBody
@@ -60,18 +64,14 @@ public class MerchantOrderController {
     @RequestMapping(value = PAYMENT_PATH + "/{orderId}", method = RequestMethod.GET)
     public String paymentPage(@PathVariable(value = "orderId") String orderId, Model model) throws MerchantOrderNotFoundException {
         MerchantOrder merchantOrder = orderService.findByOrderId(orderId);
+        //todo: проверять что заказ уже оплачен и в этом случае на страницу и также проверику в пэйменте
         if ( null == merchantOrder ) throw new MerchantOrderNotFoundException("Order: " + orderId + " not found");
 
         MerchantOrderDto merchantOrderDto = new MerchantOrderDto(merchantOrder);
         model.addAttribute("merchantOrder", merchantOrderDto);
-        return "payment";//return payment page as jsp
+        return "payment_ru";
     }
 
-    @InitBinder
-    public void init(WebDataBinder webDataBinder) {
-        webDataBinder.registerCustomEditor(PaymentWay.class, new PaymentWayConverter());
-        //todo: сделать в верхнем регистре
-    }
 
     @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST, params = {"paymentWay=card"})
     public String cardPayment(Principal principal, @Valid CardPaymentRequest paymentRequest,
@@ -90,6 +90,7 @@ public class MerchantOrderController {
 
     @RequestMapping(value = FINISH_PATH + "/{orderId}")
     public String finish(@PathVariable(value = "orderId") String orderId, Model model) {
+        //todo: когда клиент приходит н-р с ацс, то виден внешний идентификатор в запросе клиенту, может стоит его убрать
         FinishRequest finishRequest = new FinishRequest(orderId);
         FinishResponse finishResponse = orderService.finish(finishRequest);
         model.addAttribute("orderStatus",finishResponse.getOrderStatus());
@@ -122,7 +123,7 @@ public class MerchantOrderController {
             client = (Client) ((Authentication) principal).getPrincipal();
             paymentRequest.setClient(client);
         }
-        paymentRequest.setReturnUrl(request.getScheme() + "://" + request.getServerName() + request.getRequestURI() + FINISH_PATH + "/" + paymentRequest.getOrderId());
+        paymentRequest.setReturnUrl(request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + MERCHANT_ORDER_PATH + FINISH_PATH + "/" + paymentRequest.getOrderId());
         PaymentResponse paymentResponse = orderService.payment(paymentRequest, model);
         if ( ResponseStatus.SUCCESS.equals(paymentResponse.getStatus()) ) {
             logger.debug("Return success payment page: {}", paymentResponse.getRedirectUrlOrPagePath());

@@ -11,4 +11,5 @@ import ru.qrhandshake.qrpos.domain.MerchantOrder;
 public interface MerchantOrderRepository extends CrudRepository<MerchantOrder, Long> {
 
     MerchantOrder findByOrderId(String orderId);
+    MerchantOrder findBySessionId(String sessionId);
 }

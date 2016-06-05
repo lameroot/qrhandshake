@@ -9,6 +9,6 @@ public class BindingPaymentRequest extends PaymentRequest<BindingPaymentParams> 
 
     @Override
     public PaymentWay getPaymentWay() {
-        return PaymentWay.binding;
+        return PaymentWay.BINDING;
     }
 }

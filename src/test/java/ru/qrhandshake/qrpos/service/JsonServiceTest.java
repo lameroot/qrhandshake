@@ -4,6 +4,7 @@ import org.junit.Test;
 import ru.qrhandshake.qrpos.GeneralTest;
 import ru.qrhandshake.qrpos.api.CardPaymentParams;
 import ru.qrhandshake.qrpos.api.PaymentParams;
+import ru.qrhandshake.qrpos.domain.PaymentWay;
 
 import javax.annotation.Resource;
 
@@ -28,7 +29,7 @@ public class JsonServiceTest extends GeneralTest {
         assertNotNull(json);
         System.out.println(json);
 
-        PaymentParams paymentParams = jsonService.jsonToPaymentParams(json);
+        PaymentParams paymentParams = jsonService.jsonToPaymentParams(json, PaymentWay.CARD);
         assertNotNull(paymentParams);
         System.out.println(paymentParams);
         if ( paymentParams instanceof CardPaymentParams ) {

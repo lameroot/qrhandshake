@@ -14,16 +14,16 @@ public class IntegrationSupportService {
     public IntegrationSupport checkIntegrationSupport(Merchant merchant, PaymentRequest paymentRequest) {
         if ( null != merchant && null != merchant.getIntegrationSupport() ) return merchant.getIntegrationSupport();
         switch (paymentRequest.getPaymentWay()) {
-            case card: {
+            case CARD: {
                 return IntegrationSupport.RBS_SBRF;//todo: hardcode only sber
             }
-            case yandex_wallet: {
+            case YANDEX_WALLET: {
                 return IntegrationSupport.YANDEX_WALLET;
             }
-            case qiwi_wallet: {
+            case QIWI_WALLET: {
                 return IntegrationSupport.QIWI_WALLET;
             }
-            case google_wallet: {
+            case GOOGLE_WALLET: {
                 return IntegrationSupport.GOOGLE_WALLET;
             }
         }

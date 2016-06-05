@@ -3,7 +3,6 @@ package ru.qrhandshake.qrpos.repository;
 import org.junit.Test;
 import ru.qrhandshake.qrpos.GeneralTest;
 import ru.qrhandshake.qrpos.api.CardPaymentParams;
-import ru.qrhandshake.qrpos.api.PaymentParams;
 import ru.qrhandshake.qrpos.domain.Binding;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.PaymentWay;
@@ -12,9 +11,7 @@ import ru.qrhandshake.qrpos.service.ClientService;
 import ru.qrhandshake.qrpos.service.JsonService;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by lameroot on 03.06.16.
@@ -59,7 +56,7 @@ public class BindingRepositoryTest extends GeneralTest {
         Client client = clientService.findByUsername("client");
         assertNotNull(client);
 
-        List<Binding> bindings = bindingRepository.findByClientAndPaymentsWays(client, PaymentWay.card, PaymentWay.binding);
+        List<Binding> bindings = bindingRepository.findByClientAndPaymentsWays(client, PaymentWay.CARD, PaymentWay.BINDING);
         assertNotNull(bindings);
         for (Binding binding : bindings) {
             System.out.println(binding);
@@ -71,7 +68,7 @@ public class BindingRepositoryTest extends GeneralTest {
         Client client = clientService.findByUsername("client");
         assertNotNull(client);
 
-        List<Binding> bindings = bindingRepository.findByClientAndPaymentsWays(client, PaymentWay.card);
+        List<Binding> bindings = bindingRepository.findByClientAndPaymentsWays(client, PaymentWay.CARD);
         Binding binding = bindings.stream().findFirst().get();
         CardPaymentParams paymentParams = jsonService.jsonToPaymentParams(binding.getPaymentParams(), CardPaymentParams.class);
         System.out.println(paymentParams);

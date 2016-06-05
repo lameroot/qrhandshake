@@ -5,8 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import ru.qrhandshake.qrpos.api.BindingPaymentParams;
 import ru.qrhandshake.qrpos.api.CardPaymentParams;
 import ru.qrhandshake.qrpos.api.PaymentParams;
+import ru.qrhandshake.qrpos.api.YandexMoneyPaymentParams;
+import ru.qrhandshake.qrpos.domain.PaymentWay;
 
 import javax.annotation.Resource;
 import java.io.IOException;
@@ -37,9 +40,10 @@ public class JsonService {
         return null;
     }
 
-    public PaymentParams jsonToPaymentParams(String str) {
+    public PaymentParams jsonToPaymentParams(String str, PaymentWay paymentWay) {
+        Class<? extends PaymentParams> clazz = defineClassOfPaymentParamsByPaymentWay(paymentWay);
         try {
-            return objectMapper.readValue(str, PaymentParams.class);
+            return objectMapper.readValue(str, clazz);
         } catch (IOException e) {
             logger.error("Error read str: " + str,e);
             return null;
@@ -53,5 +57,16 @@ public class JsonService {
             logger.error("Error read str: " + str,e);
             return null;
         }
+    }
+
+    private Class<? extends PaymentParams> defineClassOfPaymentParamsByPaymentWay(PaymentWay paymentWay) {
+        if ( null == paymentWay ) throw new IllegalArgumentException("PaymentWay is null");
+        switch (paymentWay) {
+            case CARD: return CardPaymentParams.class;
+            case BINDING: return BindingPaymentParams.class;
+            case YANDEX_WALLET: return YandexMoneyPaymentParams.class;
+
+        }
+        throw new IllegalArgumentException("Unknown payment way: " + paymentWay);
     }
 }

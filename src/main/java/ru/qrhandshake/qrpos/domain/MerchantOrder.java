@@ -46,7 +46,7 @@ public class MerchantOrder {
     @Column(name = "orderStatus")
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus = OrderStatus.REGISTERED;
-    @Column(name = "session_id", unique = true)
+    @Column(name = "session_id")
     private String sessionId;
     @Column(name = "payment_secure_type")
     @Enumerated(EnumType.STRING)
@@ -133,6 +133,9 @@ public class MerchantOrder {
 
     public void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
+        if ( null == this.paymentDate && null != this.orderStatus && this.orderStatus.equals(OrderStatus.PAID) ) {
+            this.paymentDate = new Date();
+        }
     }
 
     public String getExternalId() {

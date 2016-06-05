@@ -304,7 +304,7 @@
                 <version>9.2.11.v20150529</version>
                 <configuration>
                     <webApp>
-                        <contextPath>/qr</contextPath>
+                        <contextPath>/qrpos</contextPath>
                         <webInfIncludeJarPattern>.*/spring-web.*.jar$</webInfIncludeJarPattern>
                     </webApp>
                     <scanIntervalSeconds>0</scanIntervalSeconds>
@@ -318,6 +318,7 @@
                             <value>org.eclipse.jetty.util.log.Slf4jLog</value>
                         </systemProperty>
                     </systemProperties>
+
                 </configuration>
             </plugin>
             <plugin>
