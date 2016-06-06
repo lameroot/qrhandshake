@@ -11,6 +11,7 @@ public class PaymentResponse extends ApiResponse {
     private String redirectUrlOrPagePath;
     private OrderStatus orderStatus;
     private PaymentAuthType paymentAuthType = PaymentAuthType.ANONYMOUS;
+    private String bindingId;
 
     public String getOrderId() {
         return orderId;
@@ -42,5 +43,13 @@ public class PaymentResponse extends ApiResponse {
 
     public void setPaymentAuthType(PaymentAuthType paymentAuthType) {
         this.paymentAuthType = paymentAuthType;
+    }
+
+    public String getBindingId() {
+        return bindingId;
+    }
+
+    public void setBindingId(String bindingId) {
+        this.bindingId = bindingId;
     }
 }

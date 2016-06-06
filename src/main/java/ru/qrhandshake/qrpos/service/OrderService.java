@@ -175,6 +175,7 @@ public class OrderService {
             return paymentResponse;
         }
         merchantOrder.setIntegrationSupport(integrationSupport);
+        merchantOrder.setPaymentWay(paymentRequest.getPaymentWay());
         IntegrationPaymentBindingRequest integrationPaymentBindingRequest = new IntegrationPaymentBindingRequest(integrationSupport,binding.getExternalBindingId());
         integrationPaymentBindingRequest.setPaymentParams(paymentRequest.getPaymentParams());
         integrationPaymentBindingRequest.setAmount(merchantOrder.getAmount());
@@ -189,6 +190,7 @@ public class OrderService {
         integrationPaymentBindingRequest.setIp(paymentRequest.getIp());
         integrationPaymentBindingRequest.setBindingId(binding.getBindingId());
 
+        paymentResponse.setBindingId(binding.getBindingId());
         try {
             IntegrationPaymentResponse integrationPaymentResponse = integrationService.paymentBinding(integrationPaymentBindingRequest);
             paymentResponse.setStatus(ResponseStatus.SUCCESS);
@@ -272,7 +274,7 @@ public class OrderService {
             merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());
             merchantOrder.setExternalId(integrationPaymentResponse.getExternalId());
             if ( integrationPaymentResponse.isSuccess() ) {
-                if (!merchantOrder.getOrderStatus().equals(integrationPaymentResponse.getOrderStatus())) {
+                if (merchantOrder.getOrderStatus() == OrderStatus.PAID) {
                     paymentResponse.setMessage("Paid successfully");
 
                     if ( null != client && merchantOrder.getMerchant().isCreateBinding()
@@ -280,6 +282,7 @@ public class OrderService {
                         Binding binding = bindingService.register(client, paymentRequest.getPaymentParams(), merchantOrder, false);
                         if ( null != binding ) {
                             logger.debug("Successfully BINDING created: {}", binding);
+                            paymentResponse.setBindingId(binding.getBindingId());
                         }
                         else {
                             logger.warn("Binding not created for order: {}", merchantOrder);

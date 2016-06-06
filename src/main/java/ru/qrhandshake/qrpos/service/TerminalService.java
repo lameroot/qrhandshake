@@ -19,6 +19,7 @@ import ru.qrhandshake.qrpos.domain.User;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.repository.TerminalRepository;
 import ru.qrhandshake.qrpos.repository.UserRepository;
+import ru.qrhandshake.qrpos.util.Util;
 
 import javax.annotation.Resource;
 import java.security.Principal;
@@ -38,29 +39,16 @@ public class TerminalService {
     @Resource
     private SecurityService securityService;
 
-    private static final char[] _base62chars = "123456789ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijklmnpqrstuvwxyz".toCharArray();
     private static final int LENGTH_AUTH = 8;
 
     String generateUniqueAuthName() {
-        Random _random = new Random();
-        StringBuilder sb = new StringBuilder(LENGTH_AUTH);
-
-        for (int i=0; i<LENGTH_AUTH; i++) {
-            sb.append(_base62chars[_random.nextInt(36)]);
-        }
-        String name = sb.toString();
+        String name = Util.generatePseudoUnique(LENGTH_AUTH);
         if ( null != terminalRepository.findByAuthName(name) ) return generateUniqueAuthName();
         return name;
     }
 
     String generateAuthPassword() {
-        Random _random = new Random();
-        StringBuilder sb = new StringBuilder(LENGTH_AUTH);
-
-        for (int i=0; i<LENGTH_AUTH; i++) {
-            sb.append(_base62chars[_random.nextInt(36)]);
-        }
-        return sb.toString();
+        return Util.generatePseudoUnique(LENGTH_AUTH);
     }
 
     public Terminal auth(ApiAuth apiAuth) {
