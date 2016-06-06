@@ -1,5 +1,7 @@
 package ru.qrhandshake.qrpos.api;
 
+import java.beans.Transient;
+
 /**
  * Created by lameroot on 24.05.16.
  */
@@ -29,5 +31,12 @@ public class ApiResponse {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public static class ErrorApiResponse extends ApiResponse {
+        public ErrorApiResponse(ResponseStatus status, String message) {
+            setStatus(status);
+            setMessage(message);
+        }
     }
 }

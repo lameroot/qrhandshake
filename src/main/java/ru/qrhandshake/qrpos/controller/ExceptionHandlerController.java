@@ -7,6 +7,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import ru.qrhandshake.qrpos.api.ApiResponse;
+import ru.qrhandshake.qrpos.api.ResponseStatus;
 import ru.qrhandshake.qrpos.dto.MerchantResponse;
 import ru.qrhandshake.qrpos.dto.ResponseCode;
 import ru.qrhandshake.qrpos.exception.AuthException;
@@ -32,16 +34,16 @@ public class ExceptionHandlerController {
 
     @ExceptionHandler(value = AuthException.class)
     @ResponseBody
-    public MerchantResponse authException(AuthException e) {
+    public ApiResponse authException(AuthException e) {
         logger.error("Auth error",e);
-        return new MerchantResponse.ErrorMerchantResponse(ResponseCode.FAIL,e.getMessage());//todo:locale
+        return new ApiResponse.ErrorApiResponse(ResponseStatus.FAIL,e.getMessage());//todo:locale
     }
 
     @ExceptionHandler(value = MerchantOrderNotFoundException.class)
     @ResponseBody
-    public MerchantResponse merchantOrderNotFoundException(MerchantOrderNotFoundException e) {
+    public ApiResponse merchantOrderNotFoundException(MerchantOrderNotFoundException e) {
         logger.error("Order not found",e);
-        return new MerchantResponse.ErrorMerchantResponse(ResponseCode.FAIL, e.getMessage());//todo: locale
+        return new ApiResponse.ErrorApiResponse(ResponseStatus.FAIL, e.getMessage());//todo: locale
     }
 
     @ExceptionHandler(value = IllegalOrderStatusException.class)

@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.dto;
 
+
 /**
  * Created by lameroot on 18.05.16.
  */
@@ -24,10 +25,5 @@ public abstract class MerchantResponse {
         this.responseMessage = responseMessage;
     }
 
-    public static class ErrorMerchantResponse extends MerchantResponse {
-        public ErrorMerchantResponse(ResponseCode responseCode, String responseMessage) {
-            setResponseCode(responseCode);
-            setResponseMessage(responseMessage);
-        }
-    }
+
 }
