@@ -1,6 +1,5 @@
 package ru.qrhandshake.qrpos.api;
 
-import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.PaymentWay;
 
 import java.util.Set;
@@ -10,16 +9,7 @@ import java.util.Set;
  */
 public class GetBindingsRequest  {
 
-    private Client client;
     private Set<PaymentWay> paymentWays;
-
-    public Client getClient() {
-        return client;
-    }
-
-    public void setClient(Client client) {
-        this.client = client;
-    }
 
     public Set<PaymentWay> getPaymentWays() {
         return paymentWays;

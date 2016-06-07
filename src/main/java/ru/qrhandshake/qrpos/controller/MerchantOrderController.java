@@ -14,6 +14,7 @@ import ru.qrhandshake.qrpos.converter.PaymentWayConverter;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.domain.PaymentWay;
+import ru.qrhandshake.qrpos.domain.Terminal;
 import ru.qrhandshake.qrpos.dto.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
@@ -51,14 +52,16 @@ public class MerchantOrderController {
 
     @RequestMapping(value = REGISTER_PATH)
     @ResponseBody
-    public MerchantOrderRegisterResponse register(@Valid MerchantOrderRegisterRequest merchantOrderRegisterRequest) throws AuthException {
-        return orderService.register(merchantOrderRegisterRequest);
+    public MerchantOrderRegisterResponse register(Principal principal,@Valid MerchantOrderRegisterRequest merchantOrderRegisterRequest)
+            throws AuthException {
+        return orderService.register(terminalAuth(principal), merchantOrderRegisterRequest);
     }
 
     @RequestMapping(value = ORDER_STATUS_PATH)
     @ResponseBody
-    public MerchantOrderStatusResponse getOrderStatus(@Valid MerchantOrderStatusRequest merchantOrderStatusRequest) throws AuthException {
-        return orderService.getOrderStatus(merchantOrderStatusRequest);
+    public MerchantOrderStatusResponse getOrderStatus(Principal principal,
+            @Valid MerchantOrderStatusRequest merchantOrderStatusRequest) throws AuthException {
+        return orderService.getOrderStatus(terminalAuth(principal), merchantOrderStatusRequest);
     }
 
     @RequestMapping(value = PAYMENT_PATH + "/{orderId}", method = RequestMethod.GET)
@@ -76,14 +79,14 @@ public class MerchantOrderController {
     @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST, params = {"paymentWay=card"})
     public String cardPayment(Principal principal, @Valid CardPaymentRequest paymentRequest,
                               HttpServletRequest request,
-                              Model model) {
+                              Model model) throws AuthException {
         return handlePaymentRequest(principal,paymentRequest,request,model);
     }
 
     @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST, params = {"paymentWay=binding"})
     public String bindingPayment(Principal principal, @Valid BindingPaymentRequest paymentRequest,
                                  HttpServletRequest request,
-                                 Model model) {
+                                 Model model) throws AuthException {
         return handlePaymentRequest(principal,paymentRequest,request,model);
     }
 
@@ -101,8 +104,8 @@ public class MerchantOrderController {
 
     @RequestMapping(value = REVERSE_PATH, method = RequestMethod.POST)
     @ResponseBody
-    public MerchantOrderReverseResponse reverse(@Valid MerchantOrderReverseRequest merchantOrderReverseRequest) throws AuthException {
-        return orderService.reverse(merchantOrderReverseRequest);
+    public MerchantOrderReverseResponse reverse(Principal principal, @Valid MerchantOrderReverseRequest merchantOrderReverseRequest) throws AuthException {
+        return orderService.reverse(terminalAuth(principal), merchantOrderReverseRequest);
     }
 
     @RequestMapping(value = GET_BINDINGS_PATH)
@@ -111,20 +114,19 @@ public class MerchantOrderController {
         Client client = null;
         if ( null != principal ) {
             client = (Client) ((Authentication) principal).getPrincipal();
-            getBindingsRequest.setClient(client);
         }
-        return orderService.getBindings(getBindingsRequest);
+        if ( null == client ) throw new AuthException("Client not auth");
+        return orderService.getBindings(client, getBindingsRequest);
     }
 
-    private String handlePaymentRequest(Principal principal, PaymentRequest paymentRequest, HttpServletRequest request, Model model) {
+    private String handlePaymentRequest(Principal principal, PaymentRequest paymentRequest, HttpServletRequest request, Model model) throws AuthException {
         paymentRequest.setIp(request.getRemoteUser());
         Client client = null;
         if ( null != principal ) {
             client = (Client) ((Authentication) principal).getPrincipal();
-            paymentRequest.setClient(client);
         }
         paymentRequest.setReturnUrl(request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + MERCHANT_ORDER_PATH + FINISH_PATH + "/" + paymentRequest.getOrderId());
-        PaymentResponse paymentResponse = orderService.payment(paymentRequest, model);
+        PaymentResponse paymentResponse = orderService.payment(client, paymentRequest, model);
         if ( ResponseStatus.SUCCESS.equals(paymentResponse.getStatus()) ) {
             logger.debug("Return success payment page: {}", paymentResponse.getRedirectUrlOrPagePath());
             return paymentResponse.getRedirectUrlOrPagePath();
@@ -133,6 +135,15 @@ public class MerchantOrderController {
             logger.error("Error payment of order: {}, cause: {}",paymentRequest.getOrderId(),paymentResponse.getMessage());
             return "redirect:" + PAYMENT_PATH + "/" + paymentRequest.getOrderId();
         }
+    }
+
+    private Terminal terminalAuth(Principal principal) throws AuthException {
+        Terminal terminal = null;
+        if ( null != principal ) {
+            terminal = (Terminal) ((Authentication) principal).getPrincipal();
+        }
+        if ( null == terminal ) throw new AuthException("Terminal not auth");
+        return terminal;
     }
 
 }

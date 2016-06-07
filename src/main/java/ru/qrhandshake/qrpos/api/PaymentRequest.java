@@ -20,7 +20,6 @@ public class PaymentRequest<P extends PaymentParams> {
     private P paymentParams;
     private String ip;//todo: перенести в общий класс на уровень выше
     private String returnUrl;
-    private Client client;
 
     public String getOrderId() {
         return orderId;
@@ -63,11 +62,4 @@ public class PaymentRequest<P extends PaymentParams> {
         this.ip = ip;
     }
 
-    public Client getClient() {
-        return client;
-    }
-
-    public void setClient(Client client) {
-        this.client = client;
-    }
 }

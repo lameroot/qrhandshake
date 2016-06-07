@@ -6,7 +6,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by lameroot on 20.05.16.
  */
-public class MerchantOrderStatusRequest extends ApiAuth {
+public class MerchantOrderStatusRequest {
 
     @NotNull
     private String orderId;

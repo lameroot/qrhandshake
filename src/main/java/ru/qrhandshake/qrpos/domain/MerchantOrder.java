@@ -37,8 +37,8 @@ public class MerchantOrder {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_terminal_id")
     private Terminal terminal;
-    //todo: future
-    @Transient
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fk_client_id")
     private Client client;
     @Column(name = "integration")
     @Enumerated(EnumType.STRING)

@@ -41,11 +41,7 @@ public class OrderService {
     @Resource
     private ClientRepository clientRepository;
 
-    public MerchantOrderRegisterResponse register(MerchantOrderRegisterRequest merchantOrderRegisterRequest) throws AuthException {
-        Terminal terminal = null;
-        if ( null == (terminal = terminalService.auth(merchantOrderRegisterRequest)) ) {
-            throw new AuthException(merchantOrderRegisterRequest);
-        }
+    public MerchantOrderRegisterResponse register(Terminal terminal, MerchantOrderRegisterRequest merchantOrderRegisterRequest) {
         Merchant merchant = terminal.getMerchant();
 
         MerchantOrder merchantOrder = new MerchantOrder();
@@ -72,11 +68,7 @@ public class OrderService {
         return merchantOrderRegisterResponse;
     }
 
-    public MerchantOrderStatusResponse getOrderStatus(MerchantOrderStatusRequest merchantOrderStatusRequest) throws AuthException{
-        Terminal terminal = null;
-        if ( null == (terminal = terminalService.auth(merchantOrderStatusRequest)) ) {
-            throw new AuthException(merchantOrderStatusRequest);
-        }
+    public MerchantOrderStatusResponse getOrderStatus(Terminal terminal, MerchantOrderStatusRequest merchantOrderStatusRequest) throws AuthException {
         MerchantOrderStatusResponse merchantOrderStatusResponse = new MerchantOrderStatusResponse();
         MerchantOrder merchantOrder = findByOrderId(merchantOrderStatusRequest.getOrderId());
         if ( null == merchantOrder ) {
@@ -115,12 +107,12 @@ public class OrderService {
         return merchantOrderStatusResponse;
     }
 
-    public PaymentResponse payment(PaymentRequest paymentRequest, Model model) {
+    public PaymentResponse payment(Client client, PaymentRequest paymentRequest, Model model) throws AuthException {
         if ( paymentRequest instanceof CardPaymentRequest ) {
-            return cardPayment((CardPaymentRequest)paymentRequest, model);
+            return cardPayment(client, (CardPaymentRequest)paymentRequest, model);
         }
         else if ( paymentRequest instanceof BindingPaymentRequest ) {
-            return bindingPayment((BindingPaymentRequest)paymentRequest, model);
+            return bindingPayment(client, (BindingPaymentRequest)paymentRequest, model);
         }
         else {
             logger.warn("Unknown type of payment request: {}", paymentRequest);
@@ -131,17 +123,15 @@ public class OrderService {
         }
     }
 
-    private PaymentResponse bindingPayment(BindingPaymentRequest paymentRequest, Model model) {
+    private PaymentResponse bindingPayment(Client clientRequest, BindingPaymentRequest paymentRequest, Model model) throws AuthException {
         PaymentResponse paymentResponse = new PaymentResponse();
         Client client = null;
-        if ( null != (client = paymentRequest.getClient()) ) {
-            client = clientRepository.findOne(client.getId());//attach to session (//todo: проверить может и не надо)
+        if ( null != clientRequest ) {
+            client = clientRepository.findOne(clientRequest.getId());//attach to session (//todo: проверить может и не надо)
             paymentResponse.setPaymentAuthType(PaymentAuthType.CLIENT_AUTH);
         }
         else {
-            paymentResponse.setStatus(ResponseStatus.FAIL);
-            paymentResponse.setMessage("Binding payment requires client auth");
-            return paymentResponse;
+            throw new AuthException("Client not auth");
         }
         MerchantOrder merchantOrder = findByOrderId(paymentRequest.getOrderId());
         if ( null == merchantOrder ) {
@@ -222,11 +212,11 @@ public class OrderService {
         return paymentResponse;
     }
 
-    private PaymentResponse cardPayment(CardPaymentRequest paymentRequest, Model model) {
+    private PaymentResponse cardPayment(Client clientRequest, CardPaymentRequest paymentRequest, Model model) {
         PaymentResponse paymentResponse = new PaymentResponse();
         Client client = null;
-        if ( null != (client = paymentRequest.getClient()) ) {
-            client = clientRepository.findOne(client.getId());//attach to session (//todo: проверить может и не надо)
+        if ( null != clientRequest ) {
+            client = clientRepository.findOne(clientRequest.getId());//attach to session (//todo: проверить может и не надо)
             paymentResponse.setPaymentAuthType(PaymentAuthType.CLIENT_AUTH);
         }
         MerchantOrder merchantOrder = findByOrderId(paymentRequest.getOrderId());
@@ -251,6 +241,7 @@ public class OrderService {
         }
         merchantOrder.setPaymentWay(paymentRequest.getPaymentWay());
         merchantOrder.setIntegrationSupport(integrationSupport);
+        merchantOrder.setClient(client);
         IntegrationPaymentRequest integrationPaymentRequest = new IntegrationPaymentRequest(integrationSupport);
         integrationPaymentRequest.setPaymentParams(paymentRequest.getPaymentParams());
         integrationPaymentRequest.setAmount(merchantOrder.getAmount());
@@ -306,11 +297,7 @@ public class OrderService {
         return paymentResponse;
     }
 
-    public MerchantOrderReverseResponse reverse(MerchantOrderReverseRequest merchantOrderReverseRequest) throws AuthException {
-        Terminal terminal = null;
-        if ( null == (terminal = terminalService.auth(merchantOrderReverseRequest)) ) {
-            throw new AuthException(merchantOrderReverseRequest);
-        }
+    public MerchantOrderReverseResponse reverse(Terminal terminal, MerchantOrderReverseRequest merchantOrderReverseRequest) throws AuthException {
         MerchantOrderReverseResponse merchantOrderReverseResponse = new MerchantOrderReverseResponse();
         merchantOrderReverseResponse.setOrderId(merchantOrderReverseRequest.getOrderId());
 
@@ -339,10 +326,8 @@ public class OrderService {
             if ( integrationReverseResponse.isSuccess() ) {
                 MerchantOrderStatusRequest merchantOrderStatusRequest = new MerchantOrderStatusRequest();
                 merchantOrderStatusRequest.setOrderId(merchantOrder.getOrderId());
-                merchantOrderStatusRequest.setAuthName(merchantOrderReverseRequest.getAuthName());
-                merchantOrderStatusRequest.setAuthPassword(merchantOrderReverseRequest.getAuthPassword());
                 merchantOrderStatusRequest.setExternalRequest(true);
-                MerchantOrderStatusResponse merchantOrderStatusResponse = getOrderStatus(merchantOrderStatusRequest);
+                MerchantOrderStatusResponse merchantOrderStatusResponse = getOrderStatus(terminal, merchantOrderStatusRequest);
                 if ( merchantOrderStatusResponse.getStatus().equals(ResponseStatus.SUCCESS) ) {
                     merchantOrderReverseResponse.setStatus(ResponseStatus.SUCCESS);
                 }
@@ -386,10 +371,10 @@ public class OrderService {
         return finishResponse;
     }
 
-    public GetBindingsResponse getBindings(GetBindingsRequest getBindingsRequest) {
+    public GetBindingsResponse getBindings(Client clientRequest, GetBindingsRequest getBindingsRequest) {
         GetBindingsResponse getBindingsResponse = new GetBindingsResponse();
         Client client = null;
-        if ( null != (client = getBindingsRequest.getClient()) ) {
+        if ( null != (client = clientRequest) ) {
             client = clientRepository.findOne(client.getId());//attach to session (//todo: проверить может и не надо)
         }
         else {
@@ -398,7 +383,7 @@ public class OrderService {
             return getBindingsResponse;
         }
 
-        List<Binding> bindings = bindingService.getBindings(getBindingsRequest.getClient(), null != getBindingsRequest.getPaymentWays() ? getBindingsRequest.getPaymentWays().toArray(new PaymentWay[]{}) : null);
+        List<Binding> bindings = bindingService.getBindings(client, null != getBindingsRequest.getPaymentWays() ? getBindingsRequest.getPaymentWays().toArray(new PaymentWay[]{}) : null);
         for (Binding binding : bindings) {
             BindingDto bindingDto = new BindingDto();
             bindingDto.setBindingId(binding.getBindingId());

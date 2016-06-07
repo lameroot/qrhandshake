@@ -5,7 +5,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by lameroot on 26.05.16.
  */
-public class MerchantOrderReverseRequest extends ApiAuth {
+public class MerchantOrderReverseRequest {
 
     @NotNull
     private String sessionId;

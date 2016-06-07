@@ -9,9 +9,11 @@ import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.Merchant;
+import ru.qrhandshake.qrpos.domain.Terminal;
 import ru.qrhandshake.qrpos.domain.User;
 import ru.qrhandshake.qrpos.repository.ClientRepository;
 import ru.qrhandshake.qrpos.repository.MerchantRepository;
+import ru.qrhandshake.qrpos.repository.TerminalRepository;
 import ru.qrhandshake.qrpos.repository.UserRepository;
 import ru.qrhandshake.qrpos.service.ClientService;
 
@@ -33,6 +35,8 @@ public class ItTest extends ServletConfigTest {
     @Resource
     private ClientService clientService;
     @Resource
+    private TerminalRepository terminalRepository;
+    @Resource
     protected ObjectMapper objectMapper;
 
     protected MerchantRegisterResponse registerMerchant(String name) throws Exception {
@@ -40,8 +44,8 @@ public class ItTest extends ServletConfigTest {
         if ( null != merchant ) throw new IllegalArgumentException("Merchant with name: " + name + " already exists");
 
         MvcResult mvcResult = mockMvc.perform(post("/merchant/register")
-                .param("authName", name + ".auth")
-                .param("authPassword", name + ".password")
+                .param("authName", name + ".authName")
+                .param("authPassword", name + ".authPassword")
                 .param("name", name))
                 .andDo(print()).andReturn();
         assertNotNull(mvcResult);
@@ -75,6 +79,13 @@ public class ItTest extends ServletConfigTest {
 
     protected TestingAuthenticationToken clientTestingAuthenticationToken(ApiAuth clientApiAuth) {
         return new TestingAuthenticationToken(findClientByUsername(clientApiAuth),null);
+    }
+
+
+    protected TestingAuthenticationToken terminalTestingAuthenticationToken(ApiAuth terminalApiAuth) {
+        Terminal terminal = terminalRepository.findByAuthName(terminalApiAuth.getAuthName());
+        assertNotNull(terminal);
+        return new TestingAuthenticationToken(terminal,null);
     }
 
     protected ClientRegisterResponse registerClient(String username, String password, AuthType authType) throws Exception {
@@ -139,9 +150,10 @@ public class ItTest extends ServletConfigTest {
     }
 
     protected MerchantOrderRegisterResponse registerOrder(ApiAuth terminalAuth, Long amount, String sessionId, String deviceId) throws Exception {
+        ApiResponse apiResponse = authTerminal(terminalAuth.getAuthName(),terminalAuth.getAuthPassword());
+        assertTrue(apiResponse.getStatus() == ResponseStatus.SUCCESS);
         MvcResult mvcResult = mockMvc.perform(get("/order/register")
-                        .param("authName",terminalAuth.getAuthName())
-                        .param("authPassword", terminalAuth.getAuthPassword())
+                        .principal(terminalTestingAuthenticationToken(terminalAuth))
                         .param("amount", amount.toString())
                         .param("sessionId", sessionId)
                         .param("deviceId", deviceId)
@@ -161,8 +173,7 @@ public class ItTest extends ServletConfigTest {
 
     protected MerchantOrderStatusResponse getOrderStatus(ApiAuth terminalAuth, String orderId, boolean externalRequest) throws Exception {
         String getOrderStatusResponse = mockMvc.perform(get("/order" + MerchantOrderController.ORDER_STATUS_PATH)
-                .param("authName", terminalAuth.getAuthName())
-                .param("authPassword", terminalAuth.getAuthPassword())
+                .principal(terminalTestingAuthenticationToken(terminalAuth))
                 .param("orderId", orderId)
                 .param("externalRequest",Boolean.toString(externalRequest)))
                 .andDo(print()).andReturn().getResponse().getContentAsString();
