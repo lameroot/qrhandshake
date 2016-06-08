@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
@@ -25,16 +27,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-@PropertySource(value = {"classpath:config.properties"})
+@PropertySource(ignoreResourceNotFound = true,
+        value = {
+                "classpath:config.properties",
+                "${" + ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION + "}"
+        })
 @ComponentScan(basePackages = {"ru.qrhandshake.qrpos.service"})
 @Import(value = {
         EntityManagerConfig.class,
         DatabaseConfig.class,
-        RbsIntegrationConfig.class,
-        //ServletConfig.class
+        RbsIntegrationConfig.class
 })
 @EnableJpaRepositories(basePackages = {"ru.qrhandshake.qrpos.repository"})
 public class ApplicationConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationConfig.class);
+    public static final String SYSTEM_VARIABLE_CONFIG_LOCATION = "qrConfigLocation";
 
     @Resource
     private ApplicationContext applicationContext;
@@ -85,10 +93,20 @@ public class ApplicationConfig {
         return map;
     }
 
-
     @Bean
     public IntegrationService integrationService() {
         return new IntegrationService(integrationFacades());
+    }
+
+    /**
+     * Установить системную переменную 'qrConfigLocation' как значение по умолчанию, иначе если её не будет, приложение не запустится
+     */
+    public final static void setSystemVariableConfigLocation() {
+        logger.debug("System variable with name '" + ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION + "' has value = '" + System.getProperty(ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION) + "'");
+        if ( null == System.getProperty(ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION) ) {
+            logger.debug("Set system variable with name '" + ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION + "' as fake value.");
+            System.setProperty(ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION,"fake value");
+        }
     }
 
 }

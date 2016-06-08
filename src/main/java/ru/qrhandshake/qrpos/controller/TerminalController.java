@@ -42,7 +42,7 @@ public class TerminalController {
     @ResponseBody
     public TerminalRegisterResponse register(Principal principal, TerminalRegisterRequest terminalRegisterRequest) {
         User user = (User)((Authentication) principal).getPrincipal();
-        if ( !user.canCreateTerminal() ) {//todo: перенести этот код в сервис создания
+        if ( !user.canCreateTerminal() ) {//?? перенести этот код в сервис создания
             TerminalRegisterResponse terminalRegisterResponse = new TerminalRegisterResponse();
             terminalRegisterResponse.setStatus(ResponseStatus.FAIL);
             terminalRegisterResponse.setMessage("User: " + user.getUsername() + " can't create terminal");

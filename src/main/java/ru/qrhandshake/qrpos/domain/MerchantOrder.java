@@ -194,6 +194,10 @@ public class MerchantOrder {
         this.paymentWay = paymentWay;
     }
 
+    public boolean canPayment() {
+        return null != getOrderStatus() && OrderStatus.REGISTERED.equals(getOrderStatus());
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("MerchantOrder{");

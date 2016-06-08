@@ -9,7 +9,9 @@ import org.springframework.ui.Model;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.*;
+import ru.qrhandshake.qrpos.dto.MerchantOrderDto;
 import ru.qrhandshake.qrpos.exception.AuthException;
+import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
 import ru.qrhandshake.qrpos.repository.BindingRepository;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 import ru.qrhandshake.qrpos.repository.UserRepository;
@@ -40,6 +42,90 @@ public class PaymentITTest extends ItTest {
     private MerchantOrderRepository merchantOrderRepository;
     @Resource
     private BindingRepository bindingRepository;
+
+    @Test
+    @Transactional
+    public void testOrderNotFound() throws Exception {
+        String unknownOrderId = UUID.randomUUID().toString();
+        MvcResult mvcResult = mockMvc.perform(get(MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.PAYMENT_PATH + "/" + unknownOrderId))
+                .andDo(print())
+                .andReturn();
+        assertNotNull(mvcResult);
+        assertTrue(mvcResult.getResolvedException() instanceof MerchantOrderNotFoundException);
+        ApiResponse apiResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ApiResponse.class);
+        assertNotNull(apiResponse);
+        assertTrue(ResponseStatus.FAIL == apiResponse.getStatus());
+    }
+
+    @Test
+    @Transactional
+    public void testCanPaymentMerchantOrder() throws Exception {
+        MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
+        TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = registerOrder(terminalRegisterResponse.getAuth(),
+                amount,sessionId,deviceId);
+
+        MvcResult mvcResult = mockMvc.perform(get(MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.PAYMENT_PATH + "/" + merchantOrderRegisterResponse.getOrderId()))
+                .andDo(print())
+                .andReturn();
+        assertNotNull(mvcResult);
+        assertTrue(mvcResult.getModelAndView().getViewName().equals("payment_ru"));
+        assertTrue(mvcResult.getModelAndView().getModel().containsKey("merchantOrder"));
+        assertEquals(merchantOrderRegisterResponse.getOrderId(),((MerchantOrderDto)mvcResult.getModelAndView().getModel().get("merchantOrder")).getOrderId());
+    }
+
+    @Test
+    @Transactional
+    public void testCanNotPaymentMerchantOrder() throws Exception {
+        MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
+        TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = registerOrder(terminalRegisterResponse.getAuth(),
+                amount,sessionId,deviceId);
+        MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .param("orderId", merchantOrderRegisterResponse.getOrderId())
+                        .param("paymentParams.pan", SSL_CARD)
+                        .param("paymentParams.month", "12")
+                        .param("paymentParams.year", "2019")
+                        .param("paymentParams.cardHolderName", "test test")
+                        .param("paymentParams.cvc", "123")
+                        .param("paymentWay", "card")
+        ).andDo(print()).andReturn();
+
+        assertNotNull(mvcResult);
+        assertTrue(mvcResult.getResponse().getStatus() == 302);
+        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("/finish/"));
+        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+
+        MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
+                .param("orderId", merchantOrderRegisterResponse.getOrderId()))
+                .andDo(print())
+                .andReturn();
+        assertNotNull(finishMvcResult);
+        Map<String,Object> finishModel = finishMvcResult.getModelAndView().getModel();
+        assertNotNull(finishModel);
+        assertTrue(!finishModel.isEmpty());
+        assertTrue(ResponseStatus.SUCCESS.equals(finishModel.get("status")));
+        assertTrue(finishMvcResult.getResponse().getForwardedUrl().contains("finish"));
+
+        Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNull(binding);
+
+        MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNotNull(merchantOrder);
+        assertTrue(merchantOrder.getOrderStatus() == OrderStatus.PAID);
+        assertNotNull(merchantOrder.getPaymentDate());
+        assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
+        assertNull(merchantOrder.getClient());
+
+
+        MvcResult mvcResultPayment = mockMvc.perform(get(MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.PAYMENT_PATH + "/" + merchantOrderRegisterResponse.getOrderId()))
+                .andDo(print())
+                .andReturn();
+        assertNotNull(mvcResultPayment);
+        assertTrue(mvcResultPayment.getResponse().getRedirectedUrl().contains(MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.FINISH_PATH + "/" + merchantOrderRegisterResponse.getOrderId()));
+    }
 
     @Test
     @Transactional
@@ -345,8 +431,8 @@ public class PaymentITTest extends ItTest {
         assertTrue(ResponseStatus.SUCCESS == apiResponse.getStatus());
 
         MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
-                        .param("authName",clientRegisterResponse.getAuth().getAuthName())
-                        .param("authPassword",clientRegisterResponse.getAuth().getAuthPassword())
+                        .param("authName", clientRegisterResponse.getAuth().getAuthName())
+                        .param("authPassword", clientRegisterResponse.getAuth().getAuthPassword())
                         .param("orderId", merchantOrderRegisterResponse.getOrderId())
                         .param("paymentParams.pan", SSL_CARD)
                         .param("paymentParams.month", "12")
@@ -387,8 +473,8 @@ public class PaymentITTest extends ItTest {
         assertTrue(ResponseStatus.SUCCESS == apiResponseTerminal.getStatus());
 
         MvcResult mvcResultReverse = mockMvc.perform(post("/order/reverse")
-                        .param("authName",terminalRegisterResponse.getAuth().getAuthName())
-                        .param("authPassword",terminalRegisterResponse.getAuth().getAuthPassword())
+                        .param("authName", terminalRegisterResponse.getAuth().getAuthName())
+                        .param("authPassword", terminalRegisterResponse.getAuth().getAuthPassword())
                         .param("sessionId", sessionId)
                         .param("orderId", merchantOrder.getOrderId())
         ).andDo(print()).andReturn();

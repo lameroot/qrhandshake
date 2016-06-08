@@ -70,8 +70,10 @@ public class MerchantOrderController {
     @RequestMapping(value = PAYMENT_PATH + "/{orderId}", method = RequestMethod.GET)
     public String paymentPage(@PathVariable(value = "orderId") String orderId, Model model) throws MerchantOrderNotFoundException {
         MerchantOrder merchantOrder = orderService.findByOrderId(orderId);
-        //todo: проверять что заказ уже оплачен и в этом случае на страницу и также проверику в пэйменте
         if ( null == merchantOrder ) throw new MerchantOrderNotFoundException("Order: " + orderId + " not found");
+        if ( !merchantOrder.canPayment() ) {
+            return "redirect:" + MERCHANT_ORDER_PATH + FINISH_PATH + "/" + merchantOrder.getOrderId();
+        }
 
         MerchantOrderDto merchantOrderDto = new MerchantOrderDto(merchantOrder);
         model.addAttribute("merchantOrder", merchantOrderDto);

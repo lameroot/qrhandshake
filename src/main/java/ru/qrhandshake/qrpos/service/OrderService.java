@@ -12,13 +12,12 @@ import ru.qrhandshake.qrpos.dto.BindingDto;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
-import ru.qrhandshake.qrpos.repository.ClientRepository;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by lameroot on 25.05.16.
@@ -36,8 +35,6 @@ public class OrderService {
     private IntegrationSupportService integrationSupportService;
     @Resource
     private BindingService bindingService;
-    @Resource
-    private ClientRepository clientRepository;
 
     public MerchantOrderRegisterResponse register(Terminal terminal, MerchantOrderRegisterRequest merchantOrderRegisterRequest) {
         Merchant merchant = terminal.getMerchant();
@@ -106,31 +103,8 @@ public class OrderService {
     }
 
     public PaymentResponse payment(Client client, PaymentRequest paymentRequest, Model model) throws AuthException {
-        if ( paymentRequest instanceof CardPaymentRequest ) {
-            return cardPayment(client, (CardPaymentRequest)paymentRequest, model);
-        }
-        else if ( paymentRequest instanceof BindingPaymentRequest ) {
-            return bindingPayment(client, (BindingPaymentRequest)paymentRequest, model);
-        }
-        else {
-            logger.warn("Unknown type of payment request: {}", paymentRequest);
-            PaymentResponse paymentResponse = new PaymentResponse();
-            paymentResponse.setStatus(ResponseStatus.FAIL);
-            paymentResponse.setMessage("Unknown type of payment request: " +  paymentRequest);
-            return paymentResponse;
-        }
-    }
-
-    private PaymentResponse bindingPayment(Client clientRequest, BindingPaymentRequest paymentRequest, Model model) throws AuthException {
         PaymentResponse paymentResponse = new PaymentResponse();
-        Client client = null;
-        if ( null != clientRequest ) {
-            client = clientRepository.findOne(clientRequest.getId());//attach to session (//todo: проверить может и не надо)
-            paymentResponse.setPaymentAuthType(PaymentAuthType.CLIENT_AUTH);
-        }
-        else {
-            throw new AuthException("Client not auth");
-        }
+
         MerchantOrder merchantOrder = findByOrderId(paymentRequest.getOrderId());
         if ( null == merchantOrder ) {
             paymentResponse.setStatus(ResponseStatus.FAIL);
@@ -138,11 +112,34 @@ public class OrderService {
             paymentResponse.setOrderId(paymentRequest.getOrderId());
             return paymentResponse;
         }
-        if ( null != merchantOrder.getOrderStatus() && !OrderStatus.REGISTERED.equals(merchantOrder.getOrderStatus()) ) {
+        if ( !merchantOrder.canPayment() ) {
             paymentResponse.setStatus(ResponseStatus.FAIL);
             paymentResponse.setOrderStatus(merchantOrder.getOrderStatus());
             paymentResponse.setMessage("Order: " + merchantOrder.getOrderId() + " has invalid status: " + merchantOrder.getOrderStatus() + " for payment.");
             return paymentResponse;
+        }
+
+        if ( paymentRequest instanceof CardPaymentRequest ) {
+            paymentResponse = cardPayment(client, (CardPaymentRequest)paymentRequest, model, merchantOrder);
+        }
+        else if ( paymentRequest instanceof BindingPaymentRequest ) {
+            paymentResponse = bindingPayment(client, (BindingPaymentRequest) paymentRequest, model, merchantOrder);
+        }
+        else {
+            logger.warn("Unknown type of payment request: {}", paymentRequest);
+            paymentResponse.setStatus(ResponseStatus.FAIL);
+            paymentResponse.setMessage("Unknown type of payment request: " +  paymentRequest);
+        }
+        return paymentResponse;
+    }
+
+    private PaymentResponse bindingPayment(Client client, BindingPaymentRequest paymentRequest, Model model, MerchantOrder merchantOrder) throws AuthException {
+        PaymentResponse paymentResponse = new PaymentResponse();
+        if ( null != client ) {
+            paymentResponse.setPaymentAuthType(PaymentAuthType.CLIENT_AUTH);
+        }
+        else {
+            throw new AuthException("Client not auth");
         }
         Binding binding = bindingService.findByBindingId(paymentRequest.getPaymentParams().getBindingId());
         if ( null == binding ) {
@@ -171,7 +168,7 @@ public class OrderService {
         integrationPaymentBindingRequest.setDescription(merchantOrder.getDescription());
         integrationPaymentBindingRequest.setOrderId(paymentRequest.getOrderId());
         integrationPaymentBindingRequest.setReturnUrl(paymentRequest.getReturnUrl());
-        integrationPaymentBindingRequest.setParams(new HashMap<>());//todo: set params
+        integrationPaymentBindingRequest.setParams(integrationParams(merchantOrder));
         integrationPaymentBindingRequest.setOrderStatus(merchantOrder.getOrderStatus());
         integrationPaymentBindingRequest.setPaymentWay(paymentRequest.getPaymentWay());
         integrationPaymentBindingRequest.setModel(model);
@@ -210,25 +207,10 @@ public class OrderService {
         return paymentResponse;
     }
 
-    private PaymentResponse cardPayment(Client clientRequest, CardPaymentRequest paymentRequest, Model model) {
+    private PaymentResponse cardPayment(Client client, CardPaymentRequest paymentRequest, Model model, MerchantOrder merchantOrder) {
         PaymentResponse paymentResponse = new PaymentResponse();
-        Client client = null;
-        if ( null != clientRequest ) {
-            client = clientRepository.findOne(clientRequest.getId());//attach to session (//todo: проверить может и не надо)
+        if ( null != client ) {
             paymentResponse.setPaymentAuthType(PaymentAuthType.CLIENT_AUTH);
-        }
-        MerchantOrder merchantOrder = findByOrderId(paymentRequest.getOrderId());
-        if ( null == merchantOrder ) {
-            paymentResponse.setStatus(ResponseStatus.FAIL);
-            paymentResponse.setMessage("Order: " + paymentRequest.getOrderId() + " not found");
-            paymentResponse.setOrderId(paymentRequest.getOrderId());
-            return paymentResponse;
-        }
-        if ( null != merchantOrder.getOrderStatus() && !OrderStatus.REGISTERED.equals(merchantOrder.getOrderStatus()) ) {
-            paymentResponse.setStatus(ResponseStatus.FAIL);
-            paymentResponse.setOrderStatus(merchantOrder.getOrderStatus());
-            paymentResponse.setMessage("Order: " + merchantOrder.getOrderId() + " has invalid status: " + merchantOrder.getOrderStatus() + " for payment.");
-            return paymentResponse;
         }
         IntegrationSupport integrationSupport = integrationSupportService.checkIntegrationSupport(merchantOrder.getMerchant(), paymentRequest);
         if ( null == integrationSupport ) {
@@ -247,7 +229,7 @@ public class OrderService {
         integrationPaymentRequest.setDescription(merchantOrder.getDescription());
         integrationPaymentRequest.setOrderId(paymentRequest.getOrderId());
         integrationPaymentRequest.setReturnUrl(paymentRequest.getReturnUrl());
-        integrationPaymentRequest.setParams(new HashMap<>());//todo: set params
+        integrationPaymentRequest.setParams(integrationParams(merchantOrder));
         integrationPaymentRequest.setOrderStatus(merchantOrder.getOrderStatus());
         integrationPaymentRequest.setPaymentWay(paymentRequest.getPaymentWay());
         integrationPaymentRequest.setModel(model);
@@ -369,13 +351,9 @@ public class OrderService {
         return finishResponse;
     }
 
-    public GetBindingsResponse getBindings(Client clientRequest, GetBindingsRequest getBindingsRequest) {
+    public GetBindingsResponse getBindings(Client client, GetBindingsRequest getBindingsRequest) {
         GetBindingsResponse getBindingsResponse = new GetBindingsResponse();
-        Client client = null;
-        if ( null != (client = clientRequest) ) {
-            client = clientRepository.findOne(client.getId());//attach to session (//todo: проверить может и не надо)
-        }
-        else {
+        if ( null == client ) {
             getBindingsResponse.setStatus(ResponseStatus.FAIL);
             getBindingsResponse.setMessage("GetBinding request requires client auth");
             return getBindingsResponse;
@@ -427,5 +405,18 @@ public class OrderService {
 
     private boolean isSessionValid(MerchantOrder merchantOrder, String sessionId) {
         return merchantOrder.getSessionId().equals(sessionId);
+    }
+
+    private Map<String,String> integrationParams(MerchantOrder merchantOrder) {
+        Map<String,String> params = new HashMap<>();
+        params.put("merchant.name",merchantOrder.getMerchant().getName());
+        params.put("merchant.id",String.valueOf(merchantOrder.getMerchant().getId()));
+        params.put("merchant.terminal.id",String.valueOf(merchantOrder.getTerminal().getId()));
+        params.put("merchant.terminal.deviceId",merchantOrder.getDeviceId());
+        params.put("merchant.terminal.sessionId",merchantOrder.getSessionId());
+        if ( null != merchantOrder.getClient() ) {
+            params.put("client.id", String.valueOf(merchantOrder.getClient().getId()));
+        }
+        return params;
     }
 }
