@@ -9,7 +9,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by lameroot on 19.05.16.
  */
-public class PaymentRequest<P extends PaymentParams> {
+public class PaymentRequest<P extends PaymentParams> extends ApiAuth {
 
     @NotNull
     private String orderId;

@@ -150,16 +150,34 @@ public class ItTest extends ServletConfigTest {
     }
 
     protected MerchantOrderRegisterResponse registerOrder(ApiAuth terminalAuth, Long amount, String sessionId, String deviceId) throws Exception {
+        return registerOrder(terminalAuth, amount, sessionId, deviceId, false);
+    }
+
+    protected MerchantOrderRegisterResponse registerOrder(ApiAuth terminalAuth, Long amount, String sessionId, String deviceId, boolean useApiAuth) throws Exception {
         ApiResponse apiResponse = authTerminal(terminalAuth.getAuthName(),terminalAuth.getAuthPassword());
         assertTrue(apiResponse.getStatus() == ResponseStatus.SUCCESS);
-        MvcResult mvcResult = mockMvc.perform(get("/order/register")
-                        .principal(terminalTestingAuthenticationToken(terminalAuth))
-                        .param("amount", amount.toString())
-                        .param("sessionId", sessionId)
-                        .param("deviceId", deviceId)
-        )
-                .andDo(print())
-                .andReturn();
+        MvcResult mvcResult = null;
+        if ( useApiAuth ) {
+            mvcResult = mockMvc.perform(get("/order/register")
+                            .param("authName",terminalAuth.getAuthName())
+                            .param("authPassword", terminalAuth.getAuthPassword())
+                            .param("amount", amount.toString())
+                            .param("sessionId", sessionId)
+                            .param("deviceId", deviceId)
+            )
+                    .andDo(print())
+                    .andReturn();
+        }
+        else {
+            mvcResult = mockMvc.perform(get("/order/register")
+                            .principal(terminalTestingAuthenticationToken(terminalAuth))
+                            .param("amount", amount.toString())
+                            .param("sessionId", sessionId)
+                            .param("deviceId", deviceId)
+            )
+                    .andDo(print())
+                    .andReturn();
+        }
         String response = mvcResult.getResponse().getContentAsString();
         ObjectMapper objectMapper = new ObjectMapper();
         MerchantOrderRegisterResponse merchantOrderRegisterResponse = objectMapper.readValue(response, MerchantOrderRegisterResponse.class);

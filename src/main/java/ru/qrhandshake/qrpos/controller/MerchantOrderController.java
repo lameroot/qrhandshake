@@ -18,6 +18,7 @@ import ru.qrhandshake.qrpos.domain.Terminal;
 import ru.qrhandshake.qrpos.dto.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
+import ru.qrhandshake.qrpos.service.AuthService;
 import ru.qrhandshake.qrpos.service.OrderService;
 
 import javax.annotation.Resource;
@@ -42,6 +43,8 @@ public class MerchantOrderController {
 
     @Resource
     private OrderService orderService;
+    @Resource
+    private AuthService authService;
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -54,14 +57,14 @@ public class MerchantOrderController {
     @ResponseBody
     public MerchantOrderRegisterResponse register(Principal principal,@Valid MerchantOrderRegisterRequest merchantOrderRegisterRequest)
             throws AuthException {
-        return orderService.register(terminalAuth(principal), merchantOrderRegisterRequest);
+        return orderService.register(authService.terminalAuth(principal, merchantOrderRegisterRequest), merchantOrderRegisterRequest);
     }
 
     @RequestMapping(value = ORDER_STATUS_PATH)
     @ResponseBody
     public MerchantOrderStatusResponse getOrderStatus(Principal principal,
             @Valid MerchantOrderStatusRequest merchantOrderStatusRequest) throws AuthException {
-        return orderService.getOrderStatus(terminalAuth(principal), merchantOrderStatusRequest);
+        return orderService.getOrderStatus(authService.terminalAuth(principal, merchantOrderStatusRequest), merchantOrderStatusRequest);
     }
 
     @RequestMapping(value = PAYMENT_PATH + "/{orderId}", method = RequestMethod.GET)
@@ -105,26 +108,18 @@ public class MerchantOrderController {
     @RequestMapping(value = REVERSE_PATH, method = RequestMethod.POST)
     @ResponseBody
     public MerchantOrderReverseResponse reverse(Principal principal, @Valid MerchantOrderReverseRequest merchantOrderReverseRequest) throws AuthException {
-        return orderService.reverse(terminalAuth(principal), merchantOrderReverseRequest);
+        return orderService.reverse(authService.terminalAuth(principal, merchantOrderReverseRequest), merchantOrderReverseRequest);
     }
 
     @RequestMapping(value = GET_BINDINGS_PATH)
     @ResponseBody
     public GetBindingsResponse getBindings(Principal principal, @Valid GetBindingsRequest getBindingsRequest) throws AuthException {
-        Client client = null;
-        if ( null != principal ) {
-            client = (Client) ((Authentication) principal).getPrincipal();
-        }
-        if ( null == client ) throw new AuthException("Client not auth");
-        return orderService.getBindings(client, getBindingsRequest);
+        return orderService.getBindings(authService.clientAuth(principal, getBindingsRequest, true), getBindingsRequest);
     }
 
     private String handlePaymentRequest(Principal principal, PaymentRequest paymentRequest, HttpServletRequest request, Model model) throws AuthException {
         paymentRequest.setIp(request.getRemoteUser());
-        Client client = null;
-        if ( null != principal ) {
-            client = (Client) ((Authentication) principal).getPrincipal();
-        }
+        Client client = authService.clientAuth(principal, paymentRequest, false);
         paymentRequest.setReturnUrl(request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + MERCHANT_ORDER_PATH + FINISH_PATH + "/" + paymentRequest.getOrderId());
         PaymentResponse paymentResponse = orderService.payment(client, paymentRequest, model);
         if ( ResponseStatus.SUCCESS.equals(paymentResponse.getStatus()) ) {
@@ -137,13 +132,5 @@ public class MerchantOrderController {
         }
     }
 
-    private Terminal terminalAuth(Principal principal) throws AuthException {
-        Terminal terminal = null;
-        if ( null != principal ) {
-            terminal = (Terminal) ((Authentication) principal).getPrincipal();
-        }
-        if ( null == terminal ) throw new AuthException("Terminal not auth");
-        return terminal;
-    }
 
 }

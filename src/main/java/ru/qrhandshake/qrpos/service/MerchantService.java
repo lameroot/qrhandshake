@@ -32,14 +32,11 @@ public class MerchantService {
     private UserService userService;
     @Resource
     private TerminalService terminalService;
-    @Resource
-    private TerminalRepository terminalRepository;
 
     public boolean isExist(String name) {
         return null != merchantRepository.findByName(name);
     }
 
-    //@Transactional
     public MerchantRegisterResponse register(MerchantRegisterRequest merchantRegisterRequest) {
         MerchantRegisterResponse merchantRegisterResponse = new MerchantRegisterResponse();
         if ( isExist(merchantRegisterRequest.getName()) ) {

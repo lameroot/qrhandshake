@@ -2,16 +2,13 @@ package ru.qrhandshake.qrpos.api;
 
 import org.apache.commons.lang.StringUtils;
 
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by lameroot on 24.05.16.
  */
 public class ApiAuth {
 
-    @NotNull
     private String authName;
-    @NotNull
     private String authPassword;
     private AuthType authType;
 

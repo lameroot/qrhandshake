@@ -29,8 +29,6 @@ public class OrderService {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Resource
-    private TerminalService terminalService;
-    @Resource
     private MerchantOrderRepository merchantOrderRepository;
     @Resource
     private IntegrationService integrationService;

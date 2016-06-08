@@ -7,7 +7,7 @@ import java.util.Set;
 /**
  * Created by lameroot on 02.06.16.
  */
-public class GetBindingsRequest  {
+public class GetBindingsRequest extends ApiAuth {
 
     private Set<PaymentWay> paymentWays;
 
