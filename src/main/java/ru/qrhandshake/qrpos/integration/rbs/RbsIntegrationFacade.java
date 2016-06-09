@@ -3,6 +3,7 @@ package ru.qrhandshake.qrpos.integration.rbs;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.ui.Model;
 import ru.bpc.phoenix.proxy.api.MerchantServiceProvider;
@@ -39,6 +40,9 @@ public class RbsIntegrationFacade implements IntegrationFacade {
     private final NamePasswordToken namePasswordToken;
     private MerchantService merchantService;
     private IntegrationSupport integrationSupport;
+
+    @Value("${rbs.paymentType:PURCHASE}")
+    private String sPaymentType;
 
     public RbsIntegrationFacade(NamePasswordToken namePasswordToken, String wsdlLocation, IntegrationSupport integrationSupport) {
         this.namePasswordToken = namePasswordToken;
@@ -149,8 +153,22 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         integrationPaymentResponse.setOrderId(integrationPaymentRequest.getOrderId());
 
         String externalOrderId = null;
+        PaymentType paymentType = PaymentType.valueOf(sPaymentType);
         try {
-            RegisterOrderResponse registerOrderResponse = getMerchantService().registerOrder(rbsParams);
+            RegisterOrderResponse registerOrderResponse = null;
+            if ( PaymentType.PURCHASE == paymentType ) {
+                registerOrderResponse = getMerchantService().registerOrder(rbsParams);
+            }
+            else if ( PaymentType.DEPOSIT == paymentType ) {
+                registerOrderResponse = getMerchantService().registerOrderPreAuth(rbsParams);
+            }
+            else {
+                integrationPaymentResponse.setSuccess(false);
+                integrationPaymentResponse.setMessage("Unknown paymentTye: " + paymentType);
+                return integrationPaymentResponse;
+            }
+            integrationPaymentResponse.setPaymentType(paymentType);
+
             integrationPaymentResponse.setMessage(registerOrderResponse.getErrorMessage());
             if ( 0 != registerOrderResponse.getErrorCode() ) {
                 logger.error("Error register order: " + integrationPaymentRequest.getOrderId() + " because : " + registerOrderResponse.getErrorMessage());
@@ -186,33 +204,6 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         try {
             PaymentOrderResult paymentOrderResult = getMerchantService().paymentOrder(paymentOrderParams);
             handlePaymentResult(integrationPaymentResponse,integrationPaymentRequest,externalOrderId,paymentOrderResult);
-            /*
-            integrationPaymentResponse.setMessage(paymentOrderResult.getErrorMessage());
-            if ( 0 != paymentOrderResult.getErrorCode() ) {
-                logger.error("Error payment order: " + integrationPaymentRequest.getOrderId() + " because: " + paymentOrderResult.getErrorMessage());
-                integrationPaymentResponse.setSuccess(false);
-                return integrationPaymentResponse;
-            }
-            integrationPaymentResponse.setSuccess(true);
-            Model model = integrationPaymentRequest.getModel();
-            if ( StringUtils.isNotBlank(paymentOrderResult.getAcsUrl()) && StringUtils.isNotBlank(paymentOrderResult.getPaReq()) ) {
-                model.addAttribute("acsUrl", paymentOrderResult.getAcsUrl());
-                model.addAttribute("mdOrder", externalOrderId);
-                model.addAttribute("paReq", paymentOrderResult.getPaReq());
-                model.addAttribute("termUrl", paymentOrderResult.getRedirect());
-                model.addAttribute("language", language);
-                integrationPaymentResponse.setRedirectUrlOrPagePath(ACS_REDIRECT_PAGE);
-                integrationPaymentResponse.setIntegrationOrderStatus(RbsOrderStatus.REDIRECTED_TO_ACS);
-                integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.TDS);
-            }
-            else {
-                IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(integrationPaymentRequest.getIntegrationSupport(), externalOrderId));
-                integrationPaymentResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
-                integrationOrderStatusResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
-                integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.SSL);
-                integrationPaymentResponse.setRedirectUrlOrPagePath("redirect:" + paymentOrderResult.getRedirect());
-            }
-            */
         } catch (Exception e) {
             throw new IntegrationException("Error integration payment order by orderId: " + integrationPaymentRequest.getOrderId(),e);
         }
@@ -303,10 +294,29 @@ public class RbsIntegrationFacade implements IntegrationFacade {
     }
 
     @Override
-    public void getBindings() {
-        GetBindingsRequest getBindingsRequest = new GetBindingsRequest();
-
-
+    public IntegrationCompletionResponse completion(IntegrationCompletionRequest integrationCompletionRequest) throws IntegrationException {
+        IntegrationCompletionResponse integrationCompletionResponse = new IntegrationCompletionResponse();
+        integrationCompletionResponse.setOrderId(integrationCompletionRequest.getOrderId());
+        integrationCompletionResponse.setExternalOrderId(integrationCompletionRequest.getExternalOrderId());
+        try {
+            DepositOrderParams depositOrderParams = new DepositOrderParams();
+            depositOrderParams.setOrderId(integrationCompletionRequest.getExternalOrderId());
+            depositOrderParams.setDepositAmount(integrationCompletionRequest.getAmount());
+            OrderResult orderResult = getMerchantService().depositOrder(depositOrderParams);
+            if ( 0 != orderResult.getErrorCode() ) {
+                integrationCompletionResponse.setSuccess(false);
+                integrationCompletionResponse.setMessage(orderResult.getErrorMessage());
+            }
+            else {
+                integrationCompletionResponse.setSuccess(true);
+                integrationCompletionResponse.setMessage("Completion by externalOrderId: " + integrationCompletionRequest.getExternalOrderId() + " successfully");
+            }
+        } catch (Exception e) {
+            logger.error("Error rbs completion by externalOrderId: " + integrationCompletionRequest.getExternalOrderId(),e);
+            integrationCompletionResponse.setSuccess(false);
+            integrationCompletionResponse.setMessage("Error completion by externalOrderId: " + integrationCompletionRequest.getExternalOrderId() + ", cause: " + e.getMessage());
+        }
+        return integrationCompletionResponse;
     }
 
     @Override

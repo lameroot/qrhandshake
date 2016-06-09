@@ -51,6 +51,14 @@ public class IntegrationService {
         return integrationReverseResponse;
     }
 
+    public IntegrationCompletionResponse completion(IntegrationCompletionRequest integrationCompletionRequest) throws IntegrationException {
+        IntegrationSupport integrationSupport = integrationCompletionRequest.getIntegrationSupport();
+        IntegrationCompletionResponse integrationCompletionResponse = getFacade(integrationSupport).completion(integrationCompletionRequest);
+        integrationCompletionResponse.setOrderId(integrationCompletionRequest.getOrderId());
+        if ( !integrationCompletionResponse.isSuccess() ) throw new IntegrationException(integrationCompletionResponse.getMessage());
+        return integrationCompletionResponse;
+    }
+
     private IntegrationFacade getFacade(IntegrationSupport integrationSupport) throws IntegrationException {
         return Optional.ofNullable(integrationFacades.get(integrationSupport))
                 .orElseThrow(() -> new IntegrationException("Unknown integration type: " + integrationSupport));
