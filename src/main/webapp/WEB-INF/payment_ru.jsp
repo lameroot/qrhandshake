@@ -10,10 +10,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <script type="text/javascript" src="resources/js/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="resources/js/jquery.url.js"></script>
-
-    <script type="text/javascript" src="resources/js/jquery.shell.js"></script>
+    <script type="text/javascript" src="/qrstatic/js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="/qrstatic/js/jquery.url.js"></script>
+    <script type="text/javascript" src="/qrstatic/js/jquery.shell.js"></script>
 
 </head>
 <body>
