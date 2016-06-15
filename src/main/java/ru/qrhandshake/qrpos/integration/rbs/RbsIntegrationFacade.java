@@ -3,12 +3,16 @@ package ru.qrhandshake.qrpos.integration.rbs;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.ui.Model;
 import ru.bpc.phoenix.proxy.api.MerchantServiceProvider;
 import ru.bpc.phoenix.proxy.api.NamePasswordToken;
+import ru.bpc.phoenix.proxy.api.P2PServiceProvider;
 import ru.bpc.phoenix.web.api.merchant.soap.MerchantService;
+import ru.bpc.phoenix.web.api.merchant.soap.p2p.P2PWSController;
 import ru.paymentgate.engine.webservices.merchant.*;
+import ru.paymentgate.engine.webservices.p2p.*;
 import ru.qrhandshake.qrpos.api.BindingPaymentParams;
 import ru.qrhandshake.qrpos.api.CardPaymentParams;
 import ru.qrhandshake.qrpos.api.PaymentParams;
@@ -29,22 +33,41 @@ public class RbsIntegrationFacade implements IntegrationFacade {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final static String language = "en";
+    private final static String language = "ru";
     private final static String currency = "643";
     private final static String ACS_REDIRECT_PAGE = "rbs/acs_redirect";
 
     @Resource
     private Environment environment;
     private MerchantServiceProvider merchantServiceProvider;
+    private P2PServiceProvider p2PServiceProvider;
     private final NamePasswordToken namePasswordToken;
+    private final NamePasswordToken p2pNamePasswordToken;
     private MerchantService merchantService;
+    private P2PWSController p2PWSController;
     private IntegrationSupport integrationSupport;
 
+    @Value("${rbs.paymentType:PURCHASE}")
+    private String sPaymentType;
+
     public RbsIntegrationFacade(NamePasswordToken namePasswordToken, String wsdlLocation, IntegrationSupport integrationSupport) {
+        this(namePasswordToken, wsdlLocation, null, null, integrationSupport);
+    }
+
+    public RbsIntegrationFacade(NamePasswordToken namePasswordToken, String wsdlLocation, NamePasswordToken p2pNamePasswordToken, String p2pWsdlLocation, IntegrationSupport integrationSupport) {
         this.namePasswordToken = namePasswordToken;
+        this.p2pNamePasswordToken = p2pNamePasswordToken;
+
         this.merchantServiceProvider = new MerchantServiceProvider();
         this.merchantServiceProvider.setDebugSoap(true);
         this.merchantServiceProvider.setWsdlLocation(wsdlLocation);
+
+        if ( null != p2pWsdlLocation ) {
+            this.p2PServiceProvider = new P2PServiceProvider();
+            this.p2PServiceProvider.setDebugSoap(true);
+            this.p2PServiceProvider.setWsdlLocation(p2pWsdlLocation);
+        }
+
         this.integrationSupport = integrationSupport;
     }
 
@@ -53,6 +76,13 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             merchantService = merchantServiceProvider.getMerchantService(namePasswordToken);
         }
         return merchantService;
+    }
+
+    P2PWSController getP2PWSController() {
+        if ( null == p2PWSController && null != p2PServiceProvider && null != p2pNamePasswordToken ) {
+            p2PWSController = p2PServiceProvider.getP2PService(p2pNamePasswordToken);
+        }
+        return p2PWSController;
     }
 
     @Override
@@ -64,7 +94,6 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         rbsParams.setAmount(integrationPaymentBindingRequest.getAmount());
         rbsParams.setReturnUrl(integrationPaymentBindingRequest.getReturnUrl());
         rbsParams.setMerchantOrderNumber(integrationPaymentBindingRequest.getOrderId());
-        //rbsParams.setBindingId(integrationPaymentBindingRequest.getBindingId());
         for (Map.Entry<String, String> entry : integrationPaymentBindingRequest.getParams().entrySet()) {
             ServiceParam serviceParam = new ServiceParam();
             serviceParam.setName(entry.getKey());
@@ -121,8 +150,6 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         return integrationPaymentResponse;
     }
 
-
-
     @Override
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException{
         OrderParams rbsParams = new OrderParams();
@@ -149,8 +176,22 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         integrationPaymentResponse.setOrderId(integrationPaymentRequest.getOrderId());
 
         String externalOrderId = null;
+        PaymentType paymentType = PaymentType.valueOf(sPaymentType);
         try {
-            RegisterOrderResponse registerOrderResponse = getMerchantService().registerOrder(rbsParams);
+            RegisterOrderResponse registerOrderResponse = null;
+            if ( PaymentType.PURCHASE == paymentType ) {
+                registerOrderResponse = getMerchantService().registerOrder(rbsParams);
+            }
+            else if ( PaymentType.DEPOSIT == paymentType ) {
+                registerOrderResponse = getMerchantService().registerOrderPreAuth(rbsParams);
+            }
+            else {
+                integrationPaymentResponse.setSuccess(false);
+                integrationPaymentResponse.setMessage("Unknown paymentTye: " + paymentType);
+                return integrationPaymentResponse;
+            }
+            integrationPaymentResponse.setPaymentType(paymentType);
+
             integrationPaymentResponse.setMessage(registerOrderResponse.getErrorMessage());
             if ( 0 != registerOrderResponse.getErrorCode() ) {
                 logger.error("Error register order: " + integrationPaymentRequest.getOrderId() + " because : " + registerOrderResponse.getErrorMessage());
@@ -186,38 +227,86 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         try {
             PaymentOrderResult paymentOrderResult = getMerchantService().paymentOrder(paymentOrderParams);
             handlePaymentResult(integrationPaymentResponse,integrationPaymentRequest,externalOrderId,paymentOrderResult);
-            /*
-            integrationPaymentResponse.setMessage(paymentOrderResult.getErrorMessage());
-            if ( 0 != paymentOrderResult.getErrorCode() ) {
-                logger.error("Error payment order: " + integrationPaymentRequest.getOrderId() + " because: " + paymentOrderResult.getErrorMessage());
-                integrationPaymentResponse.setSuccess(false);
-                return integrationPaymentResponse;
-            }
-            integrationPaymentResponse.setSuccess(true);
-            Model model = integrationPaymentRequest.getModel();
-            if ( StringUtils.isNotBlank(paymentOrderResult.getAcsUrl()) && StringUtils.isNotBlank(paymentOrderResult.getPaReq()) ) {
-                model.addAttribute("acsUrl", paymentOrderResult.getAcsUrl());
-                model.addAttribute("mdOrder", externalOrderId);
-                model.addAttribute("paReq", paymentOrderResult.getPaReq());
-                model.addAttribute("termUrl", paymentOrderResult.getRedirect());
-                model.addAttribute("language", language);
-                integrationPaymentResponse.setRedirectUrlOrPagePath(ACS_REDIRECT_PAGE);
-                integrationPaymentResponse.setIntegrationOrderStatus(RbsOrderStatus.REDIRECTED_TO_ACS);
-                integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.TDS);
-            }
-            else {
-                IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(integrationPaymentRequest.getIntegrationSupport(), externalOrderId));
-                integrationPaymentResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
-                integrationOrderStatusResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
-                integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.SSL);
-                integrationPaymentResponse.setRedirectUrlOrPagePath("redirect:" + paymentOrderResult.getRedirect());
-            }
-            */
         } catch (Exception e) {
             throw new IntegrationException("Error integration payment order by orderId: " + integrationPaymentRequest.getOrderId(),e);
         }
 
         return integrationPaymentResponse;
+    }
+
+    @Override
+    public IntegrationP2PTransferResponse p2pTransfer(IntegrationP2PTransferRequest integrationP2PTransferRequest) throws IntegrationException {
+        IntegrationP2PTransferResponse integrationP2PTransferResponse = new IntegrationP2PTransferResponse();
+        //1. p2pregister
+        P2PRegistrationRequest p2PRegistrationRequest = new P2PRegistrationRequest();
+        p2PRegistrationRequest.setAmount(integrationP2PTransferRequest.getAmount());
+        p2PRegistrationRequest.setCurrency(currency);
+        p2PRegistrationRequest.setOrderDescription(integrationP2PTransferRequest.getDescription());
+        p2PRegistrationRequest.setEmail(integrationP2PTransferRequest.getEmail());
+        p2PRegistrationRequest.setLanguage(language);
+        p2PRegistrationRequest.setFailUrl("http://google.com");
+        p2PRegistrationRequest.setReturnUrl("http://ya.ru");
+        p2PRegistrationRequest.setOrderNumber(UUID.randomUUID().toString());
+        P2PRegistrationResponse p2PRegistrationResponse = getP2PWSController().registerP2P(p2PRegistrationRequest);
+        if ( 0 != p2PRegistrationResponse.getErrorCode() ) {
+            integrationP2PTransferResponse.setSuccess(false);
+            integrationP2PTransferResponse.setMessage(p2PRegistrationResponse.getErrorMessage());
+            return integrationP2PTransferResponse;
+        }
+        integrationP2PTransferResponse.setExternalOrderId(p2PRegistrationResponse.getOrderId());
+        integrationP2PTransferResponse.setOrderNumber(p2PRegistrationResponse.getOrderNumber());
+
+        //2. p2pverify
+        P2PTransferVerificationRequest p2PTransferVerificationRequest = new P2PTransferVerificationRequest();
+        p2PTransferVerificationRequest.setOrderId(p2PRegistrationResponse.getOrderId());
+        CardPaymentParams cardPaymentParams = integrationP2PTransferRequest.getPaymentParams();
+        if ( !cardPaymentParams.isNotBlank() ) {
+            integrationP2PTransferResponse.setSuccess(false);
+            integrationP2PTransferResponse.setMessage("Card data invalid");
+            return integrationP2PTransferResponse;
+        }
+        CardData fromCard = new CardData();
+        fromCard.setCardholderName(cardPaymentParams.getCardHolderName());
+        fromCard.setCvc(cardPaymentParams.getCvc());
+        fromCard.setExpirationMonth(Integer.valueOf(cardPaymentParams.getMonth()));
+        fromCard.setExpirationYear(Integer.valueOf(cardPaymentParams.getYear()));
+        fromCard.setPan(cardPaymentParams.getPan());
+
+        CardData toCard = new CardData();
+        toCard.setPan(integrationP2PTransferRequest.getToCardPan());
+
+        p2PTransferVerificationRequest.setFromCard(fromCard);
+        p2PTransferVerificationRequest.setToCard(toCard);
+        P2PTransferVerificationResponse p2PTransferVerificationResponse = getP2PWSController().verifyP2P(p2PTransferVerificationRequest);
+        if ( 0 != p2PTransferVerificationResponse.getErrorCode() ) {
+            integrationP2PTransferResponse.setSuccess(false);
+            integrationP2PTransferResponse.setMessage(p2PTransferVerificationResponse.getErrorMessage());
+            return integrationP2PTransferResponse;
+        }
+        long totalFee = 0L;
+        for (FeeDescription feeDescription : p2PTransferVerificationResponse.getFeeDescriptionList()) {
+            totalFee += feeDescription.getFeeAmount();
+        }
+        logger.debug("Total fee p2p transfer: {} ", totalFee);
+
+        //3. p2pperform
+        P2PTransferRequest p2PTransferRequest = new P2PTransferRequest();
+        p2PTransferRequest.setOrderId(p2PRegistrationResponse.getOrderId());
+        p2PTransferRequest.setFromCard(fromCard);
+        p2PTransferRequest.setToCard(toCard);
+        p2PTransferRequest.setAmountInput(integrationP2PTransferRequest.getAmount());//todo: тут надо вычитать комиссию
+        p2PTransferRequest.setType(P2PTransferType.STANDARD);
+        p2PTransferRequest.setEmail(integrationP2PTransferRequest.getEmail());
+        P2PTransferResponse p2PTransferResponse = getP2PWSController().performP2P(p2PTransferRequest);
+        if ( 0 != p2PTransferResponse.getErrorCode() ) {
+            integrationP2PTransferResponse.setSuccess(false);
+            integrationP2PTransferResponse.setMessage(p2PTransferResponse.getErrorMessage());
+            return integrationP2PTransferResponse;
+        }
+        //todo: сделать проверку на наличие ацс
+        integrationP2PTransferResponse.setSuccess(true);
+        integrationP2PTransferResponse.setMessage("P2P transfer success");
+        return integrationP2PTransferResponse;
     }
 
     private void handlePaymentResult(IntegrationPaymentResponse integrationPaymentResponse, IntegrationPaymentRequest integrationPaymentRequest, String externalOrderId, PaymentOrderResult paymentOrderResult) throws IntegrationException {
@@ -303,10 +392,29 @@ public class RbsIntegrationFacade implements IntegrationFacade {
     }
 
     @Override
-    public void getBindings() {
-        GetBindingsRequest getBindingsRequest = new GetBindingsRequest();
-
-
+    public IntegrationCompletionResponse completion(IntegrationCompletionRequest integrationCompletionRequest) throws IntegrationException {
+        IntegrationCompletionResponse integrationCompletionResponse = new IntegrationCompletionResponse();
+        integrationCompletionResponse.setOrderId(integrationCompletionRequest.getOrderId());
+        integrationCompletionResponse.setExternalOrderId(integrationCompletionRequest.getExternalOrderId());
+        try {
+            DepositOrderParams depositOrderParams = new DepositOrderParams();
+            depositOrderParams.setOrderId(integrationCompletionRequest.getExternalOrderId());
+            depositOrderParams.setDepositAmount(integrationCompletionRequest.getAmount());
+            OrderResult orderResult = getMerchantService().depositOrder(depositOrderParams);
+            if ( 0 != orderResult.getErrorCode() ) {
+                integrationCompletionResponse.setSuccess(false);
+                integrationCompletionResponse.setMessage(orderResult.getErrorMessage());
+            }
+            else {
+                integrationCompletionResponse.setSuccess(true);
+                integrationCompletionResponse.setMessage("Completion by externalOrderId: " + integrationCompletionRequest.getExternalOrderId() + " successfully");
+            }
+        } catch (Exception e) {
+            logger.error("Error rbs completion by externalOrderId: " + integrationCompletionRequest.getExternalOrderId(),e);
+            integrationCompletionResponse.setSuccess(false);
+            integrationCompletionResponse.setMessage("Error completion by externalOrderId: " + integrationCompletionRequest.getExternalOrderId() + ", cause: " + e.getMessage());
+        }
+        return integrationCompletionResponse;
     }
 
     @Override

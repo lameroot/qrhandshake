@@ -244,6 +244,7 @@ public class OrderService {
             merchantOrder.setOrderStatus(integrationPaymentResponse.getOrderStatus());
             merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());
             merchantOrder.setExternalId(integrationPaymentResponse.getExternalId());
+            merchantOrder.setPaymentType(integrationPaymentResponse.getPaymentType());
             if ( integrationPaymentResponse.isSuccess() ) {
                 if (merchantOrder.getOrderStatus() == OrderStatus.PAID) {
                     paymentResponse.setMessage("Paid successfully");

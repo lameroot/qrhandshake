@@ -34,8 +34,19 @@ public class RbsIntegrationConfig {
     }
 
     @Bean
+    public NamePasswordToken rbsSbrfP2PNamePasswordToken() {
+        if ( environment.containsProperty("rbs.sbrf.p2p.login") ) {
+            return new NamePasswordToken(environment.getRequiredProperty("rbs.sbrf.p2p.login"),
+                    environment.getRequiredProperty("rbs.sbrf.p2p.password"));
+        }
+        return null;
+    }
+
+    @Bean
     public IntegrationFacade rbsSbrfIntegrationService() {
-        return new RbsIntegrationFacade(rbsSbrfNamePasswordToken(), environment.getRequiredProperty("rbs.sbrf.wsdlLocation"), IntegrationSupport.RBS_SBRF);
+        return new RbsIntegrationFacade(rbsSbrfNamePasswordToken(), environment.getRequiredProperty("rbs.sbrf.wsdlLocation"),
+                rbsSbrfP2PNamePasswordToken(), environment.getProperty("rbs.sbrf.p2p.wsdlLocation"),
+                IntegrationSupport.RBS_SBRF);
     }
 
     @Bean(name = "loggingInInterceptor")

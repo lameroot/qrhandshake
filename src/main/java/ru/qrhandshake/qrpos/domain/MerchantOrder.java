@@ -54,6 +54,9 @@ public class MerchantOrder {
     @Column(name = "payment_way")
     @Enumerated(EnumType.STRING)
     private PaymentWay paymentWay;
+    @Column(name = "payment_type")
+    @Enumerated(EnumType.STRING)
+    private PaymentType paymentType;
 
     public Long getId() {
         return id;
@@ -194,6 +197,14 @@ public class MerchantOrder {
         this.paymentWay = paymentWay;
     }
 
+    public PaymentType getPaymentType() {
+        return paymentType;
+    }
+
+    public void setPaymentType(PaymentType paymentType) {
+        this.paymentType = paymentType;
+    }
+
     public boolean canPayment() {
         return null != getOrderStatus() && OrderStatus.REGISTERED.equals(getOrderStatus());
     }
@@ -213,6 +224,7 @@ public class MerchantOrder {
         sb.append(", orderStatus=").append(orderStatus);
         sb.append(", paymentSecureType=").append(paymentSecureType);
         sb.append(", paymentWay=").append(paymentWay);
+        sb.append(", paymentType=").append(paymentType);
         sb.append('}');
         return sb.toString();
     }

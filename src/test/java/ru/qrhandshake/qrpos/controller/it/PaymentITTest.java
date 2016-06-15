@@ -1,17 +1,26 @@
 package ru.qrhandshake.qrpos.controller.it;
 
+
+import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
+import org.springframework.util.ReflectionUtils;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.dto.MerchantOrderDto;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
+import ru.qrhandshake.qrpos.integration.IntegrationCompletionRequest;
+import ru.qrhandshake.qrpos.integration.IntegrationCompletionResponse;
+import ru.qrhandshake.qrpos.integration.IntegrationService;
+import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationFacade;
 import ru.qrhandshake.qrpos.repository.BindingRepository;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 import ru.qrhandshake.qrpos.repository.UserRepository;
@@ -42,6 +51,16 @@ public class PaymentITTest extends ItTest {
     private MerchantOrderRepository merchantOrderRepository;
     @Resource
     private BindingRepository bindingRepository;
+    @Autowired(required = false)
+    private RbsIntegrationFacade rbsIntegrationFacade;
+    @Resource
+    private IntegrationService integrationService;
+    private PaymentType expectedPaymentType;
+
+    @Before
+    public void initConfig() {
+        expectedPaymentType = PaymentType.valueOf(environment.getProperty("rbs.paymentType", PaymentType.PURCHASE.name()));
+    }
 
     @Test
     @Transactional
@@ -170,6 +189,67 @@ public class PaymentITTest extends ItTest {
         assertNotNull(merchantOrder.getPaymentDate());
         assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
         assertNull(merchantOrder.getClient());
+        assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
+    }
+
+    @Test
+    @Transactional
+    public void testSslCardDepositAndCompletionByAnonymous() throws Exception {
+        if ( null == rbsIntegrationFacade ) {
+            return;
+        }
+        expectedPaymentType = PaymentType.DEPOSIT;
+        String sRealPaymentType = (String)ReflectionTestUtils.getField(rbsIntegrationFacade, "sPaymentType");
+        ReflectionTestUtils.setField(rbsIntegrationFacade,"sPaymentType",expectedPaymentType.name());
+        MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
+        TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = registerOrder(terminalRegisterResponse.getAuth(),
+                amount,sessionId,deviceId);
+        MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .param("orderId", merchantOrderRegisterResponse.getOrderId())
+                        .param("paymentParams.pan", SSL_CARD)
+                        .param("paymentParams.month", "12")
+                        .param("paymentParams.year", "2019")
+                        .param("paymentParams.cardHolderName", "test test")
+                        .param("paymentParams.cvc", "123")
+                        .param("paymentWay", "card")
+        ).andDo(print()).andReturn();
+
+        assertNotNull(mvcResult);
+        assertTrue(mvcResult.getResponse().getStatus() == 302);
+        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("/finish/"));
+        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+
+        MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
+                .param("orderId", merchantOrderRegisterResponse.getOrderId()))
+                .andDo(print())
+                .andReturn();
+        assertNotNull(finishMvcResult);
+        Map<String,Object> finishModel = finishMvcResult.getModelAndView().getModel();
+        assertNotNull(finishModel);
+        assertTrue(!finishModel.isEmpty());
+        assertTrue(ResponseStatus.SUCCESS.equals(finishModel.get("status")));
+        assertTrue(finishMvcResult.getResponse().getForwardedUrl().contains("finish"));
+
+        Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNull(binding);
+
+        MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNotNull(merchantOrder);
+        assertTrue(merchantOrder.getOrderStatus() == OrderStatus.PAID);
+        assertNotNull(merchantOrder.getPaymentDate());
+        assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
+        assertNull(merchantOrder.getClient());
+        assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
+
+        IntegrationCompletionRequest integrationCompletionRequest = new IntegrationCompletionRequest(merchantOrder.getIntegrationSupport(),merchantOrder.getExternalId());
+        integrationCompletionRequest.setOrderId(merchantOrder.getOrderId());
+        integrationCompletionRequest.setAmount(merchantOrder.getAmount());
+        IntegrationCompletionResponse integrationCompletionResponse = integrationService.completion(integrationCompletionRequest);
+        assertTrue(integrationCompletionResponse.isSuccess());
+
+        ReflectionTestUtils.setField(rbsIntegrationFacade,"sPaymentType",sRealPaymentType);
     }
 
     @Test
@@ -222,6 +302,7 @@ public class PaymentITTest extends ItTest {
         assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
         assertNotNull(merchantOrder.getClient());
         assertEquals(clientRegisterResponse.getAuth().getAuthName(),merchantOrder.getClient().getUsername());
+        assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
     }
 
     @Test
@@ -274,6 +355,7 @@ public class PaymentITTest extends ItTest {
         assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
         assertNotNull(merchantOrder.getClient());
         assertEquals(clientRegisterResponse.getAuth().getAuthName(),merchantOrder.getClient().getUsername());
+        assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
     }
 
     @Test
