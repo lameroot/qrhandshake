@@ -156,11 +156,11 @@ public class PaymentITTest extends ItTest {
                 amount,sessionId,deviceId);
         MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
                         .param("orderId", merchantOrderRegisterResponse.getOrderId())
-                        .param("paymentParams.pan", SSL_CARD)
-                        .param("paymentParams.month", "12")
-                        .param("paymentParams.year", "2019")
-                        .param("paymentParams.cardHolderName", "test test")
-                        .param("paymentParams.cvc", "123")
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
 
@@ -208,11 +208,11 @@ public class PaymentITTest extends ItTest {
                 amount,sessionId,deviceId);
         MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
                         .param("orderId", merchantOrderRegisterResponse.getOrderId())
-                        .param("paymentParams.pan", SSL_CARD)
-                        .param("paymentParams.month", "12")
-                        .param("paymentParams.year", "2019")
-                        .param("paymentParams.cardHolderName", "test test")
-                        .param("paymentParams.cvc", "123")
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
 
@@ -268,11 +268,11 @@ public class PaymentITTest extends ItTest {
         MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
                         .principal(authentication)
                         .param("orderId", merchantOrderRegisterResponse.getOrderId())
-                        .param("paymentParams.pan", SSL_CARD)
-                        .param("paymentParams.month", "12")
-                        .param("paymentParams.year", "2019")
-                        .param("paymentParams.cardHolderName", "test test")
-                        .param("paymentParams.cvc", "123")
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
@@ -321,11 +321,11 @@ public class PaymentITTest extends ItTest {
                         .param("authName", clientRegisterResponse.getAuth().getAuthName())
                         .param("authPassword", clientRegisterResponse.getAuth().getAuthPassword())
                         .param("orderId", merchantOrderRegisterResponse.getOrderId())
-                        .param("paymentParams.pan", SSL_CARD)
-                        .param("paymentParams.month", "12")
-                        .param("paymentParams.year", "2019")
-                        .param("paymentParams.cardHolderName", "test test")
-                        .param("paymentParams.cvc", "123")
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
@@ -374,11 +374,11 @@ public class PaymentITTest extends ItTest {
         MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
                         .principal(authentication)
                         .param("orderId", merchantOrderRegisterResponse.getOrderId())
-                        .param("paymentParams.pan", SSL_CARD)
-                        .param("paymentParams.month", "12")
-                        .param("paymentParams.year", "2019")
-                        .param("paymentParams.cardHolderName", "test test")
-                        .param("paymentParams.cvc", "123")
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
@@ -413,8 +413,8 @@ public class PaymentITTest extends ItTest {
         MvcResult mvcResultBinding = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
                         .principal(authentication)
                         .param("orderId", merchantOrderRegisterResponse1.getOrderId())
-                        .param("paymentParams.bindingId", binding.getBindingId())
-                        .param("paymentParams.confirmValue", "123")
+                        .param("bindingId", binding.getBindingId())
+                        .param("confirmValue", "123")
                         .param("paymentWay", "binding")
         ).andDo(print()).andReturn();
 
@@ -446,11 +446,11 @@ public class PaymentITTest extends ItTest {
         MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
                         .principal(authentication)
                         .param("orderId", merchantOrderRegisterResponse.getOrderId())
-                        .param("paymentParams.pan", SSL_CARD)
-                        .param("paymentParams.month", "12")
-                        .param("paymentParams.year", "2019")
-                        .param("paymentParams.cardHolderName", "test test")
-                        .param("paymentParams.cvc", "123")
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
@@ -516,11 +516,11 @@ public class PaymentITTest extends ItTest {
                         .param("authName", clientRegisterResponse.getAuth().getAuthName())
                         .param("authPassword", clientRegisterResponse.getAuth().getAuthPassword())
                         .param("orderId", merchantOrderRegisterResponse.getOrderId())
-                        .param("paymentParams.pan", SSL_CARD)
-                        .param("paymentParams.month", "12")
-                        .param("paymentParams.year", "2019")
-                        .param("paymentParams.cardHolderName", "test test")
-                        .param("paymentParams.cvc", "123")
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
@@ -587,11 +587,11 @@ public class PaymentITTest extends ItTest {
         MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
                         .principal(authentication)
                         .param("orderId", merchantOrderRegisterResponse.getOrderId())
-                        .param("paymentParams.pan", SSL_CARD)
-                        .param("paymentParams.month", "12")
-                        .param("paymentParams.year", "2019")
-                        .param("paymentParams.cardHolderName", "test test")
-                        .param("paymentParams.cvc", "123")
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
@@ -656,11 +656,11 @@ public class PaymentITTest extends ItTest {
         MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
                         .principal(authentication)
                         .param("orderId", merchantOrderRegisterResponse.getOrderId())
-                        .param("paymentParams.pan", SSL_CARD)
-                        .param("paymentParams.month", "12")
-                        .param("paymentParams.year", "2019")
-                        .param("paymentParams.cardHolderName", "test test")
-                        .param("paymentParams.cvc", "123")
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);

@@ -101,14 +101,14 @@ public class OrderService {
         return merchantOrderStatusResponse;
     }
 
-    public PaymentResponse payment(Client client, PaymentRequest paymentRequest, Model model) throws AuthException {
+    public PaymentResponse payment(Client client, PaymentParams paymentParams, Model model) throws AuthException {
         PaymentResponse paymentResponse = new PaymentResponse();
 
-        MerchantOrder merchantOrder = findByOrderId(paymentRequest.getOrderId());
+        MerchantOrder merchantOrder = findByOrderId(paymentParams.getOrderId());
         if ( null == merchantOrder ) {
             paymentResponse.setStatus(ResponseStatus.FAIL);
-            paymentResponse.setMessage("Order: " + paymentRequest.getOrderId() + " not found");
-            paymentResponse.setOrderId(paymentRequest.getOrderId());
+            paymentResponse.setMessage("Order: " + paymentParams.getOrderId() + " not found");
+            paymentResponse.setOrderId(paymentParams.getOrderId());
             return paymentResponse;
         }
         if ( !merchantOrder.canPayment() ) {
@@ -118,21 +118,21 @@ public class OrderService {
             return paymentResponse;
         }
 
-        if ( paymentRequest instanceof CardPaymentRequest ) {
-            paymentResponse = cardPayment(client, (CardPaymentRequest)paymentRequest, model, merchantOrder);
+        if ( paymentParams instanceof CardPaymentParams ) {
+            paymentResponse = cardPayment(client, (CardPaymentParams)paymentParams, model, merchantOrder);
         }
-        else if ( paymentRequest instanceof BindingPaymentRequest ) {
-            paymentResponse = bindingPayment(client, (BindingPaymentRequest) paymentRequest, model, merchantOrder);
+        else if ( paymentParams instanceof BindingPaymentParams ) {
+            paymentResponse = bindingPayment(client, (BindingPaymentParams) paymentParams, model, merchantOrder);
         }
         else {
-            logger.warn("Unknown type of payment request: {}", paymentRequest);
+            logger.warn("Unknown type of payment request: {}", paymentParams);
             paymentResponse.setStatus(ResponseStatus.FAIL);
-            paymentResponse.setMessage("Unknown type of payment request: " +  paymentRequest);
+            paymentResponse.setMessage("Unknown type of payment request: " +  paymentParams);
         }
         return paymentResponse;
     }
 
-    private PaymentResponse bindingPayment(Client client, BindingPaymentRequest paymentRequest, Model model, MerchantOrder merchantOrder) throws AuthException {
+    private PaymentResponse bindingPayment(Client client, BindingPaymentParams paymentParams, Model model, MerchantOrder merchantOrder) throws AuthException {
         PaymentResponse paymentResponse = new PaymentResponse();
         if ( null != client ) {
             paymentResponse.setPaymentAuthType(PaymentAuthType.CLIENT_AUTH);
@@ -140,10 +140,10 @@ public class OrderService {
         else {
             throw new AuthException("Client not auth");
         }
-        Binding binding = bindingService.findByBindingId(paymentRequest.getPaymentParams().getBindingId());
+        Binding binding = bindingService.findByBindingId(paymentParams.getBindingId());
         if ( null == binding ) {
             paymentResponse.setStatus(ResponseStatus.FAIL);
-            paymentResponse.setMessage("Unable to find BINDING by bindingId: " + paymentRequest.getPaymentParams().getBindingId());
+            paymentResponse.setMessage("Unable to find BINDING by bindingId: " + paymentParams.getBindingId());
             return paymentResponse;
         }
         if ( !client.getClientId().equals(binding.getClient().getClientId()) ) {
@@ -155,23 +155,23 @@ public class OrderService {
         if ( null == integrationSupport ) {
             paymentResponse.setStatus(ResponseStatus.FAIL);
             paymentResponse.setOrderStatus(merchantOrder.getOrderStatus());
-            paymentResponse.setMessage("Unknown integration support for orderId: " + paymentRequest.getOrderId());
+            paymentResponse.setMessage("Unknown integration support for orderId: " + paymentParams.getOrderId());
             return paymentResponse;
         }
         merchantOrder.setIntegrationSupport(integrationSupport);
-        merchantOrder.setPaymentWay(paymentRequest.getPaymentWay());
+        merchantOrder.setPaymentWay(PaymentWay.BINDING);
         IntegrationPaymentBindingRequest integrationPaymentBindingRequest = new IntegrationPaymentBindingRequest(integrationSupport,binding.getExternalBindingId());
-        integrationPaymentBindingRequest.setPaymentParams(paymentRequest.getPaymentParams());
+        integrationPaymentBindingRequest.setPaymentParams(paymentParams);
         integrationPaymentBindingRequest.setAmount(merchantOrder.getAmount());
         integrationPaymentBindingRequest.setClient(client);
         integrationPaymentBindingRequest.setDescription(merchantOrder.getDescription());
-        integrationPaymentBindingRequest.setOrderId(paymentRequest.getOrderId());
-        integrationPaymentBindingRequest.setReturnUrl(paymentRequest.getReturnUrl());
+        integrationPaymentBindingRequest.setOrderId(paymentParams.getOrderId());
+        integrationPaymentBindingRequest.setReturnUrl(paymentParams.getReturnUrl());
         integrationPaymentBindingRequest.setParams(integrationParams(merchantOrder));
         integrationPaymentBindingRequest.setOrderStatus(merchantOrder.getOrderStatus());
-        integrationPaymentBindingRequest.setPaymentWay(paymentRequest.getPaymentWay());
+        integrationPaymentBindingRequest.setPaymentWay(PaymentWay.BINDING);
         integrationPaymentBindingRequest.setModel(model);
-        integrationPaymentBindingRequest.setIp(paymentRequest.getIp());
+        integrationPaymentBindingRequest.setIp(paymentParams.getIp());
         integrationPaymentBindingRequest.setBindingId(binding.getBindingId());
 
         paymentResponse.setBindingId(binding.getBindingId());
@@ -198,41 +198,42 @@ public class OrderService {
             paymentResponse.setRedirectUrlOrPagePath(integrationPaymentResponse.getRedirectUrlOrPagePath());
             merchantOrderRepository.save(merchantOrder);
         } catch (IntegrationException e) {
-            logger.error("Error BINDING payment by orderId:" + paymentRequest.getOrderId(),e);
+            logger.error("Error BINDING payment by orderId:" + paymentParams.getOrderId(),e);
             paymentResponse.setStatus(ResponseStatus.FAIL);
-            paymentResponse.setMessage("Error external BINDING payment by id: " + paymentRequest.getOrderId());
-            paymentResponse.setOrderId(paymentRequest.getOrderId());
+            paymentResponse.setMessage("Error external BINDING payment by id: " + paymentParams.getOrderId());
+            paymentResponse.setOrderId(paymentParams.getOrderId());
         }
         return paymentResponse;
     }
 
-    private PaymentResponse cardPayment(Client client, CardPaymentRequest paymentRequest, Model model, MerchantOrder merchantOrder) {
+    private PaymentResponse cardPayment(Client client, CardPaymentParams paymentParams, Model model, MerchantOrder merchantOrder) {
         PaymentResponse paymentResponse = new PaymentResponse();
         if ( null != client ) {
             paymentResponse.setPaymentAuthType(PaymentAuthType.CLIENT_AUTH);
         }
-        IntegrationSupport integrationSupport = integrationSupportService.checkIntegrationSupport(merchantOrder.getMerchant(), paymentRequest);
+
+        IntegrationSupport integrationSupport = integrationSupportService.checkIntegrationSupport(merchantOrder.getMerchant(), paymentParams);
         if ( null == integrationSupport ) {
             paymentResponse.setStatus(ResponseStatus.FAIL);
             paymentResponse.setOrderStatus(merchantOrder.getOrderStatus());
-            paymentResponse.setMessage("Unknown integration support for orderId: " + paymentRequest.getOrderId());
+            paymentResponse.setMessage("Unknown integration support for orderId: " + paymentParams.getOrderId());
             return paymentResponse;
         }
-        merchantOrder.setPaymentWay(paymentRequest.getPaymentWay());
+        merchantOrder.setPaymentWay(PaymentWay.CARD);
         merchantOrder.setIntegrationSupport(integrationSupport);
         merchantOrder.setClient(client);
         IntegrationPaymentRequest integrationPaymentRequest = new IntegrationPaymentRequest(integrationSupport);
-        integrationPaymentRequest.setPaymentParams(paymentRequest.getPaymentParams());
+        integrationPaymentRequest.setPaymentParams(paymentParams);
         integrationPaymentRequest.setAmount(merchantOrder.getAmount());
         integrationPaymentRequest.setClient(client);
         integrationPaymentRequest.setDescription(merchantOrder.getDescription());
-        integrationPaymentRequest.setOrderId(paymentRequest.getOrderId());
-        integrationPaymentRequest.setReturnUrl(paymentRequest.getReturnUrl());
+        integrationPaymentRequest.setOrderId(paymentParams.getOrderId());
+        integrationPaymentRequest.setReturnUrl(paymentParams.getReturnUrl());
         integrationPaymentRequest.setParams(integrationParams(merchantOrder));
         integrationPaymentRequest.setOrderStatus(merchantOrder.getOrderStatus());
-        integrationPaymentRequest.setPaymentWay(paymentRequest.getPaymentWay());
+        integrationPaymentRequest.setPaymentWay(PaymentWay.CARD);
         integrationPaymentRequest.setModel(model);
-        integrationPaymentRequest.setIp(paymentRequest.getIp());
+        integrationPaymentRequest.setIp(paymentParams.getIp());
 
         try {
             IntegrationPaymentResponse integrationPaymentResponse = integrationService.payment(integrationPaymentRequest);
@@ -249,8 +250,8 @@ public class OrderService {
                     paymentResponse.setMessage("Paid successfully");
 
                     if ( null != client && merchantOrder.getMerchant().isCreateBinding()
-                            && !bindingService.isExists(client, paymentRequest.getPaymentParams(), paymentRequest.getPaymentWay() )) {
-                        Binding binding = bindingService.register(client, paymentRequest.getPaymentParams(), merchantOrder, false);
+                            && !bindingService.isExists(client, paymentParams, PaymentWay.CARD )) {
+                        Binding binding = bindingService.register(client, paymentParams, merchantOrder, false);
                         if ( null != binding ) {
                             logger.debug("Successfully BINDING created: {}", binding);
                             paymentResponse.setBindingId(binding.getBindingId());
@@ -269,10 +270,10 @@ public class OrderService {
             paymentResponse.setRedirectUrlOrPagePath(integrationPaymentResponse.getRedirectUrlOrPagePath());
             merchantOrderRepository.save(merchantOrder);
         } catch (IntegrationException e) {
-            logger.error("Error payment by orderId:" + paymentRequest.getOrderId(),e);
+            logger.error("Error payment by orderId:" + paymentParams.getOrderId(),e);
             paymentResponse.setStatus(ResponseStatus.FAIL);
-            paymentResponse.setMessage("Error external payment by id: " + paymentRequest.getOrderId());
-            paymentResponse.setOrderId(paymentRequest.getOrderId());
+            paymentResponse.setMessage("Error external payment by id: " + paymentParams.getOrderId());
+            paymentResponse.setOrderId(paymentParams.getOrderId());
         }
         return paymentResponse;
     }

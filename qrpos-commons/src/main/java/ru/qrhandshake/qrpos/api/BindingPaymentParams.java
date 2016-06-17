@@ -5,9 +5,8 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by lameroot on 01.06.16.
  */
-public class BindingPaymentParams implements PaymentParams {
+public class BindingPaymentParams extends PaymentParams {
 
-    @NotNull
     private String bindingId;
     private String confirmValue;
 

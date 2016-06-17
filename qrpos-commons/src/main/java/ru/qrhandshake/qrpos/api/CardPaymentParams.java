@@ -11,23 +11,15 @@ import javax.validation.constraints.Size;
 /**
  * Created by lameroot on 30.05.16.
  */
-public class CardPaymentParams implements PaymentParams {
+public class CardPaymentParams extends PaymentParams {
 
-    @NotNull
     @JsonIgnore
     private String pan;
-    @NotNull
-    @Size(min = 2, max = 2)
-    private String month;
-    @NotNull
-    @Size(min = 4, max = 4)
-    private String year;
-    @NotNull
-    private String cardHolderName;
-    @NotNull
     @JsonIgnore
     private String cvc;
-
+    private String month;
+    private String year;
+    private String cardHolderName;
     private String maskedPan;
 
     @JsonProperty(value = "masked_pan")

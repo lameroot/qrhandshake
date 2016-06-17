@@ -3,7 +3,7 @@ package ru.qrhandshake.qrpos.api;
 /**
  * Created by lameroot on 30.05.16.
  */
-public class YandexMoneyPaymentParams implements PaymentParams {
+public class YandexMoneyPaymentParams extends PaymentParams {
 
     private String dstAccount;
 

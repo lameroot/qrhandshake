@@ -84,14 +84,40 @@ public class MerchantOrderController {
     public String cardPayment(Principal principal, @Valid CardPaymentRequest paymentRequest,
                               HttpServletRequest request,
                               Model model) throws AuthException {
-        return handlePaymentRequest(principal,paymentRequest,request,model);
+        Client client = authService.clientAuth(principal, paymentRequest, false);
+
+        //TODO move to converter
+        CardPaymentParams paymentParams = new CardPaymentParams();
+        paymentParams.setOrderId(paymentRequest.getOrderId());
+        paymentParams.setPan(paymentRequest.getPan());
+        paymentParams.setMonth(paymentRequest.getMonth());
+        paymentParams.setYear(paymentRequest.getYear());
+        paymentParams.setCvc(paymentRequest.getCvc());
+        paymentParams.setCardHolderName(paymentRequest.getCardHolderName());
+        paymentParams.setIp(request.getRemoteUser());
+        paymentParams.setReturnUrl(getReturnUrl(request, paymentRequest.getOrderId()));
+
+        PaymentResponse paymentResponse = orderService.payment(client, paymentParams, model);
+
+        return handlePaymentResponse(paymentResponse, paymentRequest.getOrderId());
     }
 
     @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST, params = {"paymentWay=binding"})
     public String bindingPayment(Principal principal, @Valid BindingPaymentRequest paymentRequest,
                                  HttpServletRequest request,
                                  Model model) throws AuthException {
-        return handlePaymentRequest(principal,paymentRequest,request,model);
+        Client client = authService.clientAuth(principal, paymentRequest, false);
+
+        //TODO move to converter
+        BindingPaymentParams paymentParams = new BindingPaymentParams();
+        paymentParams.setOrderId(paymentRequest.getOrderId());
+        paymentParams.setBindingId(paymentRequest.getBindingId());
+        paymentParams.setIp(request.getRemoteUser());
+        paymentParams.setReturnUrl(getReturnUrl(request, paymentRequest.getOrderId()));
+
+        PaymentResponse paymentResponse = orderService.payment(client, paymentParams, model);
+
+        return handlePaymentResponse(paymentResponse, paymentRequest.getOrderId());
     }
 
 
@@ -118,20 +144,19 @@ public class MerchantOrderController {
         return orderService.getBindings(authService.clientAuth(principal, getBindingsRequest, true), getBindingsRequest);
     }
 
-    private String handlePaymentRequest(Principal principal, PaymentRequest paymentRequest, HttpServletRequest request, Model model) throws AuthException {
-        paymentRequest.setIp(request.getRemoteUser());
-        Client client = authService.clientAuth(principal, paymentRequest, false);
-        paymentRequest.setReturnUrl(request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + MERCHANT_ORDER_PATH + FINISH_PATH + "/" + paymentRequest.getOrderId());
-        PaymentResponse paymentResponse = orderService.payment(client, paymentRequest, model);
+    private String handlePaymentResponse(PaymentResponse paymentResponse, String orderId) {
         if ( ResponseStatus.SUCCESS.equals(paymentResponse.getStatus()) ) {
             logger.debug("Return success payment page: {}", paymentResponse.getRedirectUrlOrPagePath());
             return paymentResponse.getRedirectUrlOrPagePath();
         }
         else {
-            logger.error("Error payment of order: {}, cause: {}",paymentRequest.getOrderId(),paymentResponse.getMessage());
-            return "redirect:" + PAYMENT_PATH + "/" + paymentRequest.getOrderId();
+            logger.error("Error payment of order: {}, cause: {}", orderId, paymentResponse.getMessage());
+            return "redirect:" + PAYMENT_PATH + "/" + orderId;
         }
     }
 
-
+    private String getReturnUrl(HttpServletRequest request, String orderId){
+        return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+                + MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.FINISH_PATH + "/" + orderId;
+    }
 }
