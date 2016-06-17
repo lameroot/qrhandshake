@@ -23,7 +23,7 @@
         <tr>
             <td>PAN</td>
             <td colspan="2">
-                <select name="paymentParams.pan">
+                <select name="pan">
                     <option value="5555555555555599">5555555555555599</option>
                     <option value="4111111111111111">4111111111111111</option>
                 </select>
@@ -32,7 +32,7 @@
         <tr>
             <td>Expiry</td>
             <td>
-                <select name="paymentParams.month">
+                <select name="month">
                     <option value="01">01</option>
                     <option value="02">02</option>
                     <option value="03">03</option>
@@ -48,7 +48,7 @@
                 </select>
             </td>
             <td>
-                <select name="paymentParams.year">
+                <select name="year">
                     <option value="2016">2016</option>
                     <option value="2017">2017</option>
                     <option value="2018">2018</option>
@@ -60,13 +60,13 @@
         <tr>
             <td>CARD HOLDER</td>
             <td colspan="2">
-                <input name="paymentParams.cardHolderName" value="test test"/>
+                <input name="cardHolderName" value="test test"/>
             </td>
         </tr>
         <tr>
             <td>Cvc</td>
             <td colspan="2">
-                <input name="paymentParams.cvc" size="4" value="123"/>
+                <input name="cvc" size="4" value="123"/>
             </td>
         </tr>
         <tr>
