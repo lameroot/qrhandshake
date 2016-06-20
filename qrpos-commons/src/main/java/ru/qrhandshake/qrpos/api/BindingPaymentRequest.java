@@ -11,6 +11,7 @@ public class BindingPaymentRequest extends PaymentRequest {
 
     @NotNull
     private String bindingId;
+    private String confirmValue;
 
     public String getBindingId() {
         return bindingId;
@@ -18,6 +19,14 @@ public class BindingPaymentRequest extends PaymentRequest {
 
     public void setBindingId(String bindingId) {
         this.bindingId = bindingId;
+    }
+
+    public String getConfirmValue() {
+        return confirmValue;
+    }
+
+    public void setConfirmValue(String confirmValue) {
+        this.confirmValue = confirmValue;
     }
 
     @Override

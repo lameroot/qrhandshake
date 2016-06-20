@@ -112,6 +112,7 @@ public class MerchantOrderController {
         BindingPaymentParams paymentParams = new BindingPaymentParams();
         paymentParams.setOrderId(paymentRequest.getOrderId());
         paymentParams.setBindingId(paymentRequest.getBindingId());
+        paymentParams.setConfirmValue(paymentRequest.getConfirmValue());
         paymentParams.setIp(request.getRemoteUser());
         paymentParams.setReturnUrl(getReturnUrl(request, paymentRequest.getOrderId()));
 
