@@ -16,6 +16,7 @@ import ru.paymentgate.engine.webservices.p2p.*;
 import ru.qrhandshake.qrpos.api.BindingPaymentParams;
 import ru.qrhandshake.qrpos.api.CardPaymentParams;
 import ru.qrhandshake.qrpos.domain.*;
+import ru.qrhandshake.qrpos.dto.ReturnUrlObject;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.util.Util;
@@ -315,14 +316,16 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             return;
         }
         integrationPaymentResponse.setSuccess(true);
-        Model model = integrationPaymentRequest.getModel();
+        ReturnUrlObject returnUrlObject = new ReturnUrlObject();
+        integrationPaymentResponse.setReturnUrlObject(returnUrlObject);
         if ( StringUtils.isNotBlank(paymentOrderResult.getAcsUrl()) && StringUtils.isNotBlank(paymentOrderResult.getPaReq()) ) {
-            model.addAttribute("acsUrl", paymentOrderResult.getAcsUrl());
-            model.addAttribute("mdOrder", externalOrderId);
-            model.addAttribute("paReq", paymentOrderResult.getPaReq());
-            model.addAttribute("termUrl", paymentOrderResult.getRedirect());
-            model.addAttribute("language", language);
-            integrationPaymentResponse.setRedirectUrlOrPagePath(ACS_REDIRECT_PAGE);
+            returnUrlObject.setUrl(paymentOrderResult.getAcsUrl());
+            returnUrlObject.getParams().put("MD", externalOrderId);
+            returnUrlObject.getParams().put("PaReq", paymentOrderResult.getPaReq());
+            returnUrlObject.getParams().put("TermUrl", paymentOrderResult.getRedirect());
+            returnUrlObject.getParams().put("language", language);
+            returnUrlObject.setAction("post");
+
             integrationPaymentResponse.setIntegrationOrderStatus(RbsOrderStatus.REDIRECTED_TO_ACS);
             integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.TDS);
         }
@@ -331,7 +334,8 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             integrationPaymentResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
             integrationOrderStatusResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
             integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.SSL);
-            integrationPaymentResponse.setRedirectUrlOrPagePath("redirect:" + paymentOrderResult.getRedirect());
+            returnUrlObject.setUrl(paymentOrderResult.getRedirect());
+            returnUrlObject.setAction("redirect");
         }
     }
 

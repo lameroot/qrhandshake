@@ -243,6 +243,12 @@
             <version>1.9.5</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>ru.rbs</groupId>
+            <artifactId>mpi2-test-utils</artifactId>
+            <version>1.4</version>
+            <scope>test</scope>
+        </dependency>
 
         <!--Logging-->
         <!-- 2. Bridge logging from JCL to SLF4j-->

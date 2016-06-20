@@ -3,6 +3,7 @@ package ru.qrhandshake.qrpos.integration;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.domain.PaymentSecureType;
 import ru.qrhandshake.qrpos.domain.PaymentType;
+import ru.qrhandshake.qrpos.dto.ReturnUrlObject;
 
 /**
  * Created by lameroot on 19.05.16.
@@ -11,7 +12,7 @@ public class IntegrationPaymentResponse extends IntegrationResponse {
 
     private String orderId;
     private String externalId;
-    private String redirectUrlOrPagePath;
+    private ReturnUrlObject returnUrlObject;
     private OrderStatus orderStatus;
     private IntegrationOrderStatus integrationOrderStatus;
     private PaymentSecureType paymentSecureType;
@@ -26,12 +27,12 @@ public class IntegrationPaymentResponse extends IntegrationResponse {
         this.orderId = orderId;
     }
 
-    public String getRedirectUrlOrPagePath() {
-        return redirectUrlOrPagePath;
+    public ReturnUrlObject getReturnUrlObject() {
+        return returnUrlObject;
     }
 
-    public void setRedirectUrlOrPagePath(String redirectUrlOrPagePath) {
-        this.redirectUrlOrPagePath = redirectUrlOrPagePath;
+    public void setReturnUrlObject(ReturnUrlObject returnUrlObject) {
+        this.returnUrlObject = returnUrlObject;
     }
 
     public OrderStatus getOrderStatus() {

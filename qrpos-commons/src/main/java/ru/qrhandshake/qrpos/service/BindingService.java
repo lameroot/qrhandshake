@@ -62,6 +62,7 @@ public class BindingService {
         }
         if ( OrderStatus.PAID.equals(merchantOrder.getOrderStatus()) && binding.getClient().getClientId().equals(bindingInfo.getClientId())) {
             binding.setEnabled(true);
+            binding.setPaymentSecureType(merchantOrder.getPaymentSecureType());
             binding.setExternalBindingId(bindingInfo.getBindingId());
             bindingRepository.save(binding);
         }

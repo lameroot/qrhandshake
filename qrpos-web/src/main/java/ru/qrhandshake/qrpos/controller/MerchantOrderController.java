@@ -81,9 +81,9 @@ public class MerchantOrderController {
 
 
     @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST, params = {"paymentWay=card"})
-    public String cardPayment(Principal principal, @Valid CardPaymentRequest paymentRequest,
-                              HttpServletRequest request,
-                              Model model) throws AuthException {
+    @ResponseBody
+    public PaymentResponse cardPayment(Principal principal, @Valid CardPaymentRequest paymentRequest,
+                              HttpServletRequest request) throws AuthException {
         Client client = authService.clientAuth(principal, paymentRequest, false);
 
         //TODO move to converter
@@ -97,15 +97,13 @@ public class MerchantOrderController {
         paymentParams.setIp(request.getRemoteUser());
         paymentParams.setReturnUrl(getReturnUrl(request, paymentRequest.getOrderId()));
 
-        PaymentResponse paymentResponse = orderService.payment(client, paymentParams, model);
-
-        return handlePaymentResponse(paymentResponse, paymentRequest.getOrderId());
+        return orderService.payment(client, paymentParams);
     }
 
     @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST, params = {"paymentWay=binding"})
-    public String bindingPayment(Principal principal, @Valid BindingPaymentRequest paymentRequest,
-                                 HttpServletRequest request,
-                                 Model model) throws AuthException {
+    @ResponseBody
+    public PaymentResponse bindingPayment(Principal principal, @Valid BindingPaymentRequest paymentRequest,
+                                 HttpServletRequest request) throws AuthException {
         Client client = authService.clientAuth(principal, paymentRequest, false);
 
         //TODO move to converter
@@ -116,9 +114,7 @@ public class MerchantOrderController {
         paymentParams.setIp(request.getRemoteUser());
         paymentParams.setReturnUrl(getReturnUrl(request, paymentRequest.getOrderId()));
 
-        PaymentResponse paymentResponse = orderService.payment(client, paymentParams, model);
-
-        return handlePaymentResponse(paymentResponse, paymentRequest.getOrderId());
+        return orderService.payment(client, paymentParams);
     }
 
 
@@ -143,17 +139,6 @@ public class MerchantOrderController {
     @ResponseBody
     public GetBindingsResponse getBindings(Principal principal, @Valid GetBindingsRequest getBindingsRequest) throws AuthException {
         return orderService.getBindings(authService.clientAuth(principal, getBindingsRequest, true), getBindingsRequest);
-    }
-
-    private String handlePaymentResponse(PaymentResponse paymentResponse, String orderId) {
-        if ( ResponseStatus.SUCCESS.equals(paymentResponse.getStatus()) ) {
-            logger.debug("Return success payment page: {}", paymentResponse.getRedirectUrlOrPagePath());
-            return paymentResponse.getRedirectUrlOrPagePath();
-        }
-        else {
-            logger.error("Error payment of order: {}, cause: {}", orderId, paymentResponse.getMessage());
-            return "redirect:" + PAYMENT_PATH + "/" + orderId;
-        }
     }
 
     private String getReturnUrl(HttpServletRequest request, String orderId){

@@ -4,6 +4,7 @@ package ru.qrhandshake.qrpos.controller.it;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -15,6 +16,7 @@ import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.dto.MerchantOrderDto;
+import ru.qrhandshake.qrpos.dto.ReturnUrlObject;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
 import ru.qrhandshake.qrpos.integration.IntegrationCompletionRequest;
@@ -26,8 +28,10 @@ import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 import ru.qrhandshake.qrpos.repository.UserRepository;
 import ru.qrhandshake.qrpos.service.UserService;
 import ru.qrhandshake.qrpos.util.Util;
+import ru.rbs.mpi.test.acs.AcsUtils;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -113,9 +117,12 @@ public class PaymentITTest extends ItTest {
         ).andDo(print()).andReturn();
 
         assertNotNull(mvcResult);
-        assertTrue(mvcResult.getResponse().getStatus() == 302);
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("/finish/"));
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("redirect", returnUrlObject.getAction());
+        assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
 
         MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
                 .param("orderId", merchantOrderRegisterResponse.getOrderId()))
@@ -148,6 +155,139 @@ public class PaymentITTest extends ItTest {
 
     @Test
     @Transactional
+    public void testTdsCardPaymentByAnonymous() throws Exception {
+        MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
+        TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = registerOrder(terminalRegisterResponse.getAuth(),
+                amount,sessionId,deviceId);
+        MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .param("orderId", merchantOrderRegisterResponse.getOrderId())
+                        .param("pan", TDS_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
+                        .param("paymentWay", "card")
+        ).andDo(print()).andReturn();
+
+        assertNotNull(mvcResult);
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("post",returnUrlObject.getAction());
+        assertNotNull(returnUrlObject.getParams().get("MD"));
+        assertNotNull(returnUrlObject.getParams().get("PaReq"));
+        assertNotNull(returnUrlObject.getParams().get("TermUrl"));
+        assertNotNull(returnUrlObject.getUrl());
+
+        String paRes = AcsUtils.emulateCommunicationWithACS(returnUrlObject.getParams().get("MD"), returnUrlObject.getParams().get("TermUrl"), returnUrlObject.getParams().get("PaReq"), true);
+        assertNotNull(paRes);
+        ResponseEntity<String> responseEntity = restTemplate.getForEntity(returnUrlObject.getParams().get("TermUrl")
+                 + "?PaRes=" + paRes
+                 + "&MD=" + returnUrlObject.getParams().get("MD"), String.class);
+        assertNotNull(responseEntity);
+        System.out.println(responseEntity);
+        assertEquals(302,responseEntity.getStatusCode().value());
+        String finishUri = "/order/finish/" + merchantOrderRegisterResponse.getOrderId() + "?orderId=" + returnUrlObject.getParams().get("MD");
+        assertTrue(responseEntity.getHeaders().getLocation().toString().contains(finishUri));
+
+        MvcResult finishMvcResult = mockMvc.perform(get(finishUri))
+                .andDo(print())
+                .andReturn();
+        assertNotNull(finishMvcResult);
+        Map<String,Object> finishModel = finishMvcResult.getModelAndView().getModel();
+        assertNotNull(finishModel);
+        assertTrue(!finishModel.isEmpty());
+        assertTrue(ResponseStatus.SUCCESS.equals(finishModel.get("status")));
+        assertTrue(finishMvcResult.getResponse().getForwardedUrl().contains("finish"));
+
+        Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNull(binding);
+
+        MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNotNull(merchantOrder);
+        assertTrue(merchantOrder.getOrderStatus() == OrderStatus.PAID);
+        assertNotNull(merchantOrder.getPaymentDate());
+        assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
+        assertNull(merchantOrder.getClient());
+        assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
+    }
+
+    @Test
+    @Transactional
+    public void testTdsCardPaymentByApiAuth() throws Exception {
+        MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
+        TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = registerOrder(terminalRegisterResponse.getAuth(),
+                amount,sessionId,deviceId, true);
+        ApiResponse apiResponse = authClient(clientRegisterResponse.getAuth().getAuthName(),clientRegisterResponse.getAuth().getAuthPassword());
+        assertTrue(ResponseStatus.SUCCESS == apiResponse.getStatus());
+
+        MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .param("authName", clientRegisterResponse.getAuth().getAuthName())
+                        .param("authPassword", clientRegisterResponse.getAuth().getAuthPassword())
+                        .param("orderId", merchantOrderRegisterResponse.getOrderId())
+                        .param("pan", TDS_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
+                        .param("paymentWay", "card")
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResult);
+
+        assertNotNull(mvcResult);
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("post",returnUrlObject.getAction());
+        assertNotNull(returnUrlObject.getParams().get("MD"));
+        assertNotNull(returnUrlObject.getParams().get("PaReq"));
+        assertNotNull(returnUrlObject.getParams().get("TermUrl"));
+        assertNotNull(returnUrlObject.getUrl());
+
+        String paRes = AcsUtils.emulateCommunicationWithACS(returnUrlObject.getParams().get("MD"), returnUrlObject.getParams().get("TermUrl"), returnUrlObject.getParams().get("PaReq"), true);
+        assertNotNull(paRes);
+        ResponseEntity<String> responseEntity = restTemplate.getForEntity(returnUrlObject.getParams().get("TermUrl")
+                + "?PaRes=" + paRes
+                + "&MD=" + returnUrlObject.getParams().get("MD"), String.class);
+        assertNotNull(responseEntity);
+        System.out.println(responseEntity);
+        assertEquals(302,responseEntity.getStatusCode().value());
+        String finishUri = "/order/finish/" + merchantOrderRegisterResponse.getOrderId() + "?orderId=" + returnUrlObject.getParams().get("MD");
+        assertTrue(responseEntity.getHeaders().getLocation().toString().contains(finishUri));
+
+        MvcResult finishMvcResult = mockMvc.perform(get(finishUri))
+                .andDo(print())
+                .andReturn();
+        assertNotNull(finishMvcResult);
+        Map<String,Object> finishModel = finishMvcResult.getModelAndView().getModel();
+        assertNotNull(finishModel);
+        assertTrue(!finishModel.isEmpty());
+        assertTrue(ResponseStatus.SUCCESS.equals(finishModel.get("status")));
+        assertTrue(finishMvcResult.getResponse().getForwardedUrl().contains("finish"));
+
+        Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNotNull(binding);
+        assertTrue(binding.isCompleted());
+        assertTrue(binding.isEnabled());
+        assertEquals(PaymentSecureType.TDS, binding.getPaymentSecureType());
+
+        MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNotNull(merchantOrder);
+        assertTrue(merchantOrder.getOrderStatus() == OrderStatus.PAID);
+        assertNotNull(merchantOrder.getPaymentDate());
+        assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
+        assertNotNull(merchantOrder.getClient());
+        assertEquals(clientRegisterResponse.getAuth().getAuthName(), merchantOrder.getClient().getUsername());
+        assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
+    }
+
+    @Test
+    @Transactional
     public void testSslCardPaymentByAnonymous() throws Exception {
         MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
         TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
@@ -165,9 +305,12 @@ public class PaymentITTest extends ItTest {
         ).andDo(print()).andReturn();
 
         assertNotNull(mvcResult);
-        assertTrue(mvcResult.getResponse().getStatus() == 302);
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("/finish/"));
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("redirect", returnUrlObject.getAction());
+        assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
 
         MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
                 .param("orderId", merchantOrderRegisterResponse.getOrderId()))
@@ -217,9 +360,12 @@ public class PaymentITTest extends ItTest {
         ).andDo(print()).andReturn();
 
         assertNotNull(mvcResult);
-        assertTrue(mvcResult.getResponse().getStatus() == 302);
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("/finish/"));
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("redirect", returnUrlObject.getAction());
+        assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
 
         MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
                 .param("orderId", merchantOrderRegisterResponse.getOrderId()))
@@ -276,9 +422,12 @@ public class PaymentITTest extends ItTest {
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
-        assertTrue(mvcResult.getResponse().getStatus() == 302);
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("/finish/"));
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("redirect", returnUrlObject.getAction());
+        assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
 
         MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
                 .param("orderId", merchantOrderRegisterResponse.getOrderId()))
@@ -294,6 +443,8 @@ public class PaymentITTest extends ItTest {
         Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(binding);
         assertTrue(binding.isCompleted());
+        assertTrue(binding.isEnabled());
+        assertEquals(PaymentSecureType.SSL,binding.getPaymentSecureType());
 
         MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(merchantOrder);
@@ -329,9 +480,12 @@ public class PaymentITTest extends ItTest {
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
-        assertTrue(mvcResult.getResponse().getStatus() == 302);
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("/finish/"));
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("redirect", returnUrlObject.getAction());
+        assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
 
         MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
                 .param("orderId", merchantOrderRegisterResponse.getOrderId()))
@@ -347,6 +501,8 @@ public class PaymentITTest extends ItTest {
         Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(binding);
         assertTrue(binding.isCompleted());
+        assertTrue(binding.isEnabled());
+        assertEquals(PaymentSecureType.SSL,binding.getPaymentSecureType());
 
         MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(merchantOrder);
@@ -382,9 +538,12 @@ public class PaymentITTest extends ItTest {
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
-        assertTrue(mvcResult.getResponse().getStatus() == 302);
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("/finish/"));
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("redirect", returnUrlObject.getAction());
+        assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
 
         MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
                 .param("orderId", merchantOrderRegisterResponse.getOrderId()))
@@ -400,6 +559,8 @@ public class PaymentITTest extends ItTest {
         Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(binding);
         assertTrue(binding.isCompleted());
+        assertTrue(binding.isEnabled());
+        assertEquals(PaymentSecureType.SSL, binding.getPaymentSecureType());
 
         MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(merchantOrder);
@@ -419,9 +580,12 @@ public class PaymentITTest extends ItTest {
         ).andDo(print()).andReturn();
 
         assertNotNull(mvcResultBinding);
-        assertTrue(mvcResultBinding.getResponse().getStatus() == 302);
-        assertTrue(mvcResultBinding.getResponse().getRedirectedUrl().contains("/finish/"));
-        assertTrue(mvcResultBinding.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse1.getOrderId()));
+        PaymentResponse paymentResponseBinding = objectMapper.readValue(mvcResultBinding.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObjectBinding = paymentResponseBinding.getReturnUrlObject();
+        assertNotNull(returnUrlObjectBinding);
+        assertEquals("redirect", returnUrlObjectBinding.getAction());
+        assertTrue(returnUrlObjectBinding.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObjectBinding.getUrl().contains(merchantOrderRegisterResponse1.getOrderId()));
 
         MerchantOrder merchantOrder1 = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse1.getOrderId());
         assertNotNull(merchantOrder1);
@@ -454,9 +618,12 @@ public class PaymentITTest extends ItTest {
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
-        assertTrue(mvcResult.getResponse().getStatus() == 302);
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("/finish/"));
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("redirect", returnUrlObject.getAction());
+        assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
 
         MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
                 .param("orderId", merchantOrderRegisterResponse.getOrderId()))
@@ -472,6 +639,8 @@ public class PaymentITTest extends ItTest {
         Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(binding);
         assertTrue(binding.isCompleted());
+        assertTrue(binding.isEnabled());
+        assertEquals(PaymentSecureType.SSL, binding.getPaymentSecureType());
 
         MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(merchantOrder);
@@ -524,9 +693,12 @@ public class PaymentITTest extends ItTest {
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
-        assertTrue(mvcResult.getResponse().getStatus() == 302);
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("/finish/"));
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("redirect", returnUrlObject.getAction());
+        assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
 
         MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
                 .param("orderId", merchantOrderRegisterResponse.getOrderId()))
@@ -542,6 +714,8 @@ public class PaymentITTest extends ItTest {
         Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(binding);
         assertTrue(binding.isCompleted());
+        assertTrue(binding.isEnabled());
+        assertEquals(PaymentSecureType.SSL, binding.getPaymentSecureType());
 
         MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(merchantOrder);
@@ -595,9 +769,12 @@ public class PaymentITTest extends ItTest {
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
-        assertTrue(mvcResult.getResponse().getStatus() == 302);
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("/finish/"));
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("redirect", returnUrlObject.getAction());
+        assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
 
         MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
                 .param("orderId", merchantOrderRegisterResponse.getOrderId()))
@@ -613,6 +790,8 @@ public class PaymentITTest extends ItTest {
         Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(binding);
         assertTrue(binding.isCompleted());
+        assertTrue(binding.isEnabled());
+        assertEquals(PaymentSecureType.SSL, binding.getPaymentSecureType());
 
         MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(merchantOrder);
@@ -664,9 +843,12 @@ public class PaymentITTest extends ItTest {
                         .param("paymentWay", "card")
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
-        assertTrue(mvcResult.getResponse().getStatus() == 302);
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("/finish/"));
-        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("redirect", returnUrlObject.getAction());
+        assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
 
         MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
                 .param("orderId", merchantOrderRegisterResponse.getOrderId()))
@@ -682,6 +864,8 @@ public class PaymentITTest extends ItTest {
         Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(binding);
         assertTrue(binding.isCompleted());
+        assertTrue(binding.isEnabled());
+        assertEquals(PaymentSecureType.SSL, binding.getPaymentSecureType());
 
         MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(merchantOrder);

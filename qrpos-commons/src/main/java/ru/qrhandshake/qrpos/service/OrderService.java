@@ -101,7 +101,7 @@ public class OrderService {
         return merchantOrderStatusResponse;
     }
 
-    public PaymentResponse payment(Client client, PaymentParams paymentParams, Model model) throws AuthException {
+    public PaymentResponse payment(Client client, PaymentParams paymentParams) throws AuthException {
         PaymentResponse paymentResponse = new PaymentResponse();
 
         MerchantOrder merchantOrder = findByOrderId(paymentParams.getOrderId());
@@ -119,10 +119,10 @@ public class OrderService {
         }
 
         if ( paymentParams instanceof CardPaymentParams ) {
-            paymentResponse = cardPayment(client, (CardPaymentParams)paymentParams, model, merchantOrder);
+            paymentResponse = cardPayment(client, (CardPaymentParams)paymentParams, merchantOrder);
         }
         else if ( paymentParams instanceof BindingPaymentParams ) {
-            paymentResponse = bindingPayment(client, (BindingPaymentParams) paymentParams, model, merchantOrder);
+            paymentResponse = bindingPayment(client, (BindingPaymentParams) paymentParams, merchantOrder);
         }
         else {
             logger.warn("Unknown type of payment request: {}", paymentParams);
@@ -132,7 +132,7 @@ public class OrderService {
         return paymentResponse;
     }
 
-    private PaymentResponse bindingPayment(Client client, BindingPaymentParams paymentParams, Model model, MerchantOrder merchantOrder) throws AuthException {
+    private PaymentResponse bindingPayment(Client client, BindingPaymentParams paymentParams, MerchantOrder merchantOrder) throws AuthException {
         PaymentResponse paymentResponse = new PaymentResponse();
         if ( null != client ) {
             paymentResponse.setPaymentAuthType(PaymentAuthType.CLIENT_AUTH);
@@ -170,7 +170,6 @@ public class OrderService {
         integrationPaymentBindingRequest.setParams(integrationParams(merchantOrder));
         integrationPaymentBindingRequest.setOrderStatus(merchantOrder.getOrderStatus());
         integrationPaymentBindingRequest.setPaymentWay(PaymentWay.BINDING);
-        integrationPaymentBindingRequest.setModel(model);
         integrationPaymentBindingRequest.setIp(paymentParams.getIp());
         integrationPaymentBindingRequest.setBindingId(binding.getBindingId());
 
@@ -195,7 +194,7 @@ public class OrderService {
                 paymentResponse.setStatus(ResponseStatus.FAIL);
             }
             paymentResponse.setOrderStatus(merchantOrder.getOrderStatus());
-            paymentResponse.setRedirectUrlOrPagePath(integrationPaymentResponse.getRedirectUrlOrPagePath());
+            paymentResponse.setReturnUrlObject(integrationPaymentResponse.getReturnUrlObject());
             merchantOrderRepository.save(merchantOrder);
         } catch (IntegrationException e) {
             logger.error("Error BINDING payment by orderId:" + paymentParams.getOrderId(),e);
@@ -206,7 +205,7 @@ public class OrderService {
         return paymentResponse;
     }
 
-    private PaymentResponse cardPayment(Client client, CardPaymentParams paymentParams, Model model, MerchantOrder merchantOrder) {
+    private PaymentResponse cardPayment(Client client, CardPaymentParams paymentParams, MerchantOrder merchantOrder) {
         PaymentResponse paymentResponse = new PaymentResponse();
         if ( null != client ) {
             paymentResponse.setPaymentAuthType(PaymentAuthType.CLIENT_AUTH);
@@ -232,7 +231,6 @@ public class OrderService {
         integrationPaymentRequest.setParams(integrationParams(merchantOrder));
         integrationPaymentRequest.setOrderStatus(merchantOrder.getOrderStatus());
         integrationPaymentRequest.setPaymentWay(PaymentWay.CARD);
-        integrationPaymentRequest.setModel(model);
         integrationPaymentRequest.setIp(paymentParams.getIp());
 
         try {
@@ -246,20 +244,20 @@ public class OrderService {
             merchantOrder.setExternalId(integrationPaymentResponse.getExternalId());
             merchantOrder.setPaymentType(integrationPaymentResponse.getPaymentType());
             if ( integrationPaymentResponse.isSuccess() ) {
+                if ( null != client && merchantOrder.getMerchant().isCreateBinding()
+                        && !bindingService.isExists(client, paymentParams, PaymentWay.CARD )) {
+                    Binding binding = bindingService.register(client, paymentParams, merchantOrder, false);
+                    if ( null != binding ) {
+                        logger.debug("Successfully BINDING created: {}", binding);
+                        paymentResponse.setBindingId(binding.getBindingId());
+                    }
+                    else {
+                        logger.warn("Binding not created for order: {}", merchantOrder);
+                    }
+                }
+
                 if (merchantOrder.getOrderStatus() == OrderStatus.PAID) {
                     paymentResponse.setMessage("Paid successfully");
-
-                    if ( null != client && merchantOrder.getMerchant().isCreateBinding()
-                            && !bindingService.isExists(client, paymentParams, PaymentWay.CARD )) {
-                        Binding binding = bindingService.register(client, paymentParams, merchantOrder, false);
-                        if ( null != binding ) {
-                            logger.debug("Successfully BINDING created: {}", binding);
-                            paymentResponse.setBindingId(binding.getBindingId());
-                        }
-                        else {
-                            logger.warn("Binding not created for order: {}", merchantOrder);
-                        }
-                    }
                 } else {
                     paymentResponse.setMessage("Paid successfully but external status wasn't changed");
                 }
@@ -267,7 +265,7 @@ public class OrderService {
                 paymentResponse.setStatus(ResponseStatus.FAIL);
             }
             paymentResponse.setOrderStatus(merchantOrder.getOrderStatus());
-            paymentResponse.setRedirectUrlOrPagePath(integrationPaymentResponse.getRedirectUrlOrPagePath());
+            paymentResponse.setReturnUrlObject(integrationPaymentResponse.getReturnUrlObject());
             merchantOrderRepository.save(merchantOrder);
         } catch (IntegrationException e) {
             logger.error("Error payment by orderId:" + paymentParams.getOrderId(),e);
