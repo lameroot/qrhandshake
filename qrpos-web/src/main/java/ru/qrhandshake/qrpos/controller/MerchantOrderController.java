@@ -34,6 +34,7 @@ public class MerchantOrderController {
     public final static String MERCHANT_ORDER_PATH = "/order";
     public final static String REGISTER_PATH = "/register";
     public final static String ORDER_STATUS_PATH = "/status";
+    public final static String SESSION_STATUS_PATH = "/sessionStatus";
     public final static String PAYMENT_PATH = "/payment";
     public final static String FINISH_PATH = "/finish";
     public final static String REVERSE_PATH = "/reverse";
@@ -79,6 +80,20 @@ public class MerchantOrderController {
         return "payment_ru";
     }
 
+    @RequestMapping(value = SESSION_STATUS_PATH)
+    @ResponseBody
+    public SessionStatusResponse getSessionStatus(Principal principal, @Valid SessionStatusRequest sessionStatusRequest) throws MerchantOrderNotFoundException {
+        MerchantOrder merchantOrder = orderService.findByOrderId(sessionStatusRequest.getOrderId());
+        if ( null == merchantOrder ) throw new MerchantOrderNotFoundException("Order: " + sessionStatusRequest.getOrderId() + " not found");
+        SessionStatusResponse sessionStatusResponse = new SessionStatusResponse(sessionStatusRequest.getOrderId());
+        sessionStatusResponse.setAmount(merchantOrder.getAmount());
+        sessionStatusResponse.setOrderStatus(merchantOrder.getOrderStatus());
+        sessionStatusResponse.setCanPayment(merchantOrder.canPayment());
+        sessionStatusResponse.setStatus(ResponseStatus.SUCCESS);
+        sessionStatusResponse.setMessage("Session status");
+
+        return sessionStatusResponse;
+    }
 
     @RequestMapping(value = PAYMENT_PATH, method = RequestMethod.POST, params = {"paymentWay=card"})
     @ResponseBody
