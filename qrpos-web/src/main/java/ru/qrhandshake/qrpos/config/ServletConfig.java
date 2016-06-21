@@ -30,7 +30,7 @@ public class ServletConfig extends WebMvcConfigurationSupport {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/resources/**").addResourceLocations("/resources/","/");
+        registry.addResourceHandler("/**").addResourceLocations("/static/");
     }
 
     @Override
