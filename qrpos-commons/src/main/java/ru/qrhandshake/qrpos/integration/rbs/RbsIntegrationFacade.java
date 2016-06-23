@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.ui.Model;
 import ru.bpc.phoenix.proxy.api.MerchantServiceProvider;
 import ru.bpc.phoenix.proxy.api.NamePasswordToken;
 import ru.bpc.phoenix.proxy.api.P2PServiceProvider;
@@ -15,6 +14,7 @@ import ru.paymentgate.engine.webservices.merchant.*;
 import ru.paymentgate.engine.webservices.p2p.*;
 import ru.qrhandshake.qrpos.api.BindingPaymentParams;
 import ru.qrhandshake.qrpos.api.CardPaymentParams;
+import ru.qrhandshake.qrpos.api.PaymentParams;
 import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.dto.ReturnUrlObject;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
@@ -258,7 +258,13 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         //2. p2pverify
         P2PTransferVerificationRequest p2PTransferVerificationRequest = new P2PTransferVerificationRequest();
         p2PTransferVerificationRequest.setOrderId(p2PRegistrationResponse.getOrderId());
-        CardPaymentParams cardPaymentParams = integrationP2PTransferRequest.getPaymentParams();
+        PaymentParams paymentParams = integrationP2PTransferRequest.getPaymentParams();
+        if ( !(paymentParams instanceof CardPaymentParams) ) {
+            integrationP2PTransferResponse.setSuccess(false);
+            integrationP2PTransferResponse.setMessage("Card data invalid");
+            return integrationP2PTransferResponse;
+        }
+        CardPaymentParams cardPaymentParams = (CardPaymentParams)paymentParams;
         if ( !cardPaymentParams.isNotBlank() ) {
             integrationP2PTransferResponse.setSuccess(false);
             integrationP2PTransferResponse.setMessage("Card data invalid");
@@ -272,7 +278,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         fromCard.setPan(cardPaymentParams.getPan());
 
         CardData toCard = new CardData();
-        toCard.setPan(integrationP2PTransferRequest.getToCardPan());
+        toCard.setPan(integrationP2PTransferRequest.getTo());
 
         p2PTransferVerificationRequest.setFromCard(fromCard);
         p2PTransferVerificationRequest.setToCard(toCard);

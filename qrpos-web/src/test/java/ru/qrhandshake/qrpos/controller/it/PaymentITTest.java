@@ -444,7 +444,7 @@ public class PaymentITTest extends ItTest {
         assertNotNull(binding);
         assertTrue(binding.isCompleted());
         assertTrue(binding.isEnabled());
-        assertEquals(PaymentSecureType.SSL,binding.getPaymentSecureType());
+        assertEquals(PaymentSecureType.SSL, binding.getPaymentSecureType());
 
         MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(merchantOrder);
@@ -502,7 +502,7 @@ public class PaymentITTest extends ItTest {
         assertNotNull(binding);
         assertTrue(binding.isCompleted());
         assertTrue(binding.isEnabled());
-        assertEquals(PaymentSecureType.SSL,binding.getPaymentSecureType());
+        assertEquals(PaymentSecureType.SSL, binding.getPaymentSecureType());
 
         MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(merchantOrder);
@@ -888,5 +888,100 @@ public class PaymentITTest extends ItTest {
         assertNotNull(getBindingsResponse.getBindings());
         assertEquals(1, getBindingsResponse.getBindings().size());
         assertEquals(binding.getBindingId(), getBindingsResponse.getBindings().iterator().next().getBindingId());
+    }
+
+    @Test
+    @Transactional
+    public void testGetSessionStatusSuccessAndPaid() throws Exception {
+        MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
+        TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = registerOrder(terminalRegisterResponse.getAuth(),
+                amount,sessionId,deviceId);
+        ApiResponse apiResponse = authClient(clientRegisterResponse.getAuth().getAuthName(), clientRegisterResponse.getAuth().getAuthPassword());
+        assertTrue(ResponseStatus.SUCCESS == apiResponse.getStatus());
+        Authentication authentication = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
+
+        MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .principal(authentication)
+                        .param("orderId", merchantOrderRegisterResponse.getOrderId())
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
+                        .param("paymentWay", "card")
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResult);
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("redirect", returnUrlObject.getAction());
+        assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+
+        MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
+                .param("orderId", merchantOrderRegisterResponse.getOrderId()))
+                .andDo(print())
+                .andReturn();
+        assertNotNull(finishMvcResult);
+        Map<String,Object> finishModel = finishMvcResult.getModelAndView().getModel();
+        assertNotNull(finishModel);
+        assertTrue(!finishModel.isEmpty());
+        assertTrue(ResponseStatus.SUCCESS.equals(finishModel.get("status")));
+        assertTrue(finishMvcResult.getResponse().getForwardedUrl().contains("finish"));
+
+        MvcResult getSessionStatusMvcResult = mockMvc.perform(get("/order/sessionStatus")
+            .param("orderId",merchantOrderRegisterResponse.getOrderId())
+            ).andDo(print()).andReturn();
+
+        assertNotNull(getSessionStatusMvcResult);
+        SessionStatusResponse sessionStatusResponse = objectMapper.readValue(getSessionStatusMvcResult.getResponse().getContentAsString(),SessionStatusResponse.class);
+        assertNotNull(sessionStatusResponse);
+        assertEquals(merchantOrderRegisterResponse.getOrderId(),sessionStatusResponse.getOrderId());
+        assertEquals(OrderStatus.PAID,sessionStatusResponse.getOrderStatus());
+        assertEquals(amount,sessionStatusResponse.getAmount());
+        assertEquals(false,sessionStatusResponse.isCanPayment());
+
+    }
+
+    @Test
+    @Transactional
+    public void testGetSessionStatusSuccessAndNotPaid() throws Exception {
+        MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
+        TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = registerOrder(terminalRegisterResponse.getAuth(),
+                amount,sessionId,deviceId);
+        ApiResponse apiResponse = authClient(clientRegisterResponse.getAuth().getAuthName(), clientRegisterResponse.getAuth().getAuthPassword());
+        assertTrue(ResponseStatus.SUCCESS == apiResponse.getStatus());
+
+        MvcResult getSessionStatusMvcResult = mockMvc.perform(get("/order/sessionStatus")
+                        .param("orderId",merchantOrderRegisterResponse.getOrderId())
+        ).andDo(print()).andReturn();
+
+        assertNotNull(getSessionStatusMvcResult);
+        SessionStatusResponse sessionStatusResponse = objectMapper.readValue(getSessionStatusMvcResult.getResponse().getContentAsString(),SessionStatusResponse.class);
+        assertNotNull(sessionStatusResponse);
+        assertEquals(merchantOrderRegisterResponse.getOrderId(),sessionStatusResponse.getOrderId());
+        assertEquals(amount,sessionStatusResponse.getAmount());
+        assertEquals(OrderStatus.REGISTERED,sessionStatusResponse.getOrderStatus());
+        assertEquals(true,sessionStatusResponse.isCanPayment());
+    }
+
+    @Test
+    @Transactional
+    public void testGetSessionStatusOrderNotFound() throws Exception {
+        MvcResult getSessionStatusMvcResult = mockMvc.perform(get("/order/sessionStatus")
+                        .param("orderId",UUID.randomUUID().toString())
+        ).andDo(print()).andReturn();
+
+        assertNotNull(getSessionStatusMvcResult);
+        assertTrue(getSessionStatusMvcResult.getResolvedException() instanceof MerchantOrderNotFoundException);
+        ApiResponse apiResponse = objectMapper.readValue(getSessionStatusMvcResult.getResponse().getContentAsString(),ApiResponse.class);
+        assertNotNull(apiResponse);
+        assertEquals(ResponseStatus.FAIL,apiResponse.getStatus());
     }
 }

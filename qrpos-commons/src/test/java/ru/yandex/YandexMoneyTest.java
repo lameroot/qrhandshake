@@ -52,9 +52,9 @@ import java.util.HashMap;
 public class YandexMoneyTest extends TestCase {
 
     private final String phoneNumber = "79267796753";
-    private final BigDecimal amount = new BigDecimal(300.00);
+    private final BigDecimal amount = new BigDecimal(10.00);
     private final static String CLIENT_ID = "333CFEAD690EAA3120CFF3E38F3CF52FAFB6C49C1F216EB50627A2D3034DDF4B";
-    private final static String ACCESS_TOKEN = "410011792756615.01B0D239BB9A466244A6304962103E64DF166E94F90C55A7E01429FEA2B72498DCC06A5F3BA12275A8037BED605E6F68A76A9B67092D8F634EA1BA5C93FE5195C9030B0866C016E847E685D0D980781D222838BC93DDB468EE10B2FFC8B8F2AB8A84AB84ED0D4E639B74E79278A9F843784B01C95BD4E6E04F02B7560C3F7FAE";
+    private final static String ACCESS_TOKEN = "410011792756615.390A42D0B36B79086D2C4716AEC3D7C19658AF3B9080D5417261CF00183BC43363D229FB12C4EC6BF932802C4E1CD3BA8374B9BD2C9762E1DB929771FC7A539C8B2159FFFF7E8D058632D5F5F65B0F1542E9C38A6382543A69C493899B8B916C511F47C98886D28CEEE66E96C776CDA3EF154861066170D629BF0911BC2D63C5";
 
     private OAuth2Session session;
 
@@ -101,6 +101,9 @@ public class YandexMoneyTest extends TestCase {
     @Test
     public void testRequestPayment()
             throws InvalidTokenException, InsufficientScopeException, InvalidRequestException, IOException {
+
+        session = new OAuth2Session(new DefaultApiClient(CLIENT_ID, true));
+        session.setDebugLogging(true);
 
         session.setAccessToken(ACCESS_TOKEN);
         testRequestPayment(createRequestPayment());
@@ -254,7 +257,8 @@ public class YandexMoneyTest extends TestCase {
 
     private RequestPayment.Request createRequestPayment() {
         return RequestPayment.Request.newInstance(PhoneParams.newInstance(phoneNumber, amount))
-                .setTestResult(RequestPayment.TestResult.SUCCESS);
+                //.setTestResult(RequestPayment.TestResult.SUCCESS)
+                ;
     }
 }
 
