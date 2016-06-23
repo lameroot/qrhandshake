@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+<iframe frameborder="0" allowtransparency="true" scrolling="no"
+        src="https://money.yandex.ru/embed/shop.xml?account=41001390256356&quickpay=shop&writer=seller&targets=%D0%9E%D0%BF%D0%BB%D0%B0%D1%82%D0%B0+%D0%B7%D0%B0+%D1%82%D0%BE%D0%B2%D0%B0%D1%80&default-sum=100&button-text=01&successURL=http%3A%2F%2Fqwe.ddns.net%2Fyandex.html"
+        width="450" height="162"></iframe>
+
+<form method="POST" target="_blank" action="https://money.yandex.ru/quickpay/confirm.xml">
+    <input name="label" type="hidden" value="">
+    <input name="receiver" type="hidden" value="41001390256356">
+    <input name="quickpay-form" type="hidden" value="shop">
+    <input name="referer" type="hidden" value="">
+    <input name="is-inner-form" type="hidden" value="true">
+    <input type="hidden" name="targets" value="Оплата за товар">
+    <input name="sum" value="100" id="sum" type="text" maxlength="10" data-type="number">
+    <input type="submit" value="Оплатить" class="b-button__input" name="submit-button">
+    <input type="hidden" name="successURL" value="http://qwe.ddns.net/yandex.html">
+    <input type="hidden" name="quickpay-back-url" value="">
+</form>
+
+</body>
+</html>

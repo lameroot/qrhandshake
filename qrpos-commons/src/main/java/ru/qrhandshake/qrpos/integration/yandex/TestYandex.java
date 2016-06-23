@@ -8,6 +8,7 @@ import com.yandex.money.api.methods.params.P2pTransferParams;
 import com.yandex.money.api.methods.params.PaymentParams;
 import com.yandex.money.api.methods.params.PhoneParams;
 import com.yandex.money.api.model.YandexMoneyCard;
+import com.yandex.money.api.model.showcase.Showcase;
 import com.yandex.money.api.net.DefaultApiClient;
 import com.yandex.money.api.net.OAuth2Session;
 import ru.qrhandshake.qrpos.api.PaymentRequest;
