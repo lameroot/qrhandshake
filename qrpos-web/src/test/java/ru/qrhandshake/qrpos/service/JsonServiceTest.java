@@ -34,7 +34,7 @@ public class JsonServiceTest extends GeneralTest {
         System.out.println(paymentParams);
         if ( paymentParams instanceof CardPaymentParams ) {
             CardPaymentParams cardPaymentParams1 = (CardPaymentParams)paymentParams;
-            System.out.println(cardPaymentParams1.getMaskedPan());
+            System.out.println(cardPaymentParams1.getPaymentAccount());
             System.out.println(cardPaymentParams1.getPan());
             System.out.println(cardPaymentParams.getCardHolderName());
         }

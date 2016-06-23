@@ -20,22 +20,19 @@ public class CardPaymentParams extends PaymentParams {
     private String month;
     private String year;
     private String cardHolderName;
-    private String maskedPan;
 
-    @JsonProperty(value = "masked_pan")
-    public String getMaskedPan() {
-        return null != maskedPan ? maskedPan : MaskUtil.getMaskedPan(this.pan);
+    @Override
+    public String getPaymentAccount() {
+        return null != super.getPaymentAccount() ? super.getPaymentAccount() : MaskUtil.getMaskedPan(this.pan);
     }
-    void setMaskedPan(String maskedPan) {
-        this.maskedPan = maskedPan;
-    }
+
     public String getPan() {
         return pan;
     }
 
     public void setPan(String pan) {
         this.pan = pan;
-        setMaskedPan(MaskUtil.getMaskedPan(pan));
+        setPaymentAccount(MaskUtil.getMaskedPan(pan));
     }
 
     public String getMonth() {
@@ -82,7 +79,7 @@ public class CardPaymentParams extends PaymentParams {
 
         CardPaymentParams that = (CardPaymentParams) o;
 
-        if (maskedPan != null ? !maskedPan.equals(that.maskedPan) : that.maskedPan != null) return false;
+        if (super.getPaymentAccount() != null ? !super.getPaymentAccount().equals(that.getPaymentAccount()) : that.getPaymentAccount() != null) return false;
         if (!month.equals(that.month)) return false;
         if (!year.equals(that.year)) return false;
 
@@ -93,7 +90,7 @@ public class CardPaymentParams extends PaymentParams {
     public int hashCode() {
         int result = month.hashCode();
         result = 31 * result + year.hashCode();
-        result = 31 * result + (maskedPan != null ? maskedPan.hashCode() : 0);
+        result = 31 * result + (super.getPaymentAccount() != null ? super.getPaymentAccount().hashCode() : 0);
         return result;
     }
 
@@ -103,7 +100,7 @@ public class CardPaymentParams extends PaymentParams {
         sb.append("month='").append(month).append('\'');
         sb.append(", year='").append(year).append('\'');
         sb.append(", cardHolderName='").append(cardHolderName).append('\'');
-        sb.append(", maskedPan='").append(maskedPan).append('\'');
+        sb.append(", maskedPan='").append(super.getPaymentAccount()).append('\'');
         sb.append('}');
         return sb.toString();
     }
