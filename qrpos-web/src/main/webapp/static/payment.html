@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Оплата</title>
+    <link href='css/style.css' rel='stylesheet' type='text/css'>
 </head>
 <body>
 
 <table>
     <tr>
         <td>Сумма заказа</td>
-        <td><span id="amountInfo"></span> руб.</td>
+        <td><span id="amount"></span> руб.</td>
     </tr>
     <tr>
         <td>Номер заказа</td>
@@ -17,7 +18,7 @@
     </tr>
     <tr>
         <td>Номер карты</td>
-        <td><input type="text" id="pan"></td>
+        <td><input type="text" id="pan" value="4111111111111111"></td>
     </tr>
     <tr>
         <td>Месяц</td>
@@ -40,18 +41,23 @@
     </tr>
     <tr>
         <td>Год</td>
-        <td><input type="text" id="year"></td>
+        <td><input type="text" id="year" value="2019"></td>
     </tr>
     <tr>
         <td>Владелец карты</td>
-        <td><input type="text" id="cardHolderName"></td>
+        <td><input type="text" id="cardHolderName" value="test test"></td>
     </tr>
     <tr>
         <td>CVC</td>
-        <td><input type="text" id="cvc"></td>
+        <td><input type="text" id="cvc" value="123"></td>
+    </tr>
+
+    <tr>
+        <td><input type="button" id="payBtn" value="Оплата"></td>
+        <td><span id="state"></span></td>
     </tr>
 </table>
-<input type="button" id="payBtn" value="Оплата">
+
 
 <script type="text/javascript" src="js/jquery-3.0.0.min.js"></script>
 <script type="text/javascript" src="js/payment.js"></script>

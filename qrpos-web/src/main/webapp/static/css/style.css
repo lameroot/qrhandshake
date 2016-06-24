@@ -1,0 +1,9 @@
+.attention {
+    background-color: yellow;
+}
+.error {
+    background-color: lightsalmon;
+}
+.successful {
+    background-color: lightgreen;
+}
