@@ -68,16 +68,8 @@ public class MerchantOrderController {
     }
 
     @RequestMapping(value = PAYMENT_PATH + "/{orderId}", method = RequestMethod.GET)
-    public String paymentPage(@PathVariable(value = "orderId") String orderId, Model model) throws MerchantOrderNotFoundException {
-        MerchantOrder merchantOrder = orderService.findByOrderId(orderId);
-        if ( null == merchantOrder ) throw new MerchantOrderNotFoundException("Order: " + orderId + " not found");
-        if ( !merchantOrder.canPayment() ) {
-            return "redirect:" + MERCHANT_ORDER_PATH + FINISH_PATH + "/" + merchantOrder.getOrderId();
-        }
-
-        MerchantOrderDto merchantOrderDto = new MerchantOrderDto(merchantOrder);
-        model.addAttribute("merchantOrder", merchantOrderDto);
-        return "payment_ru";
+    public String paymentPage(@PathVariable(value = "orderId") String orderId) {
+        return "redirect:/payment.html?orderId=" + orderId;
     }
 
     @RequestMapping(value = SESSION_STATUS_PATH)
