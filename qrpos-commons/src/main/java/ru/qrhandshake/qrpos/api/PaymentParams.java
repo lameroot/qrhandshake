@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Created by lameroot on 30.05.16.
  */
-public abstract class PaymentParams {
+public class PaymentParams {
     private String orderId;
     private String ip;
     private String returnUrl;

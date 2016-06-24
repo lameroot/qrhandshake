@@ -34,6 +34,8 @@ public class OrderService {
     private IntegrationSupportService integrationSupportService;
     @Resource
     private BindingService bindingService;
+    @Resource
+    private JsonService jsonService;
 
     public MerchantOrderRegisterResponse register(Terminal terminal, MerchantOrderRegisterRequest merchantOrderRegisterRequest, String paymentPath) {
         Merchant merchant = terminal.getMerchant();
@@ -363,11 +365,11 @@ public class OrderService {
             BindingDto bindingDto = new BindingDto();
             bindingDto.setBindingId(binding.getBindingId());
             bindingDto.setPaymentWay(binding.getPaymentWay());
-            bindingDto.setPaymentParams(binding.getPaymentParams());
+            bindingDto.setPaymentParams(jsonService.jsonToPaymentParams(binding.getPaymentParams(), PaymentParams.class));
             getBindingsResponse.getBindings().add(bindingDto);
-            getBindingsResponse.setStatus(ResponseStatus.SUCCESS);
-            getBindingsResponse.setMessage("Get bindings success");
         }
+        getBindingsResponse.setStatus(ResponseStatus.SUCCESS);
+        getBindingsResponse.setMessage("Get bindings success");
 
         return getBindingsResponse;
     }

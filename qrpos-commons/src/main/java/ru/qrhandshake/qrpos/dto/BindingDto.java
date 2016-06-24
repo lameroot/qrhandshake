@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.dto;
 
+import ru.qrhandshake.qrpos.api.PaymentParams;
 import ru.qrhandshake.qrpos.domain.PaymentWay;
 
 /**
@@ -9,7 +10,7 @@ public class BindingDto {
 
     private String bindingId;
     private PaymentWay paymentWay;
-    private String paymentParams;
+    private PaymentParams paymentParams;
 
     public String getBindingId() {
         return bindingId;
@@ -27,11 +28,11 @@ public class BindingDto {
         this.paymentWay = paymentWay;
     }
 
-    public String getPaymentParams() {
+    public PaymentParams getPaymentParams() {
         return paymentParams;
     }
 
-    public void setPaymentParams(String paymentParams) {
+    public void setPaymentParams(PaymentParams paymentParams) {
         this.paymentParams = paymentParams;
     }
 }
