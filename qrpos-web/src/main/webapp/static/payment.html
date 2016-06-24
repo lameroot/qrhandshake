@@ -3,46 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <title>Оплата</title>
-    <script type="text/javascript" src="js/jquery-3.0.0.min.js"></script>
-    <script type="text/javascript" src="js/payment.js"></script>
 </head>
 <body>
 
-<div>Сумма заказа <span id="amountInfo"></span> руб.</div>
-<div>Номер заказа <span id="orderIdInfo"></span></div>
-<div>
-    Номер карты
-    <input type="text" id="pan">
-</div>
-<div>
-    Месяц
-    <select id="month">
-        <option value="01">01</option>
-        <option value="02">02</option>
-        <option value="03">03</option>
-        <option value="04">04</option>
-        <option value="05">05</option>
-        <option value="06">06</option>
-        <option value="07">07</option>
-        <option value="08">08</option>
-        <option value="09">09</option>
-        <option value="10">10</option>
-        <option value="11">11</option>
-        <option selected="true" value="12">12</option>
-    </select>
-</div>
-<div>
-    Год
-    <input type="text" id="year">
-</div>
-<div>
-    Владелец карты
-    <input type="text" id="cardHolderName">
-</div>
-<div>
-    CVC
-    <input type="text" id="cvc">
-</div>
+<table>
+    <tr>
+        <td>Сумма заказа</td>
+        <td><span id="amountInfo"></span> руб.</td>
+    </tr>
+    <tr>
+        <td>Номер заказа</td>
+        <td><span id="orderId"></span></td>
+    </tr>
+    <tr>
+        <td>Номер карты</td>
+        <td><input type="text" id="pan"></td>
+    </tr>
+    <tr>
+        <td>Месяц</td>
+        <td>
+            <select id="month">
+                <option value="01">01</option>
+                <option value="02">02</option>
+                <option value="03">03</option>
+                <option value="04">04</option>
+                <option value="05">05</option>
+                <option value="06">06</option>
+                <option value="07">07</option>
+                <option value="08">08</option>
+                <option value="09">09</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option selected="true" value="12">12</option>
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td>Год</td>
+        <td><input type="text" id="year"></td>
+    </tr>
+    <tr>
+        <td>Владелец карты</td>
+        <td><input type="text" id="cardHolderName"></td>
+    </tr>
+    <tr>
+        <td>CVC</td>
+        <td><input type="text" id="cvc"></td>
+    </tr>
+</table>
+<input type="button" id="payBtn" value="Оплата">
+
+<script type="text/javascript" src="js/jquery-3.0.0.min.js"></script>
+<script type="text/javascript" src="js/payment.js"></script>
 
 </body>
 </html>
