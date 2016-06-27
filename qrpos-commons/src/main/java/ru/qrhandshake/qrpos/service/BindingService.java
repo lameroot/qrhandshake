@@ -50,6 +50,7 @@ public class BindingService {
     }
 
     public void update(MerchantOrder merchantOrder, BindingInfo bindingInfo) {
+        if ( merchantOrder.getPaymentWay() == PaymentWay.BINDING ) return;
         if ( null == merchantOrder || null == bindingInfo ) return;
         Binding binding = bindingRepository.findByOrderId(merchantOrder.getOrderId());
         if ( null == binding ) {

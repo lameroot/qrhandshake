@@ -252,7 +252,6 @@ public class PaymentITTest extends ItTest {
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
 
-        assertNotNull(mvcResult);
         PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
         ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
         assertNotNull(returnUrlObject);
@@ -529,7 +528,120 @@ public class PaymentITTest extends ItTest {
 
     @Test
     @Transactional
-    public void testBindingPayment() throws Exception {
+    public void testBindingTdsPayment() throws Exception {
+        MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
+        TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = registerOrder(terminalRegisterResponse.getAuth(),
+                amount,sessionId,deviceId);
+        ApiResponse apiResponse = authClient(clientRegisterResponse.getAuth().getAuthName(), clientRegisterResponse.getAuth().getAuthPassword());
+        assertTrue(ResponseStatus.SUCCESS == apiResponse.getStatus());
+        Authentication authentication = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
+
+        MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .principal(authentication)
+                        .param("orderId", merchantOrderRegisterResponse.getOrderId())
+                        .param("pan", TDS_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
+                        .param("paymentWay", "card")
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResult);
+
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("post",returnUrlObject.getAction());
+        assertNotNull(returnUrlObject.getParams().get("MD"));
+        assertNotNull(returnUrlObject.getParams().get("PaReq"));
+        assertNotNull(returnUrlObject.getParams().get("TermUrl"));
+        assertNotNull(returnUrlObject.getUrl());
+
+        String paRes = AcsUtils.emulateCommunicationWithACS(returnUrlObject.getParams().get("MD"), returnUrlObject.getParams().get("TermUrl"), returnUrlObject.getParams().get("PaReq"), true);
+        assertNotNull(paRes);
+        ResponseEntity<String> responseEntity = restTemplate.getForEntity(returnUrlObject.getParams().get("TermUrl")
+                + "?PaRes=" + paRes
+                + "&MD=" + returnUrlObject.getParams().get("MD"), String.class);
+        assertNotNull(responseEntity);
+        System.out.println(responseEntity);
+        assertEquals(302,responseEntity.getStatusCode().value());
+        String finishUri = "/order/finish/" + merchantOrderRegisterResponse.getOrderId() + "?orderId=" + returnUrlObject.getParams().get("MD");
+        assertTrue(responseEntity.getHeaders().getLocation().toString().contains(finishUri));
+
+        MvcResult finishMvcResult = mockMvc.perform(get(finishUri))
+                .andDo(print())
+                .andReturn();
+        assertNotNull(finishMvcResult);
+        Map<String,Object> finishModel = finishMvcResult.getModelAndView().getModel();
+        assertNotNull(finishModel);
+        assertTrue(!finishModel.isEmpty());
+        assertTrue(ResponseStatus.SUCCESS.equals(finishModel.get("status")));
+        assertTrue(finishMvcResult.getResponse().getForwardedUrl().contains("finish"));
+
+        Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNotNull(binding);
+        assertTrue(binding.isCompleted());
+        assertTrue(binding.isEnabled());
+        assertEquals(PaymentSecureType.TDS, binding.getPaymentSecureType());
+
+        MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNotNull(merchantOrder);
+        assertTrue(merchantOrder.getOrderStatus() == OrderStatus.PAID);
+        assertNotNull(merchantOrder.getPaymentDate());
+        assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
+        assertNotNull(merchantOrder.getClient());
+        assertEquals(clientRegisterResponse.getAuth().getAuthName(), merchantOrder.getClient().getUsername());
+        assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse1 = registerOrder(terminalRegisterResponse.getAuth(),
+                amount, sessionId, deviceId);
+        MvcResult mvcResultBinding = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .principal(authentication)
+                        .param("orderId", merchantOrderRegisterResponse1.getOrderId())
+                        .param("bindingId", binding.getBindingId())
+                        .param("confirmValue", "123")
+                        .param("paymentWay", "binding")
+        ).andDo(print()).andReturn();
+
+        assertNotNull(mvcResultBinding);
+        PaymentResponse paymentResponseBinding = objectMapper.readValue(mvcResultBinding.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObjectBinding = paymentResponseBinding.getReturnUrlObject();
+        assertNotNull(returnUrlObjectBinding);
+        assertEquals("post",returnUrlObjectBinding.getAction());
+        assertNotNull(returnUrlObjectBinding.getParams().get("MD"));
+        assertNotNull(returnUrlObjectBinding.getParams().get("PaReq"));
+        assertNotNull(returnUrlObjectBinding.getParams().get("TermUrl"));
+        assertNotNull(returnUrlObjectBinding.getUrl());
+        assertEquals(OrderStatus.REDIRECTED_TO_EXTERNAL,paymentResponse.getOrderStatus());
+
+        String paResBinding = AcsUtils.emulateCommunicationWithACS(returnUrlObjectBinding.getParams().get("MD"), returnUrlObjectBinding.getParams().get("TermUrl"), returnUrlObjectBinding.getParams().get("PaReq"), true);
+        assertNotNull(paResBinding);
+        ResponseEntity<String> responseEntityBinding = restTemplate.getForEntity(returnUrlObjectBinding.getParams().get("TermUrl")
+                + "?PaRes=" + paResBinding
+                + "&MD=" + returnUrlObjectBinding.getParams().get("MD"), String.class);
+        assertNotNull(responseEntityBinding);
+        System.out.println(responseEntityBinding);
+        assertEquals(302,responseEntityBinding.getStatusCode().value());
+        String finishUriBinding = "/order/finish/" + merchantOrderRegisterResponse1.getOrderId() + "?orderId=" + returnUrlObjectBinding.getParams().get("MD");
+        assertTrue(responseEntityBinding.getHeaders().getLocation().toString().contains(finishUriBinding));
+
+        MvcResult finishMvcResultBinding = mockMvc.perform(get(finishUriBinding))
+                .andDo(print())
+                .andReturn();
+        assertNotNull(finishMvcResultBinding);
+        Map<String,Object> finishModelBinding = finishMvcResultBinding.getModelAndView().getModel();
+        assertNotNull(finishModelBinding);
+        assertTrue(!finishModelBinding.isEmpty());
+        assertTrue(ResponseStatus.SUCCESS.equals(finishModelBinding.get("status")));
+        assertTrue(finishMvcResultBinding.getResponse().getForwardedUrl().contains("finish"));
+    }
+
+    @Test
+    @Transactional
+    public void testBindingSslPayment() throws Exception {
         MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
         TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
         ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);

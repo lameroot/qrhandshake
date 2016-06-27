@@ -445,7 +445,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                 case APPROVED: return OrderStatus.PAID;
                 case REFUNDED: return OrderStatus.REFUNDED;
                 case REVERSED: return OrderStatus.REVERSED;
-                case REDIRECTED_TO_ACS: return OrderStatus.REGISTERED;
+                case REDIRECTED_TO_ACS: return OrderStatus.REDIRECTED_TO_EXTERNAL;
             }
             return OrderStatus.REGISTERED;
         }

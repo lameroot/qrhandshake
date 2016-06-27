@@ -54,4 +54,16 @@ public class PaymentResponse extends ApiResponse {
     public void setBindingId(String bindingId) {
         this.bindingId = bindingId;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("PaymentResponse{");
+        sb.append("returnUrlObject=").append(returnUrlObject);
+        sb.append(", orderId='").append(orderId).append('\'');
+        sb.append(", orderStatus=").append(orderStatus);
+        sb.append(", paymentAuthType=").append(paymentAuthType);
+        sb.append(", bindingId='").append(bindingId).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

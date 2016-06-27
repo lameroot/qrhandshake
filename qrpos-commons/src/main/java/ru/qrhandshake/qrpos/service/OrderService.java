@@ -4,7 +4,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.dto.BindingDto;
@@ -14,6 +13,7 @@ import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -183,14 +183,18 @@ public class OrderService {
             paymentResponse.setMessage(integrationPaymentResponse.getMessage());
             merchantOrder.setPaymentSecureType(integrationPaymentResponse.getPaymentSecureType());
             if ( integrationPaymentResponse.isSuccess() ) {
-                if (!merchantOrder.getOrderStatus().equals(integrationPaymentResponse.getOrderStatus())) {
-                    merchantOrder.setOrderStatus(integrationPaymentResponse.getOrderStatus());
-                    merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());
-                    merchantOrder.setExternalId(integrationPaymentResponse.getExternalId());
-                    paymentResponse.setMessage("Paid by BINDING successfully");
+                merchantOrder.setOrderStatus(integrationPaymentResponse.getOrderStatus());
+                merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());
+                merchantOrder.setExternalId(integrationPaymentResponse.getExternalId());
 
-                } else {
-                    paymentResponse.setMessage("Paid by BINDING successfully but external status wasn't changed");
+                if (merchantOrder.getOrderStatus() == OrderStatus.PAID ) {
+                    paymentResponse.setMessage("Paid by BINDING successfully");
+                }
+                else if ( merchantOrder.getOrderStatus() == OrderStatus.REDIRECTED_TO_EXTERNAL) {
+                    paymentResponse.setMessage("Paid by BINDING caused to redirect to external system");
+                }
+                else {
+                    paymentResponse.setMessage("Paid by BINDING successfully but status invalid: " + merchantOrder.getOrderStatus());
                 }
             } else {
                 paymentResponse.setStatus(ResponseStatus.FAIL);
@@ -259,9 +263,13 @@ public class OrderService {
                 }
 
                 if (merchantOrder.getOrderStatus() == OrderStatus.PAID) {
-                    paymentResponse.setMessage("Paid successfully");
-                } else {
-                    paymentResponse.setMessage("Paid successfully but external status wasn't changed");
+                    paymentResponse.setMessage("Paid card successfully");
+                }
+                else if ( merchantOrder.getOrderStatus() == OrderStatus.REDIRECTED_TO_EXTERNAL ) {
+                    paymentResponse.setMessage("Paid by card caused to redirect to external system");
+                }
+                else {
+                    paymentResponse.setMessage("Paid successfully but status invalid: " + merchantOrder.getOrderStatus());
                 }
             } else {
                 paymentResponse.setStatus(ResponseStatus.FAIL);
@@ -330,11 +338,13 @@ public class OrderService {
         FinishResponse finishResponse = new FinishResponse();
         MerchantOrder merchantOrder = findByOrderId(finishRequest.getOrderId());
         if ( null == merchantOrder ) {
+            logger.warn("Fail finish payment." + "Order with id:" + finishRequest.getOrderId() + " doesn't exists");
             finishResponse.setStatus(ResponseStatus.FAIL);
             finishResponse.setMessage("Order with id:" + finishRequest.getOrderId() + " doesn't exists");
             return finishResponse;
         }
         if ( null == merchantOrder.getIntegrationSupport() || StringUtils.isBlank(merchantOrder.getExternalId()) ) {
+            logger.warn("Fail finish payment." + "Order with id: " + finishRequest.getOrderId() + " has invalid params");
             finishResponse.setStatus(ResponseStatus.FAIL);
             finishResponse.setMessage("Order with id: " + finishRequest.getOrderId() + " has invalid params");
             return finishResponse;
@@ -346,6 +356,7 @@ public class OrderService {
             finishResponse.setOrderId(integrationOrderStatusResponse.getOrderId());
             finishResponse.setMessage(integrationOrderStatusResponse.getMessage());
         } catch (IntegrationException e) {
+            logger.error("Fail finish payment." + "Error finish payment with order:" + finishRequest.getOrderId() + ", cause: " + e.getMessage(),e);
             finishResponse.setStatus(ResponseStatus.FAIL);
             finishResponse.setMessage("Error finish payment with order:" + finishRequest.getOrderId() + ", cause: " + e.getMessage());
         }
@@ -401,7 +412,7 @@ public class OrderService {
     }
 
     private String generateUniqueIdOrder(MerchantOrder merchantOrder) {
-        return String.valueOf(merchantOrder.getId());
+        return String.valueOf(merchantOrder.getId() + "_" + new Date().getTime());
     }
 
     private boolean isSessionValid(MerchantOrder merchantOrder, String sessionId) {

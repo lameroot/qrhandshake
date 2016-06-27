@@ -35,4 +35,14 @@ public class ReturnUrlObject {
     public void setParams(Map<String, String> params) {
         this.params = params;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ReturnUrlObject{");
+        sb.append("url='").append(url).append('\'');
+        sb.append(", action='").append(action).append('\'');
+        sb.append(", params size=").append(params.size());
+        sb.append('}');
+        return sb.toString();
+    }
 }

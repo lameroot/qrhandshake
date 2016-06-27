@@ -9,5 +9,6 @@ public enum  OrderStatus {
     DECLINED,
     REVERSED,
     REFUNDED,
+    REDIRECTED_TO_EXTERNAL;
 
 }
