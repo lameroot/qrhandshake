@@ -27,11 +27,11 @@ public class IntegrationService {
         return integrationPaymentResponse;
     }
 
+    //todo: убрать все выбросы if ( !integrationPaymentResponse.isSuccess() ) throw new IntegrationException - сделать лучше заполнение статуса
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException {
         IntegrationSupport integrationSupport = integrationPaymentRequest.getIntegrationSupport();
         IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationSupport).payment(integrationPaymentRequest);
-        if ( !integrationPaymentResponse.isSuccess() ) throw new IntegrationException(integrationPaymentResponse.getMessage());
-        integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport,integrationPaymentResponse.getIntegrationOrderStatus()));
+        integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport, integrationPaymentResponse.getIntegrationOrderStatus()));
         return integrationPaymentResponse;
     }
 

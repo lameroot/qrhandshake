@@ -150,58 +150,78 @@ public class RbsIntegrationFacade implements IntegrationFacade {
     }
 
     @Override
-    public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException{
-        OrderParams rbsParams = new OrderParams();
-        rbsParams.setCurrency(currency);
-        rbsParams.setLanguage(language);
-        rbsParams.setDescription(integrationPaymentRequest.getDescription());
-        rbsParams.setAmount(integrationPaymentRequest.getAmount());
-        rbsParams.setReturnUrl(integrationPaymentRequest.getReturnUrl());
-        rbsParams.setMerchantOrderNumber(integrationPaymentRequest.getOrderId());
-        for (Map.Entry<String, String> entry : integrationPaymentRequest.getParams().entrySet()) {
-            ServiceParam serviceParam = new ServiceParam();
-            serviceParam.setName(entry.getKey());
-            serviceParam.setValue(entry.getValue());
-            rbsParams.getParams().add(serviceParam);
-        }
-        if ( null != integrationPaymentRequest.getClient() ) {
-            Client client = integrationPaymentRequest.getClient();
-            rbsParams.setClientId(client.getClientId());
-            if ( null != integrationPaymentRequest.getIp() ) rbsParams.getParams().add(Util.createServiceParam(Client.IP_PARAM,integrationPaymentRequest.getIp()));
-            if ( null != client.getEmail() ) rbsParams.getParams().add(Util.createServiceParam(Client.EMAIL_PARAM,client.getEmail()));
-            if ( null != client.getPhone() ) rbsParams.getParams().add(Util.createServiceParam(Client.PHONE_PARAM, client.getPhone()));
-        }
+    public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException {
         IntegrationPaymentResponse integrationPaymentResponse = new IntegrationPaymentResponse();
         integrationPaymentResponse.setOrderId(integrationPaymentRequest.getOrderId());
-
-        String externalOrderId = null;
         PaymentType paymentType = PaymentType.valueOf(sPaymentType);
-        try {
-            RegisterOrderResponse registerOrderResponse = null;
-            if ( PaymentType.PURCHASE == paymentType ) {
-                registerOrderResponse = getMerchantService().registerOrder(rbsParams);
-            }
-            else if ( PaymentType.DEPOSIT == paymentType ) {
-                registerOrderResponse = getMerchantService().registerOrderPreAuth(rbsParams);
-            }
-            else {
-                integrationPaymentResponse.setSuccess(false);
-                integrationPaymentResponse.setMessage("Unknown paymentTye: " + paymentType);
-                return integrationPaymentResponse;
-            }
-            integrationPaymentResponse.setPaymentType(paymentType);
+        integrationPaymentResponse.setPaymentType(paymentType);
 
-            integrationPaymentResponse.setMessage(registerOrderResponse.getErrorMessage());
-            if ( 0 != registerOrderResponse.getErrorCode() ) {
-                logger.error("Error register order: " + integrationPaymentRequest.getOrderId() + " because : " + registerOrderResponse.getErrorMessage());
+        String externalOrderId = integrationPaymentRequest.getExternalId();
+        if ( StringUtils.isBlank(externalOrderId) ) {
+            OrderParams rbsParams = new OrderParams();
+            rbsParams.setCurrency(currency);
+            rbsParams.setLanguage(language);
+            rbsParams.setDescription(integrationPaymentRequest.getDescription());
+            rbsParams.setAmount(integrationPaymentRequest.getAmount());
+            rbsParams.setReturnUrl(integrationPaymentRequest.getReturnUrl());
+            rbsParams.setMerchantOrderNumber(integrationPaymentRequest.getOrderId());
+            for (Map.Entry<String, String> entry : integrationPaymentRequest.getParams().entrySet()) {
+                ServiceParam serviceParam = new ServiceParam();
+                serviceParam.setName(entry.getKey());
+                serviceParam.setValue(entry.getValue());
+                rbsParams.getParams().add(serviceParam);
+            }
+            if (null != integrationPaymentRequest.getClient()) {
+                Client client = integrationPaymentRequest.getClient();
+                rbsParams.setClientId(client.getClientId());
+                if (null != integrationPaymentRequest.getIp())
+                    rbsParams.getParams().add(Util.createServiceParam(Client.IP_PARAM, integrationPaymentRequest.getIp()));
+                if (null != client.getEmail())
+                    rbsParams.getParams().add(Util.createServiceParam(Client.EMAIL_PARAM, client.getEmail()));
+                if (null != client.getPhone())
+                    rbsParams.getParams().add(Util.createServiceParam(Client.PHONE_PARAM, client.getPhone()));
+            }
+
+
+            try {
+                RegisterOrderResponse registerOrderResponse = null;
+                if (PaymentType.PURCHASE == paymentType) {
+                    registerOrderResponse = getMerchantService().registerOrder(rbsParams);
+                } else if (PaymentType.DEPOSIT == paymentType) {
+                    registerOrderResponse = getMerchantService().registerOrderPreAuth(rbsParams);
+                } else {
+                    integrationPaymentResponse.setSuccess(false);
+                    integrationPaymentResponse.setMessage("Unknown paymentTye: " + paymentType);
+                    return integrationPaymentResponse;
+                }
+
+                integrationPaymentResponse.setMessage(registerOrderResponse.getErrorMessage());
+                if (0 != registerOrderResponse.getErrorCode()) {
+                    logger.error("Error register order: " + integrationPaymentRequest.getOrderId() + " because : " + registerOrderResponse.getErrorMessage());
+                    integrationPaymentResponse.setSuccess(false);
+                    return integrationPaymentResponse;
+                }
+                integrationPaymentResponse.setSuccess(true);
+                externalOrderId = registerOrderResponse.getOrderId();
+                integrationPaymentResponse.setExternalId(externalOrderId);
+            } catch (Exception e) {
+                throw new IntegrationException("Error integration register order by orderId:" + integrationPaymentRequest.getOrderId(), e);
+            }
+        }
+        else {
+            integrationPaymentResponse.setExternalId(externalOrderId);
+            logger.debug("Order with orderId: {} was already registered",integrationPaymentRequest.getOrderId());
+            IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(integrationPaymentRequest.getIntegrationSupport(),externalOrderId);
+            IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(integrationOrderStatusRequest);
+
+            if ( !(integrationOrderStatusResponse.getIntegrationOrderStatus().getStatus().equals(RbsOrderStatus.CREATED.getStatus())
+                    || integrationOrderStatusResponse.getIntegrationOrderStatus().getStatus().equals(RbsOrderStatus.REDIRECTED_TO_ACS.getStatus()))) {
                 integrationPaymentResponse.setSuccess(false);
+                integrationPaymentResponse.setMessage("Order with orderId: " + integrationPaymentRequest.getOrderId() + " has already paid");
+                integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus()));
+                integrationPaymentResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
                 return integrationPaymentResponse;
             }
-            integrationPaymentResponse.setSuccess(true);
-            externalOrderId = registerOrderResponse.getOrderId();
-            integrationPaymentResponse.setExternalId(externalOrderId);
-        } catch (Exception e) {
-            throw new IntegrationException("Error integration register order by orderId:" + integrationPaymentRequest.getOrderId(),e);
         }
 
         CardPaymentParams paymentParams = (CardPaymentParams)integrationPaymentRequest.getPaymentParams();
@@ -319,6 +339,9 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         if ( 0 != paymentOrderResult.getErrorCode() ) {
             logger.error("Error payment order: " + integrationPaymentRequest.getOrderId() + " because: " + paymentOrderResult.getErrorMessage());
             integrationPaymentResponse.setSuccess(false);
+            IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(integrationPaymentRequest.getIntegrationSupport(), externalOrderId));
+            integrationPaymentResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
+            integrationPaymentResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
             return;
         }
         integrationPaymentResponse.setSuccess(true);
@@ -338,7 +361,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         else {
             IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(integrationPaymentRequest.getIntegrationSupport(), externalOrderId));
             integrationPaymentResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
-            integrationOrderStatusResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
+            integrationPaymentResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
             integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.SSL);
             returnUrlObject.setUrl(paymentOrderResult.getRedirect());
             returnUrlObject.setAction("redirect");
@@ -449,7 +472,8 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             }
             return OrderStatus.REGISTERED;
         }
-        throw new IllegalArgumentException("Unknown integration order status: " + integrationOrderStatus);
+        //throw new IllegalArgumentException("Unknown integration order status: " + integrationOrderStatus);
+        return null;
     }
 
 }

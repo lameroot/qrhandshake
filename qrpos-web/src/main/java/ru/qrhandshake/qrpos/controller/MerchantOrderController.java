@@ -133,7 +133,7 @@ public class MerchantOrderController {
         model.addAttribute("orderStatus",finishResponse.getOrderStatus());
         model.addAttribute("orderId",finishResponse.getOrderId());
         model.addAttribute("status",finishResponse.getStatus());
-        model.addAttribute("debugMessage",finishResponse.getMessage());
+        model.addAttribute("message",finishResponse.getMessage());
         return "finish";
     }
 

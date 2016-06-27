@@ -16,6 +16,7 @@ import java.util.Map;
 public class IntegrationPaymentRequest extends IntegrationRequest {
 
     private String orderId;
+    private String externalId;
     private String returnUrl;
     private String description;
     private Long amount;
@@ -36,6 +37,14 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 
     public Map<String, String> getParams() {

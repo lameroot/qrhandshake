@@ -468,6 +468,87 @@ public class PaymentITTest extends ItTest {
         assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
     }
 
+    //todo: написать тесты если закончились попытки а также по 3дс карте
+    @Test
+    @Transactional
+    public void testDoubleSslPayment() throws Exception {
+        MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
+        TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = registerOrder(terminalRegisterResponse.getAuth(),
+                amount,sessionId,deviceId, true);
+        ApiResponse apiResponse = authClient(clientRegisterResponse.getAuth().getAuthName(),clientRegisterResponse.getAuth().getAuthPassword());
+        assertTrue(ResponseStatus.SUCCESS == apiResponse.getStatus());
+
+        MvcResult mvcResult0 = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .param("authName", clientRegisterResponse.getAuth().getAuthName())
+                        .param("authPassword", clientRegisterResponse.getAuth().getAuthPassword())
+                        .param("orderId", merchantOrderRegisterResponse.getOrderId())
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "666")//invalid cvc
+                        .param("paymentWay", "card")
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResult0);
+        PaymentResponse paymentResponse0 = objectMapper.readValue(mvcResult0.getResponse().getContentAsString(), PaymentResponse.class);
+        assertEquals(OrderStatus.REGISTERED,paymentResponse0.getOrderStatus());
+        assertEquals(ResponseStatus.FAIL,paymentResponse0.getStatus());
+        assertNull(paymentResponse0.getReturnUrlObject());
+
+        MerchantOrder merchantOrder0 = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertEquals(OrderStatus.REGISTERED, merchantOrder0.getOrderStatus());
+
+        MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .param("authName", clientRegisterResponse.getAuth().getAuthName())
+                        .param("authPassword", clientRegisterResponse.getAuth().getAuthPassword())
+                        .param("orderId", merchantOrderRegisterResponse.getOrderId())
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
+                        .param("paymentWay", "card")
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResult);
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("redirect", returnUrlObject.getAction());
+        assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+        assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+
+        MvcResult finishMvcResult = mockMvc.perform(get("/order/finish/" + merchantOrderRegisterResponse.getOrderId())
+                .param("orderId", merchantOrderRegisterResponse.getOrderId()))
+                .andDo(print())
+                .andReturn();
+        assertNotNull(finishMvcResult);
+        Map<String,Object> finishModel = finishMvcResult.getModelAndView().getModel();
+        assertNotNull(finishModel);
+        assertTrue(!finishModel.isEmpty());
+        assertTrue(ResponseStatus.SUCCESS.equals(finishModel.get("status")));
+        assertEquals(merchantOrderRegisterResponse.getOrderId(),finishModel.get("orderId"));
+        assertEquals(OrderStatus.PAID,finishModel.get("orderStatus"));
+        assertTrue(finishMvcResult.getResponse().getForwardedUrl().contains("finish"));
+
+        Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNotNull(binding);
+        assertTrue(binding.isCompleted());
+        assertTrue(binding.isEnabled());
+        assertEquals(PaymentSecureType.SSL, binding.getPaymentSecureType());
+
+        MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNotNull(merchantOrder);
+        assertTrue(merchantOrder.getOrderStatus() == OrderStatus.PAID);
+        assertNotNull(merchantOrder.getPaymentDate());
+        assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
+        assertNotNull(merchantOrder.getClient());
+        assertEquals(clientRegisterResponse.getAuth().getAuthName(),merchantOrder.getClient().getUsername());
+        assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
+    }
+
     @Test
     @Transactional
     public void testSslCardPaymentByClientUseApiAuth() throws Exception {
@@ -615,7 +696,7 @@ public class PaymentITTest extends ItTest {
         assertNotNull(returnUrlObjectBinding.getParams().get("PaReq"));
         assertNotNull(returnUrlObjectBinding.getParams().get("TermUrl"));
         assertNotNull(returnUrlObjectBinding.getUrl());
-        assertEquals(OrderStatus.REDIRECTED_TO_EXTERNAL,paymentResponse.getOrderStatus());
+        assertEquals(OrderStatus.REDIRECTED_TO_EXTERNAL, paymentResponse.getOrderStatus());
 
         String paResBinding = AcsUtils.emulateCommunicationWithACS(returnUrlObjectBinding.getParams().get("MD"), returnUrlObjectBinding.getParams().get("TermUrl"), returnUrlObjectBinding.getParams().get("PaReq"), true);
         assertNotNull(paResBinding);

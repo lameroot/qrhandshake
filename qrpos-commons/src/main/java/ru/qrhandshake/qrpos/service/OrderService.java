@@ -238,6 +238,7 @@ public class OrderService {
         integrationPaymentRequest.setOrderStatus(merchantOrder.getOrderStatus());
         integrationPaymentRequest.setPaymentWay(PaymentWay.CARD);
         integrationPaymentRequest.setIp(paymentParams.getIp());
+        integrationPaymentRequest.setExternalId(merchantOrder.getExternalId());
 
         try {
             IntegrationPaymentResponse integrationPaymentResponse = integrationService.payment(integrationPaymentRequest);
@@ -246,10 +247,10 @@ public class OrderService {
             paymentResponse.setMessage(integrationPaymentResponse.getMessage());
             merchantOrder.setPaymentSecureType(integrationPaymentResponse.getPaymentSecureType());
             merchantOrder.setOrderStatus(integrationPaymentResponse.getOrderStatus());
-            merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());
             merchantOrder.setExternalId(integrationPaymentResponse.getExternalId());
             merchantOrder.setPaymentType(integrationPaymentResponse.getPaymentType());
             if ( integrationPaymentResponse.isSuccess() ) {
+                merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());
                 if ( null != client && merchantOrder.getMerchant().isCreateBinding()
                         && !bindingService.isExists(client, paymentParams, PaymentWay.CARD )) {
                     Binding binding = bindingService.register(client, paymentParams, merchantOrder, false);
@@ -338,13 +339,13 @@ public class OrderService {
         FinishResponse finishResponse = new FinishResponse();
         MerchantOrder merchantOrder = findByOrderId(finishRequest.getOrderId());
         if ( null == merchantOrder ) {
-            logger.warn("Fail finish payment." + "Order with id:" + finishRequest.getOrderId() + " doesn't exists");
+            logger.warn("Fail finish payment. " + "Order with id:" + finishRequest.getOrderId() + " doesn't exists");
             finishResponse.setStatus(ResponseStatus.FAIL);
             finishResponse.setMessage("Order with id:" + finishRequest.getOrderId() + " doesn't exists");
             return finishResponse;
         }
         if ( null == merchantOrder.getIntegrationSupport() || StringUtils.isBlank(merchantOrder.getExternalId()) ) {
-            logger.warn("Fail finish payment." + "Order with id: " + finishRequest.getOrderId() + " has invalid params");
+            logger.warn("Fail finish payment. " + "Order with id: " + finishRequest.getOrderId() + " has invalid params");
             finishResponse.setStatus(ResponseStatus.FAIL);
             finishResponse.setMessage("Order with id: " + finishRequest.getOrderId() + " has invalid params");
             return finishResponse;
