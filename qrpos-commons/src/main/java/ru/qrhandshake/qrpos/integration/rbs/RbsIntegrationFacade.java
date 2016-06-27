@@ -393,6 +393,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             integrationOrderStatusResponse.setSuccess(true);
             RbsOrderStatus rbsOrderStatus = RbsOrderStatus.valueOf(getOrderStatusExtendedResponse.getOrderStatus());
             integrationOrderStatusResponse.setIntegrationOrderStatus(rbsOrderStatus);
+            integrationOrderStatusResponse.setOrderStatus(toOrderStatus(rbsOrderStatus));
             return integrationOrderStatusResponse;
         } catch (Exception e) {
             throw new IntegrationException("Error integration get order status by orderId:" + integrationOrderStatusRequest.getExternalId(),e);
@@ -468,6 +469,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                 case APPROVED: return OrderStatus.PAID;
                 case REFUNDED: return OrderStatus.REFUNDED;
                 case REVERSED: return OrderStatus.REVERSED;
+                case DECLINED: return OrderStatus.DECLINED;
                 case REDIRECTED_TO_ACS: return OrderStatus.REDIRECTED_TO_EXTERNAL;
             }
             return OrderStatus.REGISTERED;

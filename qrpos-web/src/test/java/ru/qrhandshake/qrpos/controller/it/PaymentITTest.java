@@ -468,10 +468,59 @@ public class PaymentITTest extends ItTest {
         assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
     }
 
+    @Test
+    @Transactional
+    public void testFailAllAttemptsSslPayment() throws Exception {
+        int attempts = 3;
+        MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
+        TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = registerOrder(terminalRegisterResponse.getAuth(),
+                amount,sessionId,deviceId, true);
+        ApiResponse apiResponse = authClient(clientRegisterResponse.getAuth().getAuthName(),clientRegisterResponse.getAuth().getAuthPassword());
+        assertTrue(ResponseStatus.SUCCESS == apiResponse.getStatus());
+
+        while (attempts-- > 1) {
+            MvcResult mvcResult0 = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                            .param("authName", clientRegisterResponse.getAuth().getAuthName())
+                            .param("authPassword", clientRegisterResponse.getAuth().getAuthPassword())
+                            .param("orderId", merchantOrderRegisterResponse.getOrderId())
+                            .param("pan", SSL_CARD)
+                            .param("month", "12")
+                            .param("year", "2019")
+                            .param("cardHolderName", "test test")
+                            .param("cvc", "666")//invalid cvc
+                            .param("paymentWay", "card")
+            ).andDo(print()).andReturn();
+            assertNotNull(mvcResult0);
+            PaymentResponse paymentResponse0 = objectMapper.readValue(mvcResult0.getResponse().getContentAsString(), PaymentResponse.class);
+            assertEquals(OrderStatus.REGISTERED,paymentResponse0.getOrderStatus());
+            assertEquals(ResponseStatus.FAIL,paymentResponse0.getStatus());//todo: поменять на success если ответ есть, даже если неудачный
+        }
+
+        MvcResult mvcResult0 = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .param("authName", clientRegisterResponse.getAuth().getAuthName())
+                        .param("authPassword", clientRegisterResponse.getAuth().getAuthPassword())
+                        .param("orderId", merchantOrderRegisterResponse.getOrderId())
+                        .param("pan", SSL_CARD)
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "666")//invalid cvc
+                        .param("paymentWay", "card")
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResult0);
+        PaymentResponse paymentResponse0 = objectMapper.readValue(mvcResult0.getResponse().getContentAsString(), PaymentResponse.class);
+        assertEquals(OrderStatus.DECLINED,paymentResponse0.getOrderStatus());
+        assertEquals(ResponseStatus.SUCCESS,paymentResponse0.getStatus());
+    }
+
+
     //todo: написать тесты если закончились попытки а также по 3дс карте
     @Test
     @Transactional
-    public void testDoubleSslPayment() throws Exception {
+    public void testFailAndSuccessSslPayment() throws Exception {
         MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
         TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
         ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
