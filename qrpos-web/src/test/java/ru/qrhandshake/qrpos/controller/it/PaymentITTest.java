@@ -74,10 +74,7 @@ public class PaymentITTest extends ItTest {
                 .andDo(print())
                 .andReturn();
         assertNotNull(mvcResult);
-        assertTrue(mvcResult.getResolvedException() instanceof MerchantOrderNotFoundException);
-        ApiResponse apiResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ApiResponse.class);
-        assertNotNull(apiResponse);
-        assertTrue(ResponseStatus.FAIL == apiResponse.getStatus());
+        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("payment.html?orderId=" + unknownOrderId));
     }
 
     @Test
@@ -93,9 +90,16 @@ public class PaymentITTest extends ItTest {
                 .andDo(print())
                 .andReturn();
         assertNotNull(mvcResult);
-        assertTrue(mvcResult.getModelAndView().getViewName().equals("payment_ru"));
-        assertTrue(mvcResult.getModelAndView().getModel().containsKey("merchantOrder"));
-        assertEquals(merchantOrderRegisterResponse.getOrderId(),((MerchantOrderDto)mvcResult.getModelAndView().getModel().get("merchantOrder")).getOrderId());
+        assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("payment.html?orderId=" + merchantOrderRegisterResponse.getOrderId()));
+
+        MvcResult mvcResultSessionStatus = mockMvc.perform(get(MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.SESSION_STATUS_PATH)
+                .param("orderId", merchantOrderRegisterResponse.getOrderId())).andDo(print()).andReturn();
+        assertNotNull(mvcResultSessionStatus);
+
+        SessionStatusResponse sessionStatusResponse = objectMapper.readValue(mvcResultSessionStatus.getResponse().getContentAsString(), SessionStatusResponse.class);
+        assertNotNull(sessionStatusResponse);
+        assertEquals(ResponseStatus.SUCCESS,sessionStatusResponse.getStatus());
+        assertTrue(OrderStatus.PAID != sessionStatusResponse.getOrderStatus());
     }
 
     @Test
@@ -150,7 +154,16 @@ public class PaymentITTest extends ItTest {
                 .andDo(print())
                 .andReturn();
         assertNotNull(mvcResultPayment);
-        assertTrue(mvcResultPayment.getResponse().getRedirectedUrl().contains(MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.FINISH_PATH + "/" + merchantOrderRegisterResponse.getOrderId()));
+        assertTrue(mvcResultPayment.getResponse().getRedirectedUrl().contains("payment.html?orderId=" + merchantOrderRegisterResponse.getOrderId()));
+
+        MvcResult mvcResultSessionStatus = mockMvc.perform(get(MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.SESSION_STATUS_PATH)
+            .param("orderId", merchantOrderRegisterResponse.getOrderId())).andDo(print()).andReturn();
+        assertNotNull(mvcResultSessionStatus);
+
+        SessionStatusResponse sessionStatusResponse = objectMapper.readValue(mvcResultSessionStatus.getResponse().getContentAsString(), SessionStatusResponse.class);
+        assertNotNull(sessionStatusResponse);
+        assertEquals(ResponseStatus.SUCCESS,sessionStatusResponse.getStatus());
+        assertEquals(OrderStatus.PAID, sessionStatusResponse.getOrderStatus());
     }
 
     @Test
@@ -984,4 +997,6 @@ public class PaymentITTest extends ItTest {
         assertNotNull(apiResponse);
         assertEquals(ResponseStatus.FAIL,apiResponse.getStatus());
     }
+
+    //todo: тест на дублирующиеся биндинги и 3дс платеж
 }
