@@ -1,11 +1,12 @@
 package ru.qrhandshake.qrpos.domain;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import ru.qrhandshake.qrpos.util.SecurityUtils;
 
 import javax.persistence.*;
-import java.util.Collection;
-import java.util.Date;
+import java.util.*;
 
 /**
  * Created by lameroot on 18.05.16.
@@ -35,6 +36,51 @@ public class User implements UserDetails {
     private boolean isExpired;
     @Column(name = "is_locked")
     private boolean isLocked;
+    @Column
+    private String roles;
+    @Column
+    private String salt;
+
+    public void setAuthorities(Collection<EnumGrantedAuthority> authorities) {
+        if (authorities.isEmpty()) {
+            this.roles = "";
+            return;
+        }
+        StringBuilder res = new StringBuilder();
+        Set<EnumGrantedAuthority> authSet = new HashSet<>(authorities);
+        for (GrantedAuthority authority : authSet) {
+            res.append(authority.getAuthority()).append(",");
+        }
+        res.deleteCharAt(res.length() - 1);
+        this.roles = res.toString();
+    }
+
+    @Override
+    @Transient
+    public Collection<EnumGrantedAuthority> getAuthorities() {
+        if (StringUtils.isBlank(this.roles)) {
+            return Collections.emptyList();
+        }
+        String[] roles = StringUtils.trimToEmpty(this.roles).split(",");
+        return SecurityUtils.createAuthorityList(roles);
+    }
+
+    @Deprecated
+    public String getRoles() {
+        return roles;
+    }
+
+    public void setRoles(String roles) {
+        this.roles = roles;
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+
+    public void setSalt(String salt) {
+        this.salt = salt;
+    }
 
     public Long getId() {
         return id;
@@ -74,11 +120,6 @@ public class User implements UserDetails {
 
     public void setCreatedDate(Date createdDate) {
         this.createdDate = createdDate;
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
     }
 
     @Override
