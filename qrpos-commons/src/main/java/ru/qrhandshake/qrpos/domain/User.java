@@ -38,8 +38,6 @@ public class User implements UserDetails {
     private boolean isLocked;
     @Column
     private String roles;
-    @Column
-    private String salt;
 
     public void setAuthorities(Collection<EnumGrantedAuthority> authorities) {
         if (authorities.isEmpty()) {
@@ -72,14 +70,6 @@ public class User implements UserDetails {
 
     public void setRoles(String roles) {
         this.roles = roles;
-    }
-
-    public String getSalt() {
-        return salt;
-    }
-
-    public void setSalt(String salt) {
-        this.salt = salt;
     }
 
     public Long getId() {
