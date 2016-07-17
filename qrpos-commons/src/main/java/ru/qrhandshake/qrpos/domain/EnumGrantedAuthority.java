@@ -11,8 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
  */
 public enum EnumGrantedAuthority implements GrantedAuthority {
     ADMIN,
-    REGISTERED,
-    ANONYMOUS;
+    REGISTERED;
 
     @Override
     public String getAuthority() {

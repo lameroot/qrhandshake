@@ -35,9 +35,7 @@ public class SecurityUtils {
         if (authentication.getPrincipal() instanceof User) {
             return (User) authentication.getPrincipal();
         } else {
-            User user = new User();
-            user.setAuthorities(Collections.singletonList(EnumGrantedAuthority.ANONYMOUS));
-            return user;
+            return null;
         }
     }
 
