@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
+    <link href="/bundles/dad2cd6ea6fdbdf7a3b7db697f32a9f3.css" rel="stylesheet"> <!--[if lt IE 9]>
+    <script src="https://cdn.jsdelivr.net/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/respond/1.4.2/respond.min.js"></script> <![endif]-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+    <!-- Website CSS style -->
+    <link rel="stylesheet" type="text/css" href="css/register.css">
+
+    <!-- Website Font style -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+
+    <!-- Google Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Passion+One' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Oxygen' rel='stylesheet' type='text/css'>
+
+    <title>Регистрация</title>
+
+    <script>
+        $(document).ready(function() {
+            var settings = {
+                delaySend: 1000
+            };
+            $('#registerButton').prop('disabled', true);
+
+            $(document).on('input', '#name', timeoutFunc);
+
+
+            function timeoutFunc(event) {
+                var value = event.target.value;
+
+                clearTimeout(settings.timer);
+                if ( value.length > 4 ) {
+                    settings.timer = setTimeout(sendAJAX(value), settings.delaySend);
+                }
+                else {
+                    $('#registerButton').prop('disabled', true);
+                }
+            }
+
+            function sendAJAX(value) {
+                console.log('SEND ' + value);
+
+                $.ajax({
+                   url: 'merchant/is_exists',
+                   type: 'POST',
+                   //contentType: "application/json",
+                   //dataType: 'json',
+                   cache: false,
+                   data: {
+                     name: value
+                   },
+                   error: function () {
+                       console.log('error');
+                   }
+                }).done(function(data){
+                    if (data) {
+                        console.log('exists');
+                        $('#registerButton').prop('disabled', true);
+                    }
+                    else {
+                        console.log('not exists');
+                        $('#registerButton').prop('disabled', false);
+                    }
+                });
+            }
+
+            $("#registerButton").click(function(){
+
+                var nameNew = $("#name").val();
+                console.log('test' + nameNew);
+                $.ajax({
+                    url: 'merchant/register',
+                    type: 'POST',
+                    cache: false,
+                    data: {
+                        name: nameNew
+                    },
+                    error: function () {
+                        console.log('error');
+                    }
+                }).done(function(response) {
+                    $('#registerButton').prop('disabled', true);
+                    if ( response.status == 'SUCCESS' ) {
+                        alert('Merchant has created.');
+                        $("#name").val('');
+                    }
+                    else {
+                        console.log('error: ' + response.message);
+                    }
+                })
+            });
+        });
+
+
+
+    </script>
+</head>
+</head>
+<body>
+
+<div class="container">
+    <div class="row main">
+        <div class="panel-heading">
+            <div class="panel-title text-center">
+                <h1 class="title">Company Name</h1>
+                <hr />
+            </div>
+        </div>
+        <div class="main-login main-center">
+            <form id="registrationForm" class="form-horizontal" method="post" action="#">
+
+                <div class="form-group">
+                    <label for="name" class="cols-sm-2 control-label">Name</label>
+                    <div class="cols-sm-10">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-user fa" aria-hidden="true"></i></span>
+                            <input type="text" class="form-control" name="name" id="name"  placeholder="Enter your Name"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group ">
+                    <button type="button" id="registerButton" class="btn btn-primary btn-lg btn-block login-button">Register</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="js/bootstrap.js"></script>
+
+</body>
+</html>
