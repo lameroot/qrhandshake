@@ -24,99 +24,20 @@
 
     <title>Регистрация</title>
 
-    <script>
-        $(document).ready(function() {
-            var settings = {
-                delaySend: 1000
-            };
-            $('#registerButton').prop('disabled', true);
-
-            $(document).on('input', '#name', timeoutFunc);
-
-
-            function timeoutFunc(event) {
-                var value = event.target.value;
-
-                clearTimeout(settings.timer);
-                if ( value.length > 4 ) {
-                    settings.timer = setTimeout(sendAJAX(value), settings.delaySend);
-                }
-                else {
-                    $('#registerButton').prop('disabled', true);
-                }
-            }
-
-            function sendAJAX(value) {
-                console.log('SEND ' + value);
-
-                $.ajax({
-                   url: 'merchant/is_exists',
-                   type: 'POST',
-                   //contentType: "application/json",
-                   //dataType: 'json',
-                   cache: false,
-                   data: {
-                     name: value
-                   },
-                   error: function () {
-                       console.log('error');
-                   }
-                }).done(function(data){
-                    if (data) {
-                        console.log('exists');
-                        $('#registerButton').prop('disabled', true);
-                    }
-                    else {
-                        console.log('not exists');
-                        $('#registerButton').prop('disabled', false);
-                    }
-                });
-            }
-
-            $("#registerButton").click(function(){
-
-                var nameNew = $("#name").val();
-                console.log('test' + nameNew);
-                $.ajax({
-                    url: 'merchant/register',
-                    type: 'POST',
-                    cache: false,
-                    data: {
-                        name: nameNew
-                    },
-                    error: function () {
-                        console.log('error');
-                    }
-                }).done(function(response) {
-                    $('#registerButton').prop('disabled', true);
-                    if ( response.status == 'SUCCESS' ) {
-                        alert('Merchant has created.');
-                        $("#name").val('');
-                    }
-                    else {
-                        console.log('error: ' + response.message);
-                    }
-                })
-            });
-        });
-
-
-
-    </script>
 </head>
 </head>
 <body>
 
 <div class="container">
-    <div class="row main">
+    <div class="row main" align="center">
         <div class="panel-heading">
             <div class="panel-title text-center">
-                <h1 class="title">Company Name</h1>
+                <h1 class="title">Virtual Coin</h1>
                 <hr />
             </div>
         </div>
-        <div class="main-login main-center">
-            <form id="registrationForm" class="form-horizontal" method="post" action="#">
+        <div id="form" class="main-login main-center">
+            <div id="registrationForm" class="form-horizontal">
 
                 <div class="form-group">
                     <label for="name" class="cols-sm-2 control-label">Name</label>
@@ -131,12 +52,96 @@
                 <div class="form-group ">
                     <button type="button" id="registerButton" class="btn btn-primary btn-lg btn-block login-button">Register</button>
                 </div>
-            </form>
+            </div>
+        </div>
+        <div id="result" class="main-login main-center">
+            <h3>Merchant created</h3>
+            <div>password: <span id="password"></span></div>
         </div>
     </div>
 </div>
 
 <script type="text/javascript" src="js/bootstrap.js"></script>
+<script>
+    $(document).ready(function() {
+        $("#form").show();
+        $("#result").hide();
 
+        var settings = {
+            delaySend: 1000
+        };
+        $('#registerButton').prop('disabled', true);
+
+        $(document).on('input', '#name', timeoutFunc);
+
+
+        function timeoutFunc(event) {
+            var value = event.target.value;
+
+            clearTimeout(settings.timer);
+            if ( value.length > 4 ) {
+                settings.timer = setTimeout(sendAJAX(value), settings.delaySend);
+            }
+            else {
+                $('#registerButton').prop('disabled', true);
+            }
+        }
+
+        function sendAJAX(value) {
+            console.log('SEND ' + value);
+
+            $.ajax({
+                url: 'merchant/is_exists',
+                type: 'POST',
+                //contentType: "application/json",
+                //dataType: 'json',
+                cache: false,
+                data: {
+                    name: value
+                },
+                error: function () {
+                    console.log('error');
+                }
+            }).done(function(data){
+                if (data) {
+                    console.log('exists');
+                    $('#registerButton').prop('disabled', true);
+                }
+                else {
+                    console.log('not exists');
+                    $('#registerButton').prop('disabled', false);
+                }
+            });
+        }
+
+        $("#registerButton").click(function(){
+
+            var nameNew = $("#name").val();
+            console.log('test' + nameNew);
+            $.ajax({
+                url: 'merchant/register',
+                type: 'POST',
+                cache: false,
+                data: {
+                    name: nameNew
+                },
+                error: function () {
+                    console.log('error');
+                }
+            }).done(function(response) {
+                $('#registerButton').prop('disabled', true);
+                if ( response.status == 'SUCCESS' ) {
+//                    alert('Merchant has created.');
+                    $("#form").hide();
+                    $("#result").show();
+                    $("#password").text(response.terminalAuth.authPassword);
+                }
+                else {
+                    console.log('error: ' + response.message);
+                }
+            })
+        });
+    });
+</script>
 </body>
 </html>
