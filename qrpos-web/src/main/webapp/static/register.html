@@ -2,6 +2,7 @@
 <html>
 <head lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
@@ -56,6 +57,7 @@
         </div>
         <div id="result" class="main-login main-center">
             <h3>Merchant created</h3>
+            <div>login: <span id="login"></span></div>
             <div>password: <span id="password"></span></div>
         </div>
     </div>
@@ -134,6 +136,7 @@
 //                    alert('Merchant has created.');
                     $("#form").hide();
                     $("#result").show();
+                    $("#login").text(response.terminalAuth.authName);
                     $("#password").text(response.terminalAuth.authPassword);
                 }
                 else {
