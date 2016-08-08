@@ -9,6 +9,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import ru.qrhandshake.qrpos.config.ApplicationConfig;
+import ru.qrhandshake.qrpos.repository.TerminalRepository;
 
 import javax.annotation.Resource;
 
@@ -22,6 +23,8 @@ public class GeneralTest extends TestCase {
 
     @Resource
     protected ApplicationContext applicationContext;
+    @Resource
+    protected TerminalRepository terminalRepository;
 
     @Test
     public void testExists() {

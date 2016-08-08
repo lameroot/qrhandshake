@@ -409,7 +409,7 @@ public class OrderService {
     }
 
     private String buildPaymentUrl(String paymentPath, MerchantOrder merchantOrder, String orderId) {
-        return paymentPath + "/" + orderId;
+        return StringUtils.isNotBlank(paymentPath) ? paymentPath + "/" + orderId : null;
     }
 
     private String generateUniqueIdOrder(MerchantOrder merchantOrder) {

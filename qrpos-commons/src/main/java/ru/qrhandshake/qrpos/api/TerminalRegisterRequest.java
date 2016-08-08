@@ -6,4 +6,13 @@ package ru.qrhandshake.qrpos.api;
  */
 public class TerminalRegisterRequest extends ApiAuth {
 
+    private boolean defaultTerminal;
+
+    public boolean isDefaultTerminal() {
+        return defaultTerminal;
+    }
+
+    public void setDefaultTerminal(boolean defaultTerminal) {
+        this.defaultTerminal = defaultTerminal;
+    }
 }

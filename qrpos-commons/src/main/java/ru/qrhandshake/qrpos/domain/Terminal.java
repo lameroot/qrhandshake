@@ -23,6 +23,8 @@ public class Terminal {
     private String authPassword;
     @Column(name = "enabled")
     private boolean enabled;
+    @Column(name = "default_terminal")
+    private boolean defaultTerminal;
 
     public Long getId() {
         return id;
@@ -62,5 +64,13 @@ public class Terminal {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isDefaultTerminal() {
+        return defaultTerminal;
+    }
+
+    public void setDefaultTerminal(boolean defaultTerminal) {
+        this.defaultTerminal = defaultTerminal;
     }
 }

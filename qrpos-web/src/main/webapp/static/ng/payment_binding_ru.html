@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Сбербанк</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width"/>
+    <link rel="icon" type="image/x-icon" href="img/favicon.ico"/>
+    <link rel="stylesheet" href="css/styles.css" type="text/css"/>
+    <script src="js/jquery-1.11.3.min.js" type="text/javascript"></script>
+    <script src="js/jquery.url.js" type="text/javascript"></script>
+    <script src="js/jquery.timers-1.2.js" type="text/javascript"></script>
+    <script src="js/jquery-ui-1.11.4.custom.min.js" type="text/javascript"></script>
+    <script src="js/jquery.payment_binding.js" type="text/javascript"></script>
+    <script src="js/1.0/jquery.page.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).payment_binding({
+          messageTimeRemaining: '#HOU#:#MIN#:#SEC#'
+        });
+    </script>
+  </head>
+  <body>
+    <!--#if expr="$request_uri = /\/([a-zA-Z]+)\//" -->
+    <!--#set var="context" value="$1" -->
+    <!--#endif -->
+    <!--#if expr="$request_uri = /mdOrder=([a-zA-Z0-9-]+)/" -->
+    <!--#set var="mdOrder" value="$1" -->
+    <!--#endif -->
+    <!--#include virtual="/$context/rest/merchantlogin.do?mdOrder=$mdOrder" set="merchantLogin" -->
+    <div class="container">
+      <div class="row">
+        <div class="logo col2"><img src="img/main-logo.png" alt="Сбербанк"/></div>
+        <div class="merchant-logo col2"><img src="../<!--#echo var="merchantLogin" -->/custom/logo.png" height="64" alt="" onerror='$(this).parent().hide()'/></div>
+      </div>
+      <div class="row informationPayment">
+        <div class="row"><span class="label-amount">Сумма к оплате:</span><span id="amount" class="bold">--.-- RUB</span></div>
+        <div class="row"><span class="label-orderId">Номер заказа:</span><span id="orderNumber" class="bold">--</span></div>
+        <div class="row"><span class="label-description">Описание платежа:</span><span id="description" style="white-space: pre;"></span></div>
+        <div class="row" style="display: none;" id="bonusBlock"><span class="logo-spasibo-mini"></span><span class="label-description">Бонусы "Спасибо":</span><span id="bonusAmount" class="bold"></span></div>
+      </div>
+      <div class="cardContainer">
+        <form name="bindingPaymentForm" action="#" method="post" id="bindingPaymentForm" autocomplete="off">
+          <div class="timer"><span class="label-timer">До окончания сессии осталось:</span>
+            <div id="countdown"></div>
+          </div>
+          <div class="row fields">
+            <div class="row">
+              <div class="col-label">
+                <label for="iPAN_sub" class="col-label">Номер карты</label>
+              </div>
+              <div class="block-input-pan col-input">
+                <span class="input-icon">
+                  <div id="maskedPan" class="dummy-field"></div>
+                  <span id="typecard-icon"></span>
+                </span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-label">
+                <label for="iCVC" class="col-label">CVC2/CVV2</label>
+              </div>
+              <div class="col-input"><span id="iCVC-validation">
+                  <input id="cvc" type="password" placeholder="***" maxlength="4" class="cvc"/>
+                  <div class="hint"></div>
+                  <div class="hint-baloon">
+                    <div class="arrow-baloon"></div><span>Код CVC2 (CVV2) - это трехзначное число, обозначенное на обороте карты.</span>
+                  </div></span></div>
+            </div>
+          </div>
+          <div id="spasibo_block" style="display:none;">
+            <div class="hr"></div>
+            <div class="row block-spasibo">
+              <div class="col-logo">
+                <div class="logo-spasibo"></div>
+              </div>
+              <div class="col-description-spasibo">Выберите сумму, которую вы собираетесь оплатить баллами "Спасибо":</div>
+            </div>
+            <div class="row block-spasibo">
+              <div class="col-points">
+                <label for="spasibo">Баллы</label>
+              </div>
+              <div class="col-wrap-slider"></div>
+              <div class="col-currency">
+                <label for="remainderAmount">Рубли</label>
+              </div>
+            </div>
+            <div class="row block-spasibo">
+              <div class="col-points">
+                <input type="tel" id="spasibo"/>
+              </div>
+              <div class="col-slider">
+                <div id="spasiboSlider" aria-disabled="false">
+                  <div class="ui-slider-range ui-widget-header ui-corner-all ui-slider-range-min"></div><a href="#" class="ui-slider-handle ui-state-default ui-corner-all"></a>
+                </div>
+                <input value="0" name="sbrf_spasibo:amount_bonus" id="sbrf_spasibo" type="hidden"/><span id="spasibo-validation"></span>
+              </div>
+              <div class="col-currency">
+                <input type="text" id="remainderAmount" readonly="readonly"/>
+              </div>
+            </div>
+          </div>
+          <div class="row payment-info">
+            <div class="row">
+              <div class="col-label"></div>
+              <div class="col-input">
+                <div id="errorBlock"></div>
+                <div id="infoBlock"></div>
+                <div id="indicator" style="display:none;"><img src="img/ajax-loader.gif" height="19" width="220" alt="Loading" title="Loading..." style="margin-left: -5px;"/></div>
+              </div>
+            </div>
+          </div>
+          <div class="row payment-button">
+            <div class="row">
+              <div class="col-label"></div>
+              <div class="col-input">
+                <button name="SendPayment" type="button" id="sendPayment" class="btn">Оплатить</button>
+              </div>
+            </div>
+          </div>
+        </form>
+        <form id="acs" method="post" action="">
+          <input type="hidden" id="MD" name="MD"/>
+          <input type="hidden" id="PaReq" name="PaReq"/>
+          <input type="hidden" id="TermUrl" name="TermUrl"/>
+        </form>
+
+      </div>
+      <div class="footer">
+        <div class="system-logos">
+          <div class="logo visa"></div>
+          <div class="logo mastercard"></div>
+          <div class="logo verify-visa"></div>
+          <div class="logo verify-mastercard"></div>
+          <div class="logo pci"></div>
+        </div>
+        <div class="security-text">Настоящий сайт поддерживает 256-битное шифрование. Конфиденциальность сообщаемой персональной информации обеспечивается ПАО "Сбербанк России". Введенная информация не будет предоставлена третьим лицам за исключением случаев, предусмотренных законодательством РФ. Проведение платежей по банковским картам осуществляется в строгом соответствии с требованиями платежных систем Visa Int. и MasterCard Europe Sprl.</div>
+      </div>
+    </div>
+  </body>
+</html>

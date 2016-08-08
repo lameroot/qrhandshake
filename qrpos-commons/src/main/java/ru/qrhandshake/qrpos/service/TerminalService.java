@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.api.ApiAuth;
 import ru.qrhandshake.qrpos.api.ResponseStatus;
+import ru.qrhandshake.qrpos.api.TerminalRegisterRequest;
 import ru.qrhandshake.qrpos.api.TerminalRegisterResponse;
 import ru.qrhandshake.qrpos.domain.Merchant;
 import ru.qrhandshake.qrpos.domain.Terminal;
@@ -13,6 +14,7 @@ import ru.qrhandshake.qrpos.repository.TerminalRepository;
 import ru.qrhandshake.qrpos.util.Util;
 
 import javax.annotation.Resource;
+import java.util.Optional;
 
 /**
  * Created by lameroot on 24.05.16.
@@ -53,10 +55,10 @@ public class TerminalService {
     }
 
     @Transactional
-    public TerminalRegisterResponse create(Merchant merchant, ApiAuth apiAuth) {
+    public TerminalRegisterResponse create(Merchant merchant, TerminalRegisterRequest terminalRegisterRequest) {
         ApiAuth terminalAuth = null;
-        if ( null != apiAuth && apiAuth.authIsNotBlank() && null == terminalRepository.findByAuthName(apiAuth.getAuthName())) {
-            terminalAuth = apiAuth;
+        if ( null != terminalRegisterRequest && terminalRegisterRequest.authIsNotBlank() && null == terminalRepository.findByAuthName(terminalRegisterRequest.getAuthName())) {
+            terminalAuth = terminalRegisterRequest;
         }
         else {
             logger.debug("ApiAuth either null or terminal with this name already exists. Generate authName and authPassword for new terminal.");
@@ -68,6 +70,9 @@ public class TerminalService {
         terminal.setAuthName(terminalAuth.getAuthName());
         terminal.setAuthPassword(securityService.encodePassword(terminalAuth.getAuthPassword()));
         terminal.setEnabled(true);
+        if ( terminalRegisterRequest.isDefaultTerminal() && null == terminalRepository.findDefaultTerminalForMerchant(merchant) ) {
+            terminal.setDefaultTerminal(true);
+        }
         terminalRepository.save(terminal);
 
         TerminalRegisterResponse terminalRegisterResponse = new TerminalRegisterResponse();
