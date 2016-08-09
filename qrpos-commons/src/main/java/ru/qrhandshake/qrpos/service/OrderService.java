@@ -162,6 +162,7 @@ public class OrderService {
         }
         merchantOrder.setIntegrationSupport(integrationSupport);
         merchantOrder.setPaymentWay(PaymentWay.BINDING);
+        merchantOrder.setClient(client);
         IntegrationPaymentBindingRequest integrationPaymentBindingRequest = new IntegrationPaymentBindingRequest(integrationSupport,binding.getExternalBindingId());
         integrationPaymentBindingRequest.setPaymentParams(paymentParams);
         integrationPaymentBindingRequest.setAmount(merchantOrder.getAmount());
@@ -182,6 +183,7 @@ public class OrderService {
             paymentResponse.setOrderId(merchantOrder.getOrderId());
             paymentResponse.setMessage(integrationPaymentResponse.getMessage());
             merchantOrder.setPaymentSecureType(integrationPaymentResponse.getPaymentSecureType());
+            merchantOrder.setPaymentType(integrationPaymentResponse.getPaymentType());
             if ( integrationPaymentResponse.isSuccess() ) {
                 merchantOrder.setOrderStatus(integrationPaymentResponse.getOrderStatus());
                 merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());

@@ -21,6 +21,7 @@ import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationConfig;
 import ru.qrhandshake.qrpos.repository.MerchantRepository;
 import ru.qrhandshake.qrpos.repository.OrderTemplateRepository;
 import ru.qrhandshake.qrpos.repository.TerminalRepository;
+import ru.qrhandshake.qrpos.repository.UserRepository;
 
 import javax.annotation.Resource;
 
@@ -58,6 +59,8 @@ public class ServletConfigTest extends TestCase {
     protected ObjectMapper objectMapper;
     @Resource
     protected MerchantRepository merchantRepository;
+    @Resource
+    protected UserRepository userRepository;
     @Resource
     protected OrderTemplateRepository orderTemplateRepository;
     @Resource

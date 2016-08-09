@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.service;
 
 import org.junit.Test;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.GeneralTest;
@@ -8,6 +9,7 @@ import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.domain.Terminal;
 
 import javax.annotation.Resource;
+import javax.persistence.criteria.Order;
 import java.util.UUID;
 
 /**
@@ -21,6 +23,7 @@ public class OrderTemplateServiceTest extends GeneralTest {
     private OrderTemplateService orderTemplateService;
     @Resource
     private MerchantService merchantService;
+
 
     @Test
     public void testCreate() {
@@ -39,7 +42,9 @@ public class OrderTemplateServiceTest extends GeneralTest {
         orderTemplateRequest.setAmount(20000L);
         orderTemplateRequest.setTerminalId(Long.valueOf(terminal.getId()));
 
-        OrderTemplateResponse orderTemplateResponse = orderTemplateService.create(orderTemplateRequest);
+        OrderTemplateParams orderTemplateParams = conversionService.convert(orderTemplateRequest, OrderTemplateParams.class);
+        OrderTemplateResult orderTemplateResult = orderTemplateService.create(orderTemplateParams);
+        OrderTemplateResponse orderTemplateResponse = conversionService.convert(orderTemplateResult,OrderTemplateResponse.class);
         assertNotNull(orderTemplateResponse);
         assertNotNull(orderTemplateResponse.getId());
         assertEquals(ResponseStatus.SUCCESS,orderTemplateResponse.getStatus());

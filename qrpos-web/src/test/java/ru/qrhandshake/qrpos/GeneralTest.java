@@ -4,6 +4,7 @@ import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -25,6 +26,8 @@ public class GeneralTest extends TestCase {
     protected ApplicationContext applicationContext;
     @Resource
     protected TerminalRepository terminalRepository;
+    @Resource
+    protected ConversionService conversionService;
 
     @Test
     public void testExists() {

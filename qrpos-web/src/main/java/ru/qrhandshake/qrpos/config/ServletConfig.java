@@ -4,12 +4,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.FormattingConversionService;
+import org.springframework.format.support.FormattingConversionServiceFactoryBean;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
+import ru.qrhandshake.qrpos.converter.OrderTemplateRequestToOrderTemplateParamsConverter;
 import ru.qrhandshake.qrpos.interceptor.PostLoggingInterceptor;
 
 import javax.annotation.Resource;
@@ -54,4 +58,6 @@ public class ServletConfig extends WebMvcConfigurationSupport {
         resolver.setSuffix(".jsp");
         return resolver;
     }
+
+
 }

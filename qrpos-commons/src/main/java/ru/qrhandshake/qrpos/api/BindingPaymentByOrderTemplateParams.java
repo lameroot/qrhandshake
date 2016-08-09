@@ -1,19 +1,18 @@
 package ru.qrhandshake.qrpos.api;
 
-import javax.validation.constraints.NotNull;
+
+import ru.qrhandshake.qrpos.domain.OrderTemplate;
 
 /**
- * Created by lameroot on 08.08.16.
+ * Created by lameroot on 09.08.16.
  */
-public class BindingPaymentByOrderTemplateRequest extends ApiAuth {
+public class BindingPaymentByOrderTemplateParams {
 
-    @NotNull
     private String bindingId;
-    @NotNull
-    private Long orderTemplateId;
-    @NotNull
+    private OrderTemplate orderTemplate;
     private String sessionId;
     private String deviceId;
+    private String returnUrl;
 
     public String getBindingId() {
         return bindingId;
@@ -23,12 +22,12 @@ public class BindingPaymentByOrderTemplateRequest extends ApiAuth {
         this.bindingId = bindingId;
     }
 
-    public Long getOrderTemplateId() {
-        return orderTemplateId;
+    public OrderTemplate getOrderTemplate() {
+        return orderTemplate;
     }
 
-    public void setOrderTemplateId(Long orderTemplateId) {
-        this.orderTemplateId = orderTemplateId;
+    public void setOrderTemplate(OrderTemplate orderTemplate) {
+        this.orderTemplate = orderTemplate;
     }
 
     public String getSessionId() {
@@ -45,5 +44,13 @@ public class BindingPaymentByOrderTemplateRequest extends ApiAuth {
 
     public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
+    }
+
+    public String getReturnUrl() {
+        return returnUrl;
+    }
+
+    public void setReturnUrl(String returnUrl) {
+        this.returnUrl = returnUrl;
     }
 }

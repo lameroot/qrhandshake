@@ -1,11 +1,13 @@
 package ru.qrhandshake.qrpos.service;
 
+import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.Merchant;
 import ru.qrhandshake.qrpos.domain.OrderTemplate;
 import ru.qrhandshake.qrpos.domain.Terminal;
+import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.repository.MerchantRepository;
 import ru.qrhandshake.qrpos.repository.OrderTemplateRepository;
 import ru.qrhandshake.qrpos.repository.TerminalRepository;
@@ -27,55 +29,54 @@ public class OrderTemplateService {
     private OrderService orderService;
     @Resource
     private TerminalRepository terminalRepository;
+    @Resource
+    private ConversionService conversionService;
 
-    public OrderTemplateResponse create(OrderTemplateRequest orderTemplateRequest) {
-        Terminal terminal = Optional.ofNullable(terminalRepository.findOne(orderTemplateRequest.getTerminalId())).orElseGet(null);
-        if ( null == terminal ) {
-            OrderTemplateResponse orderTemplateResponse = new OrderTemplateResponse();
-            orderTemplateResponse.setStatus(ResponseStatus.FAIL);
-            orderTemplateResponse.setMessage("Unknown terminal");
-        }
+    public OrderTemplateResult create(OrderTemplateParams orderTemplateParams) {
+        Terminal terminal = orderTemplateParams.getTerminal();
         OrderTemplate orderTemplate = new OrderTemplate();
-        orderTemplate.setAmount(orderTemplateRequest.getAmount());
-        orderTemplate.setDescription(orderTemplateRequest.getDescription());
-        orderTemplate.setName(orderTemplateRequest.getName());
+        orderTemplate.setAmount(orderTemplateParams.getAmount());
+        orderTemplate.setDescription(orderTemplateParams.getDescription());
+        orderTemplate.setName(orderTemplateParams.getName());
         orderTemplate.setTerminal(terminal);
 
         orderTemplateRepository.save(orderTemplate);
 
-        OrderTemplateResponse orderTemplateResponse = new OrderTemplateResponse();
-        orderTemplateResponse.setId(orderTemplate.getId());
-        orderTemplateResponse.setStatus(ResponseStatus.SUCCESS);
+        OrderTemplateResult orderTemplateResult = new OrderTemplateResult();
+        orderTemplateResult.setId(orderTemplate.getId());
 
-        return orderTemplateResponse;
+        return orderTemplateResult;
     }
 
     public OrderTemplate findById(Long id) {
         return orderTemplateRepository.findOne(id);
     }
 
-    public MerchantOrderRegisterResponse createOrderByTemplate(Client client, BindingPaymentByOrderTemplateRequest bindingPaymentByOrderTemplateRequest) throws Exception {
-        OrderTemplate orderTemplate = orderTemplateRepository.findOne(Long.valueOf(bindingPaymentByOrderTemplateRequest.getOrderTemplateId()));
-        //todo: check exists
+    public BindingPaymentByOrderTemplateResult paymentOrderByTemplate(Client client, BindingPaymentByOrderTemplateParams bindingPaymentByOrderTemplateParams) throws AuthException {
+        OrderTemplate orderTemplate = bindingPaymentByOrderTemplateParams.getOrderTemplate();
+
         Terminal terminal = orderTemplate.getTerminal();
         MerchantOrderRegisterRequest merchantOrderRegisterRequest = new MerchantOrderRegisterRequest();
         merchantOrderRegisterRequest.setAmount(orderTemplate.getAmount());
         merchantOrderRegisterRequest.setDescription(orderTemplate.getDescription());
-        merchantOrderRegisterRequest.setDeviceId(bindingPaymentByOrderTemplateRequest.getDeviceId());
-        merchantOrderRegisterRequest.setSessionId(bindingPaymentByOrderTemplateRequest.getSessionId());
+        merchantOrderRegisterRequest.setDeviceId(bindingPaymentByOrderTemplateParams.getDeviceId());
+        merchantOrderRegisterRequest.setSessionId(bindingPaymentByOrderTemplateParams.getSessionId());
 
         MerchantOrderRegisterResponse merchantOrderRegisterResponse = orderService.register(terminal, merchantOrderRegisterRequest, null);
         BindingPaymentParams bindingPaymentParams = new BindingPaymentParams();
-        //todo: fill param
-        paymentByBinding(client, orderTemplate, bindingPaymentParams);
+        bindingPaymentParams.setConfirmValue(null);
+        bindingPaymentParams.setBindingId(bindingPaymentByOrderTemplateParams.getBindingId());
+        bindingPaymentParams.setOrderId(merchantOrderRegisterResponse.getOrderId());
+        bindingPaymentParams.setReturnUrl(bindingPaymentByOrderTemplateParams.getReturnUrl());
 
-        return null;
+        PaymentResponse paymentResponse = orderService.payment(client, bindingPaymentParams);
+
+        BindingPaymentByOrderTemplateResult bindingPaymentByOrderTemplateResult = new BindingPaymentByOrderTemplateResult();
+        bindingPaymentByOrderTemplateResult.setOrderId(paymentResponse.getOrderId());
+
+        return bindingPaymentByOrderTemplateResult;
     }
 
-    public void paymentByBinding(Client client, OrderTemplate orderTemplate, BindingPaymentParams bindingPaymentParams) throws Exception {
 
-
-        orderService.payment(client, bindingPaymentParams);
-    }
 
 }

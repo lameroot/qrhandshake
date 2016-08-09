@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.ApiAuth;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.Terminal;
+import ru.qrhandshake.qrpos.domain.User;
 import ru.qrhandshake.qrpos.exception.AuthException;
 
 import javax.annotation.Resource;

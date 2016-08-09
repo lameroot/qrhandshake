@@ -15,6 +15,7 @@ import ru.qrhandshake.qrpos.util.Util;
 
 import javax.annotation.Resource;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Created by lameroot on 24.05.16.
@@ -49,6 +50,14 @@ public class TerminalService {
         return null;
     }
 
+    public Terminal findById(Long id) {
+        return terminalRepository.findOne(id);
+    }
+
+    public Set<Terminal> findByMerchant(Merchant merchant) {
+        return terminalRepository.findByMerchant(merchant);
+    }
+
     @Transactional
     public TerminalRegisterResponse create(Merchant merchant) {
         return create(merchant,null);
@@ -70,9 +79,6 @@ public class TerminalService {
         terminal.setAuthName(terminalAuth.getAuthName());
         terminal.setAuthPassword(securityService.encodePassword(terminalAuth.getAuthPassword()));
         terminal.setEnabled(true);
-        if ( terminalRegisterRequest.isDefaultTerminal() && null == terminalRepository.findDefaultTerminalForMerchant(merchant) ) {
-            terminal.setDefaultTerminal(true);
-        }
         terminalRepository.save(terminal);
 
         TerminalRegisterResponse terminalRegisterResponse = new TerminalRegisterResponse();

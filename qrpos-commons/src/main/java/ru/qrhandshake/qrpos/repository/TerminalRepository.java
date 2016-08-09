@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 import ru.qrhandshake.qrpos.domain.Merchant;
 import ru.qrhandshake.qrpos.domain.Terminal;
 
+import java.util.Set;
+
 /**
  * Created by lameroot on 24.05.16.
  */
@@ -14,6 +16,5 @@ import ru.qrhandshake.qrpos.domain.Terminal;
 public interface TerminalRepository extends CrudRepository<Terminal, Long>{
 
     public Terminal findByAuthName(String authName);
-    @Query("from Terminal t where t.defaultTerminal is not null and t.merchant = :merchant")
-    public Terminal findDefaultTerminalForMerchant(@Param("merchant") Merchant merchant);
+    public Set<Terminal> findByMerchant(Merchant merchant);
 }
