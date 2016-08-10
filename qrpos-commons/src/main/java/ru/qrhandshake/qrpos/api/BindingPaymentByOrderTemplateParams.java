@@ -13,6 +13,7 @@ public class BindingPaymentByOrderTemplateParams {
     private String sessionId;
     private String deviceId;
     private String returnUrl;
+    private String userAgent;
 
     public String getBindingId() {
         return bindingId;
@@ -52,5 +53,13 @@ public class BindingPaymentByOrderTemplateParams {
 
     public void setReturnUrl(String returnUrl) {
         this.returnUrl = returnUrl;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
     }
 }

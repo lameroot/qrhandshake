@@ -1,11 +1,15 @@
 package ru.qrhandshake.qrpos.api;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * Created by lameroot on 18.05.16.
  */
 public class MerchantOrderRegisterResponse extends ApiResponse {
 
+    @JsonIgnore
+    private Long id;
     private String orderId;
     private String paymentUrl;
 
@@ -25,4 +29,11 @@ public class MerchantOrderRegisterResponse extends ApiResponse {
         this.paymentUrl = paymentUrl;
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 }

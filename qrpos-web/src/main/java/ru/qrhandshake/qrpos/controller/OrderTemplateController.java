@@ -4,16 +4,15 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import ru.qrhandshake.qrpos.api.*;
-import ru.qrhandshake.qrpos.domain.Client;
-import ru.qrhandshake.qrpos.domain.OrderTemplate;
-import ru.qrhandshake.qrpos.domain.Terminal;
-import ru.qrhandshake.qrpos.domain.User;
+import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.service.AuthService;
+import ru.qrhandshake.qrpos.service.OrderTemplateHistoryService;
 import ru.qrhandshake.qrpos.service.OrderTemplateService;
 import ru.qrhandshake.qrpos.service.TerminalService;
 
@@ -21,6 +20,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.security.Principal;
+import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -34,6 +35,8 @@ public class OrderTemplateController {
     private AuthService authService;
     @Resource
     private OrderTemplateService orderTemplateService;
+    @Resource
+    private OrderTemplateHistoryService orderTemplateHistoryService;
     @Resource
     private ConversionService conversionService;
     @Resource
@@ -62,9 +65,11 @@ public class OrderTemplateController {
     @ResponseBody
     public BindingPaymentByOrderTemplateResponse paymentOrderByTemplate(Principal principal,
                                                                         @Valid BindingPaymentByOrderTemplateRequest bindingPaymentByOrderTemplateRequest,
-                                                                        HttpServletRequest request) throws AuthException {
+                                                                        HttpServletRequest request,
+                                                                        @RequestHeader("User-Agent") String userAgent) throws AuthException {
         Client client = authService.clientAuth(principal, bindingPaymentByOrderTemplateRequest, true);
         BindingPaymentByOrderTemplateParams bindingPaymentByOrderTemplateParams = conversionService.convert(bindingPaymentByOrderTemplateRequest,BindingPaymentByOrderTemplateParams.class);
+        bindingPaymentByOrderTemplateParams.setUserAgent(userAgent);
 
         //todo: move to validator
         if ( null == bindingPaymentByOrderTemplateParams.getOrderTemplate() ) throw new AuthException("Invalid orderTemplateId");
@@ -72,6 +77,19 @@ public class OrderTemplateController {
 
         BindingPaymentByOrderTemplateResult bindingPaymentByOrderTemplateResult = orderTemplateService.paymentOrderByTemplate(client, bindingPaymentByOrderTemplateParams);
         return conversionService.convert(bindingPaymentByOrderTemplateResult, BindingPaymentByOrderTemplateResponse.class);
+    }
+
+    @RequestMapping(value = "/get_orders")
+    @ResponseBody
+    public OrderTemplateHistoryResponse getOrders(@Valid OrderTemplateHistoryRequest orderTemplateHistoryRequest) {
+        //todo  добавить авторизацию по терминалу
+        OrderTemplateHistoryResponse orderTemplateHistoryResponse = new OrderTemplateHistoryResponse();
+        //todo переделать на стримы
+        List<OrderTemplateHistory> orderTemplateHistories = orderTemplateHistoryService.getLastSuccessFromDate(orderTemplateHistoryRequest.getFrom(), orderTemplateHistoryRequest.getOrderTemplateId());
+        for (OrderTemplateHistory orderTemplateHistory : orderTemplateHistories) {
+            orderTemplateHistoryResponse.getOrderNumbers().add(orderTemplateHistory.getHumanOrderNumber());
+        }
+        return orderTemplateHistoryResponse;
     }
 
     private String getReturnUrl(HttpServletRequest request, String orderTemplateId){

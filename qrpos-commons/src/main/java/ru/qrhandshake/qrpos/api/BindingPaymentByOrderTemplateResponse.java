@@ -3,7 +3,7 @@ package ru.qrhandshake.qrpos.api;
 /**
  * Created by lameroot on 09.08.16.
  */
-public class BindingPaymentByOrderTemplateResponse {
+public class BindingPaymentByOrderTemplateResponse extends ApiResponse {
 
     private String orderId;
 

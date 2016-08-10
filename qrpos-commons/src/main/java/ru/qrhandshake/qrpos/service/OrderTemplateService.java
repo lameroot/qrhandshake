@@ -3,16 +3,15 @@ package ru.qrhandshake.qrpos.service;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.*;
-import ru.qrhandshake.qrpos.domain.Client;
-import ru.qrhandshake.qrpos.domain.Merchant;
-import ru.qrhandshake.qrpos.domain.OrderTemplate;
-import ru.qrhandshake.qrpos.domain.Terminal;
+import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.repository.MerchantRepository;
 import ru.qrhandshake.qrpos.repository.OrderTemplateRepository;
 import ru.qrhandshake.qrpos.repository.TerminalRepository;
 
 import javax.annotation.Resource;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -31,6 +30,8 @@ public class OrderTemplateService {
     private TerminalRepository terminalRepository;
     @Resource
     private ConversionService conversionService;
+    @Resource
+    private OrderTemplateHistoryService orderTemplateHistoryService;
 
     public OrderTemplateResult create(OrderTemplateParams orderTemplateParams) {
         Terminal terminal = orderTemplateParams.getTerminal();
@@ -71,12 +72,25 @@ public class OrderTemplateService {
 
         PaymentResponse paymentResponse = orderService.payment(client, bindingPaymentParams);
 
+        OrderTemplateHistory orderTemplateHistory = new OrderTemplateHistory();
+        orderTemplateHistory.setOrderTemplateId(orderTemplate.getId());
+        orderTemplateHistory.setMerchantOrderId(merchantOrderRegisterResponse.getId());
+        orderTemplateHistory.setDeviceId(bindingPaymentByOrderTemplateParams.getDeviceId());
+        orderTemplateHistory.setDeviceModel(bindingPaymentByOrderTemplateParams.getUserAgent());
+        orderTemplateHistory.setClientId(client.getId());
+        orderTemplateHistory.setDate(new Date());
+        //todo: генерация номера заказа должна задавать в шаблоне, то есть н-р номер маршрута + номер заказа, отдельная стратегия
+        orderTemplateHistory.setHumanOrderNumber(orderTemplateHistoryService.generateHumanOrderNumber(merchantOrderRegisterResponse.getId()));
+        orderTemplateHistory.setStatus(paymentResponse.getStatus() == ResponseStatus.SUCCESS ? true : false);
+        orderTemplateHistoryService.save(orderTemplateHistory);
+
         BindingPaymentByOrderTemplateResult bindingPaymentByOrderTemplateResult = new BindingPaymentByOrderTemplateResult();
         bindingPaymentByOrderTemplateResult.setOrderId(paymentResponse.getOrderId());
+        bindingPaymentByOrderTemplateResult.setHumanOrderNumber(orderTemplateHistory.getHumanOrderNumber());
+        bindingPaymentByOrderTemplateResult.setStatus(orderTemplateHistory.getStatus());
 
         return bindingPaymentByOrderTemplateResult;
     }
-
 
 
 }

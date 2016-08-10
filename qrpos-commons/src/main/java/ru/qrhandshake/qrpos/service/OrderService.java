@@ -60,6 +60,7 @@ public class OrderService {
         merchantOrderRegisterResponse.setMessage("Merchant order success created");
         merchantOrderRegisterResponse.setOrderId(orderId);
         merchantOrderRegisterResponse.setPaymentUrl(paymentUrl);
+        merchantOrderRegisterResponse.setId(merchantOrder.getId());
 
         return merchantOrderRegisterResponse;
     }

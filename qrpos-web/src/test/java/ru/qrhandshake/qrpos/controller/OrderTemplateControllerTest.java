@@ -217,6 +217,8 @@ public class OrderTemplateControllerTest extends ItTest {
                 assertNotNull(merchantOrderByOrderTemplate.getClient());
                 assertEquals(clientRegisterResponse.getAuth().getAuthName(), merchantOrderByOrderTemplate.getClient().getUsername());
                 assertEquals(expectedPaymentType, merchantOrderByOrderTemplate.getPaymentType());
+
+                //todo: дописать тест, получать список заказов оплаченных
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

@@ -10,6 +10,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import ru.qrhandshake.qrpos.config.ApplicationConfig;
+import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
+import ru.qrhandshake.qrpos.repository.MerchantRepository;
+import ru.qrhandshake.qrpos.repository.OrderTemplateRepository;
 import ru.qrhandshake.qrpos.repository.TerminalRepository;
 
 import javax.annotation.Resource;
@@ -28,6 +31,12 @@ public class GeneralTest extends TestCase {
     protected TerminalRepository terminalRepository;
     @Resource
     protected ConversionService conversionService;
+    @Resource
+    protected MerchantRepository merchantRepository;
+    @Resource
+    protected OrderTemplateRepository orderTemplateRepository;
+    @Resource
+    protected MerchantOrderRepository merchantOrderRepository;
 
     @Test
     public void testExists() {
