@@ -18,6 +18,8 @@ import ru.qrhandshake.qrpos.dto.ReturnUrlObject;
 import ru.qrhandshake.qrpos.util.Util;
 import ru.rbs.mpi.test.acs.AcsUtils;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -171,6 +173,8 @@ public class OrderTemplateControllerTest extends ItTest {
         Terminal terminal = terminalRepository.findByAuthName(terminalRegisterResponse.getAuth().getAuthName());
         assertNotNull(terminal);
 
+        Authentication authenticationTerminal = new TestingAuthenticationToken(terminal, null);
+
         Authentication authenticationUser = new TestingAuthenticationToken(user, null);
 
         MvcResult orderTemplateMvcResult = mockMvc.perform(post("/order_template/create")
@@ -193,7 +197,8 @@ public class OrderTemplateControllerTest extends ItTest {
         assertNotNull(orderTemplate);
         assertEquals(terminal.getId(), orderTemplate.getTerminal().getId());
 
-        IntStream.range(1,10).forEach(i -> {
+        Date start = new Date();
+        IntStream.rangeClosed(1, 10).forEach(i -> {
             try {
                 MvcResult bindingPaymentOrderTemplateMvcResult = mockMvc.perform(post("/order_template/payment")
                                 .principal(authenticationClient)
@@ -202,6 +207,8 @@ public class OrderTemplateControllerTest extends ItTest {
                                 .param("orderTemplateId", String.valueOf(orderTemplate.getId()))
                                 .param("sessionId", sessionId)
                                 .param("deviceId", deviceId)
+                                .param("deviceModel", "Samsung V3")
+                                .param("deviceMobileNumber", "+79267777777")
 
                 ).andDo(print()).andReturn();
                 assertNotNull(bindingPaymentOrderTemplateMvcResult);
@@ -223,6 +230,75 @@ public class OrderTemplateControllerTest extends ItTest {
                 throw new RuntimeException(e);
             }
         });
+
+        MvcResult getOrdersMvcResult = mockMvc.perform(get("/order_template/get_orders")
+                        .principal(authenticationTerminal)
+                        .param("authName", terminalRegisterResponse.getAuth().getAuthName())
+                        .param("authPassword", terminalRegisterResponse.getAuth().getAuthPassword())
+                        .param("from", new SimpleDateFormat("yyyyMMddHHmmss").format(start))
+                        .param("orderTemplateId", String.valueOf(orderTemplate.getId()))
+        ).andDo(print()).andReturn();
+        assertNotNull(getOrdersMvcResult);
+
+        OrderTemplateHistoryResponse orderTemplateHistoryResponse = objectMapper.readValue(getOrdersMvcResult.getResponse().getContentAsString(),OrderTemplateHistoryResponse.class);
+        assertNotNull(orderTemplateHistoryResponse);
+        assertNotNull(orderTemplateHistoryResponse.getOrders());
+        assertEquals(10, orderTemplateHistoryResponse.getOrders().size());
+        for (Map<String, Object> map : orderTemplateHistoryResponse.getOrders()) {
+            assertNotNull(map.containsKey("humanOrderNumber"));
+        }
+
+        Thread.sleep(1000);
+        Date secondStart = new Date();
+        IntStream.rangeClosed(1, 4).forEach(idx -> {
+            try {
+                MvcResult bindingPaymentOrderTemplateMvcResult = mockMvc.perform(post("/order_template/payment")
+                                .principal(authenticationClient)
+                                .param("paymentWay", "bindingByOrderTemplate")
+                                .param("bindingId", binding.getBindingId())
+                                .param("orderTemplateId", String.valueOf(orderTemplate.getId()))
+                                .param("sessionId", sessionId)
+                                .param("deviceId", deviceId)
+                                .param("deviceModel", "Nokia")
+                                .param("deviceMobileNumber", "+79268888888")
+
+                ).andDo(print()).andReturn();
+                assertNotNull(bindingPaymentOrderTemplateMvcResult);
+                BindingPaymentByOrderTemplateResponse bindingPaymentByOrderTemplateResponse = objectMapper.readValue(bindingPaymentOrderTemplateMvcResult.getResponse().getContentAsString(), BindingPaymentByOrderTemplateResponse.class);
+                assertNotNull(bindingPaymentByOrderTemplateResponse);
+                assertNotNull(bindingPaymentByOrderTemplateResponse.getOrderId());
+
+                MerchantOrder merchantOrderByOrderTemplate = merchantOrderRepository.findByOrderId(bindingPaymentByOrderTemplateResponse.getOrderId());
+                assertNotNull(merchantOrderByOrderTemplate);
+                assertTrue(merchantOrderByOrderTemplate.getOrderStatus() == OrderStatus.PAID);
+                assertNotNull(merchantOrderByOrderTemplate.getPaymentDate());
+                assertEquals(PaymentWay.BINDING, merchantOrderByOrderTemplate.getPaymentWay());
+                assertNotNull(merchantOrderByOrderTemplate.getClient());
+                assertEquals(clientRegisterResponse.getAuth().getAuthName(), merchantOrderByOrderTemplate.getClient().getUsername());
+                assertEquals(expectedPaymentType, merchantOrderByOrderTemplate.getPaymentType());
+
+                //todo: дописать тест, получать список заказов оплаченных
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        MvcResult getOrdersMvcResult2 = mockMvc.perform(get("/order_template/get_orders")
+                        .principal(authenticationTerminal)
+                        .param("authName",terminalRegisterResponse.getAuth().getAuthName())
+                        .param("authPassword",terminalRegisterResponse.getAuth().getAuthPassword())
+                        .param("from", new SimpleDateFormat("yyyyMMddHHmmss").format(secondStart))
+                        .param("orderTemplateId", String.valueOf(orderTemplate.getId()))
+        ).andDo(print()).andReturn();
+        assertNotNull(getOrdersMvcResult);
+
+        OrderTemplateHistoryResponse orderTemplateHistoryResponse2 = objectMapper.readValue(getOrdersMvcResult2.getResponse().getContentAsString(),OrderTemplateHistoryResponse.class);
+        assertNotNull(orderTemplateHistoryResponse2);
+        assertNotNull(orderTemplateHistoryResponse2.getOrders());
+        assertEquals(4, orderTemplateHistoryResponse2.getOrders().size());
+        for (Map<String, Object> map : orderTemplateHistoryResponse2.getOrders()) {
+            assertNotNull(map.containsKey("humanOrderNumber"));
+        }
 
     }
 }

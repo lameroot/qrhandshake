@@ -7,17 +7,17 @@ import ru.qrhandshake.qrpos.domain.Terminal;
  */
 public class OrderTemplateParams {
 
-    private Terminal terminal;
+    private Long terminalId;
     private String name;
     private String description;
     private Long amount;
 
-    public Terminal getTerminal() {
-        return terminal;
+    public Long getTerminalId() {
+        return terminalId;
     }
 
-    public void setTerminal(Terminal terminal) {
-        this.terminal = terminal;
+    public void setTerminalId(Long terminalId) {
+        this.terminalId = terminalId;
     }
 
     public String getName() {

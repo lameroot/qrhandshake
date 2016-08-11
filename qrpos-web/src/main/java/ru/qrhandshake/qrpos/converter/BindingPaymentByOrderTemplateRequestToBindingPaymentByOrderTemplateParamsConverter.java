@@ -24,6 +24,8 @@ public class BindingPaymentByOrderTemplateRequestToBindingPaymentByOrderTemplate
         bindingPaymentByOrderTemplateParams.setDeviceId(bindingPaymentByOrderTemplateRequest.getDeviceId());
         bindingPaymentByOrderTemplateParams.setOrderTemplate(orderTemplateRepository.findOne(bindingPaymentByOrderTemplateRequest.getOrderTemplateId()));
         bindingPaymentByOrderTemplateParams.setSessionId(bindingPaymentByOrderTemplateRequest.getSessionId());
+        bindingPaymentByOrderTemplateParams.setDeviceModel(bindingPaymentByOrderTemplateRequest.getDeviceModel());
+        bindingPaymentByOrderTemplateParams.setDeviceMobileNumber(bindingPaymentByOrderTemplateRequest.getDeviceMobileNumber());
         return bindingPaymentByOrderTemplateParams;
     }
 }

@@ -27,6 +27,8 @@ public class OrderTemplateHistory {
     private String deviceId;
     @Column(name = "device_model")
     private String deviceModel;
+    @Column(name = "device_mobile_number")
+    private String deviceMobileNumber;
     @Column(name = "status")
     private Boolean status;
     @Column(name = "date")
@@ -106,6 +108,13 @@ public class OrderTemplateHistory {
         this.date = date;
     }
 
+    public String getDeviceMobileNumber() {
+        return deviceMobileNumber;
+    }
+
+    public void setDeviceMobileNumber(String deviceMobileNumber) {
+        this.deviceMobileNumber = deviceMobileNumber;
+    }
 
     @Override
     public String toString() {

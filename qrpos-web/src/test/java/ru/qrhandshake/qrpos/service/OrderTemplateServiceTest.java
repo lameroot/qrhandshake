@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.GeneralTest;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.domain.Terminal;
+import ru.qrhandshake.qrpos.exception.AuthException;
 
 import javax.annotation.Resource;
 import javax.persistence.criteria.Order;
@@ -26,7 +27,7 @@ public class OrderTemplateServiceTest extends GeneralTest {
 
 
     @Test
-    public void testCreate() {
+    public void testCreate() throws AuthException {
         MerchantRegisterRequest merchantRegisterRequest = new MerchantRegisterRequest();
         merchantRegisterRequest.setName(UUID.randomUUID().toString());
         MerchantRegisterResponse merchantRegisterResponse = merchantService.register(merchantRegisterRequest);

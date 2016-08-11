@@ -12,8 +12,10 @@ public class BindingPaymentByOrderTemplateParams {
     private OrderTemplate orderTemplate;
     private String sessionId;
     private String deviceId;
+    private String deviceModel;
+    private String deviceMobileNumber;
     private String returnUrl;
-    private String userAgent;
+
 
     public String getBindingId() {
         return bindingId;
@@ -55,11 +57,19 @@ public class BindingPaymentByOrderTemplateParams {
         this.returnUrl = returnUrl;
     }
 
-    public String getUserAgent() {
-        return userAgent;
+    public String getDeviceModel() {
+        return deviceModel;
     }
 
-    public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
+    public void setDeviceModel(String deviceModel) {
+        this.deviceModel = deviceModel;
+    }
+
+    public String getDeviceMobileNumber() {
+        return deviceMobileNumber;
+    }
+
+    public void setDeviceMobileNumber(String deviceMobileNumber) {
+        this.deviceMobileNumber = deviceMobileNumber;
     }
 }

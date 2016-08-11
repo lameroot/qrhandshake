@@ -1,21 +1,22 @@
 package ru.qrhandshake.qrpos.api;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by lameroot on 11.08.16.
  */
 public class OrderTemplateHistoryResponse extends ApiResponse {
 
-    //todo: добавить также дату и номер телефона (последние цифры)
-    private List<String> orderNumbers = new ArrayList<>();
+    private List<Map<String,Object>> orders = new ArrayList<>();
 
-    public List<String> getOrderNumbers() {
-        return orderNumbers;
+    public List<Map<String, Object>> getOrders() {
+        return orders;
     }
 
-    public void setOrderNumbers(List<String> orderNumbers) {
-        this.orderNumbers = orderNumbers;
+    public void setOrders(List<Map<String, Object>> orders) {
+        this.orders = orders;
     }
 }

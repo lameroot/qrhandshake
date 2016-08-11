@@ -1,14 +1,12 @@
 package ru.qrhandshake.qrpos.api;
 
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 /**
  * Created by lameroot on 11.08.16.
  */
-public class OrderTemplateHistoryRequest extends ApiAuth {
+public class OrderTemplateHistoryParams {
 
-    @NotNull
     private Long orderTemplateId;
     private Date from = new Date();
 

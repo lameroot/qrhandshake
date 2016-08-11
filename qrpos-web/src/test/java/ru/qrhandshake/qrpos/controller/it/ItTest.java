@@ -36,7 +36,7 @@ public class ItTest extends ServletConfigTest {
     @Resource
     protected UserRepository userRepository;
     @Resource
-    private ClientService clientService;
+    protected ClientService clientService;
     @Resource
     protected TerminalRepository terminalRepository;
     @Resource
@@ -103,7 +103,8 @@ public class ItTest extends ServletConfigTest {
         MvcResult mvcResult = mockMvc.perform(post("/client/register")
                 .param("authName", username)
                 .param("authPassword", password)
-                .param("authType", null != authType ? authType.name() : ""))
+                .param("authType", null != authType ? authType.name() : "")
+                )
                 .andDo(print()).andReturn();
         assertNotNull(mvcResult);
         String response = mvcResult.getResponse().getContentAsString();

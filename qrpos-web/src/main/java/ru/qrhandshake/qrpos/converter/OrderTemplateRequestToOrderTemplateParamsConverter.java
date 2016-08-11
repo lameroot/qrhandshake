@@ -15,17 +15,13 @@ import javax.annotation.Resource;
 @Component
 public class OrderTemplateRequestToOrderTemplateParamsConverter implements Converter<OrderTemplateRequest, OrderTemplateParams> {
 
-    @Resource
-    private TerminalService terminalService;
-
     @Override
     public OrderTemplateParams convert(OrderTemplateRequest orderTemplateRequest) {
-        Terminal terminal = terminalService.findById(orderTemplateRequest.getTerminalId());
         OrderTemplateParams orderTemplateParams = new OrderTemplateParams();
         orderTemplateParams.setDescription(orderTemplateRequest.getDescription());
         orderTemplateParams.setAmount(orderTemplateRequest.getAmount());
         orderTemplateParams.setName(orderTemplateRequest.getName());
-        orderTemplateParams.setTerminal(terminal);
+        orderTemplateParams.setTerminalId(orderTemplateRequest.getTerminalId());
 
         return orderTemplateParams;
     }

@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.service;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.*;
@@ -33,8 +34,10 @@ public class OrderTemplateService {
     @Resource
     private OrderTemplateHistoryService orderTemplateHistoryService;
 
-    public OrderTemplateResult create(OrderTemplateParams orderTemplateParams) {
-        Terminal terminal = orderTemplateParams.getTerminal();
+
+    public OrderTemplateResult create(OrderTemplateParams orderTemplateParams) throws AuthException {
+        Terminal terminal = terminalRepository.findOne(orderTemplateParams.getTerminalId());
+        if ( null == terminal ) throw new AuthException("Invalid terminalId: " + orderTemplateParams.getTerminalId());
         OrderTemplate orderTemplate = new OrderTemplate();
         orderTemplate.setAmount(orderTemplateParams.getAmount());
         orderTemplate.setDescription(orderTemplateParams.getDescription());
@@ -76,9 +79,10 @@ public class OrderTemplateService {
         orderTemplateHistory.setOrderTemplateId(orderTemplate.getId());
         orderTemplateHistory.setMerchantOrderId(merchantOrderRegisterResponse.getId());
         orderTemplateHistory.setDeviceId(bindingPaymentByOrderTemplateParams.getDeviceId());
-        orderTemplateHistory.setDeviceModel(bindingPaymentByOrderTemplateParams.getUserAgent());
+        orderTemplateHistory.setDeviceModel(bindingPaymentByOrderTemplateParams.getDeviceModel());
         orderTemplateHistory.setClientId(client.getId());
         orderTemplateHistory.setDate(new Date());
+        orderTemplateHistory.setDeviceMobileNumber(null != client && StringUtils.isNotBlank(client.getPhone()) ? client.getPhone() : bindingPaymentByOrderTemplateParams.getDeviceMobileNumber());
         //todo: генерация номера заказа должна задавать в шаблоне, то есть н-р номер маршрута + номер заказа, отдельная стратегия
         orderTemplateHistory.setHumanOrderNumber(orderTemplateHistoryService.generateHumanOrderNumber(merchantOrderRegisterResponse.getId()));
         orderTemplateHistory.setStatus(paymentResponse.getStatus() == ResponseStatus.SUCCESS ? true : false);

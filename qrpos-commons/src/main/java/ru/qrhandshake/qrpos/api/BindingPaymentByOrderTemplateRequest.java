@@ -14,6 +14,8 @@ public class BindingPaymentByOrderTemplateRequest extends ApiAuth {
     @NotNull
     private String sessionId;
     private String deviceId;
+    private String deviceModel;
+    private String deviceMobileNumber;
 
     public String getBindingId() {
         return bindingId;
@@ -45,5 +47,21 @@ public class BindingPaymentByOrderTemplateRequest extends ApiAuth {
 
     public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
+    }
+
+    public String getDeviceModel() {
+        return deviceModel;
+    }
+
+    public void setDeviceModel(String deviceModel) {
+        this.deviceModel = deviceModel;
+    }
+
+    public String getDeviceMobileNumber() {
+        return deviceMobileNumber;
+    }
+
+    public void setDeviceMobileNumber(String deviceMobileNumber) {
+        this.deviceMobileNumber = deviceMobileNumber;
     }
 }
