@@ -49,6 +49,12 @@ public class RbsIntegrationConfig {
                 IntegrationSupport.RBS_SBRF);
     }
 
+//    @Bean
+//    public IntegrationFacade rbsSbrfOwnIntegrationFacade() {
+//        return new RbsIntegrationFacade(new NamePasswordToken(environment.getRequiredProperty("rbs.sbrfOwn.login"), environment.getRequiredProperty("rbs.sbrfOwn.password")),
+//                environment.getRequiredProperty("rbs.sbrfOwn.wsdlLocation"),IntegrationSupport.RBS_SBRF_OWN);
+//    }
+
     @Bean(name = "loggingInInterceptor")
     public LoggingInInterceptor loggingInInterceptor() {
         return new LoggingInInterceptor();

@@ -18,4 +18,8 @@ public interface IntegrationFacade {
     IntegrationReverseResponse reverse(IntegrationReverseRequest integrationReverseRequest) throws IntegrationException;
     IntegrationP2PTransferResponse p2pTransfer(IntegrationP2PTransferRequest integrationP2PTransferRequest) throws IntegrationException;
     boolean isApplicable();
+
+    public static class Builder {
+
+    }
 }

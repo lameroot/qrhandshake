@@ -104,6 +104,7 @@ public class OrderService {
         return merchantOrderStatusResponse;
     }
 
+    //todo: заменить paymentResponse to PaymentResult и делать конвертацию в контроллере
     public PaymentResponse payment(Client client, PaymentParams paymentParams) throws AuthException {
         PaymentResponse paymentResponse = new PaymentResponse();
 
