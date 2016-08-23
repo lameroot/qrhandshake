@@ -11,6 +11,7 @@ import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
+import ru.qrhandshake.qrpos.repository.OrderTemplateRepository;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -29,6 +30,8 @@ public class OrderService {
     @Resource
     private MerchantOrderRepository merchantOrderRepository;
     @Resource
+    private OrderTemplateRepository orderTemplateRepository;
+    @Resource
     private IntegrationService integrationService;
     @Resource
     private IntegrationSupportService integrationSupportService;
@@ -36,6 +39,41 @@ public class OrderService {
     private BindingService bindingService;
     @Resource
     private JsonService jsonService;
+
+    public MerchantOrderRegisterResponse registerByTemplate(MerchantOrderRegisterByTemplateRequest request, String paymentPath) {
+
+        OrderTemplate orderTemplate = orderTemplateRepository.findOne(request.getTemplateId());
+        if (orderTemplate == null) {
+            throw new RuntimeException("order template not found");
+        }
+
+        Terminal terminal = orderTemplate.getTerminal();
+        Merchant merchant = terminal.getMerchant();
+
+        MerchantOrder merchantOrder = new MerchantOrder();
+        merchantOrder.setMerchant(merchant);
+        merchantOrder.setTerminal(terminal);
+        merchantOrder.setDeviceId(null);
+        merchantOrder.setAmount(orderTemplate.getAmount());
+        merchantOrder.setDescription(orderTemplate.getDescription());
+        merchantOrder.setOrderStatus(OrderStatus.REGISTERED);
+        merchantOrder.setSessionId(null);
+        merchantOrderRepository.save(merchantOrder);
+
+        String orderId = generateUniqueIdOrder(merchantOrder);
+        String paymentUrl = buildPaymentUrl(paymentPath, merchantOrder, orderId);
+        merchantOrder.setOrderId(orderId);
+        merchantOrderRepository.save(merchantOrder);
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = new MerchantOrderRegisterResponse();
+        merchantOrderRegisterResponse.setStatus(ResponseStatus.SUCCESS);
+        merchantOrderRegisterResponse.setMessage("Merchant order success created");
+        merchantOrderRegisterResponse.setOrderId(orderId);
+        merchantOrderRegisterResponse.setPaymentUrl(paymentUrl);
+        merchantOrderRegisterResponse.setId(merchantOrder.getId());
+
+        return merchantOrderRegisterResponse;
+    }
 
     public MerchantOrderRegisterResponse register(Terminal terminal, MerchantOrderRegisterRequest merchantOrderRegisterRequest, String paymentPath) {
         Merchant merchant = terminal.getMerchant();

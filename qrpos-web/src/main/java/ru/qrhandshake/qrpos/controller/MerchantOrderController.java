@@ -33,6 +33,7 @@ public class MerchantOrderController {
 
     public final static String MERCHANT_ORDER_PATH = "/order";
     public final static String REGISTER_PATH = "/register";
+    public final static String REGISTER_BY_TEMPLATE_PATH = "/registerByTemplate";
     public final static String ORDER_STATUS_PATH = "/status";
     public final static String SESSION_STATUS_PATH = "/sessionStatus";
     public final static String PAYMENT_PATH = "/payment";
@@ -50,6 +51,16 @@ public class MerchantOrderController {
     @InitBinder
     public void init(WebDataBinder webDataBinder) {
         webDataBinder.registerCustomEditor(PaymentWay.class, new PaymentWayConverter());
+    }
+
+    @RequestMapping(value = REGISTER_BY_TEMPLATE_PATH)
+    @ResponseBody
+    public MerchantOrderRegisterResponse registerByTemplate(Principal principal, MerchantOrderRegisterByTemplateRequest request)
+            throws AuthException {
+        authService.clientAuth(principal, request, true);
+
+        String paymentPath = MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.PAYMENT_PATH;
+        return orderService.registerByTemplate(request, paymentPath);
     }
 
     @RequestMapping(value = REGISTER_PATH)

@@ -64,8 +64,18 @@ public class MerchantOrderControllerTest extends ServletConfigTest {
                 .param("amount", "1000")
                 .param("sessionId", UUID.randomUUID().toString())
                 .param("deviceId","11111-2222-333")
-                )
-            .andDo(print());
+        )
+                .andDo(print());
+    }
+
+    @Test
+    public void testRegisterByTemplate() throws Exception {
+        mockMvc.perform(get("/order/registerByTemplate")
+                .param("authName","user")
+                .param("authPassword","password")
+                .param("templateId", "37")
+        )
+                .andDo(print());
     }
 
     @Test
