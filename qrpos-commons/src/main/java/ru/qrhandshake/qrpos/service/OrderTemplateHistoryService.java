@@ -6,6 +6,7 @@ import ru.qrhandshake.qrpos.api.OrderTemplateHistoryParams;
 import ru.qrhandshake.qrpos.api.OrderTemplateHistoryResult;
 import ru.qrhandshake.qrpos.config.DatabaseConfig;
 import ru.qrhandshake.qrpos.domain.Client;
+import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.domain.OrderTemplate;
 import ru.qrhandshake.qrpos.domain.OrderTemplateHistory;
 import ru.qrhandshake.qrpos.repository.ClientRepository;
@@ -31,6 +32,10 @@ public class OrderTemplateHistoryService {
 
     public void save(OrderTemplateHistory orderTemplateHistory) {
         orderTemplateHistoryRepository.save(orderTemplateHistory);
+    }
+
+    public OrderTemplateHistory findByOrderTemplateIdAndMerchantOrderId(Long merchantOrderId) {
+        return orderTemplateHistoryRepository.findByMerchantOrderId(merchantOrderId);
     }
 
     public OrderTemplateHistoryResult getLastSuccessFromDate(OrderTemplateHistoryParams orderTemplateHistoryParams) {

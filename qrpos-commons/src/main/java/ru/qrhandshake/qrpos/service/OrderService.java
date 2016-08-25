@@ -39,6 +39,8 @@ public class OrderService {
     private BindingService bindingService;
     @Resource
     private JsonService jsonService;
+    @Resource
+    private OrderTemplateHistoryService orderTemplateHistoryService;
 
     public MerchantOrderRegisterResponse registerByTemplate(MerchantOrderRegisterByTemplateRequest request, String paymentPath) {
 
@@ -64,6 +66,14 @@ public class OrderService {
         String paymentUrl = buildPaymentUrl(paymentPath, merchantOrder, orderId);
         merchantOrder.setOrderId(orderId);
         merchantOrderRepository.save(merchantOrder);
+
+        OrderTemplateHistory orderTemplateHistory = new OrderTemplateHistory();
+        orderTemplateHistory.setOrderTemplateId(orderTemplate.getId());
+        orderTemplateHistory.setMerchantOrderId(merchantOrder.getId());
+        orderTemplateHistory.setDate(new Date());
+        orderTemplateHistory.setHumanOrderNumber(orderTemplateHistoryService.generateHumanOrderNumber(merchantOrder.getId()));
+        orderTemplateHistory.setStatus(false);
+        orderTemplateHistoryService.save(orderTemplateHistory);
 
         MerchantOrderRegisterResponse merchantOrderRegisterResponse = new MerchantOrderRegisterResponse();
         merchantOrderRegisterResponse.setStatus(ResponseStatus.SUCCESS);
@@ -170,6 +180,14 @@ public class OrderService {
             logger.warn("Unknown type of payment request: {}", paymentParams);
             paymentResponse.setStatus(ResponseStatus.FAIL);
             paymentResponse.setMessage("Unknown type of payment request: " +  paymentParams);
+        }
+
+        if (ResponseStatus.SUCCESS == paymentResponse.getStatus()) {
+            OrderTemplateHistory orderTemplateHistory = orderTemplateHistoryService.findByOrderTemplateIdAndMerchantOrderId(merchantOrder.getId());
+            if (orderTemplateHistory != null) {
+                orderTemplateHistory.setStatus(true);
+                orderTemplateHistoryService.save(orderTemplateHistory);
+            }
         }
         return paymentResponse;
     }
