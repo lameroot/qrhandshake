@@ -60,17 +60,17 @@ public class OrderTemplateHistoryService {
         Page<OrderTemplateHistory> orderTemplateHistories = null;
         switch (direction) {
             case ASC: {
+                Assert.notNull(orderTemplateHistoryParams.getId(),"Id must not be null for this request");
+                orderTemplateHistories = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdGreaterThan(orderTemplateHistoryParams.getOrderTemplateId(), orderTemplateHistoryParams.isStatus(), orderTemplateHistoryParams.getId(), pageable);
+                break;
+            }
+            case DESC: {
                 if ( null != orderTemplateHistoryParams.getId() ) {
-                    orderTemplateHistories = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdGreaterThan(orderTemplateHistoryParams.getOrderTemplateId(), orderTemplateHistoryParams.isStatus(), orderTemplateHistoryParams.getId(), pageable);
+                    orderTemplateHistories = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdLessThan(orderTemplateHistoryParams.getOrderTemplateId(),orderTemplateHistoryParams.isStatus(), orderTemplateHistoryParams.getId(), pageable);
                 }
                 else {
                     orderTemplateHistories = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatus(orderTemplateHistoryParams.getOrderTemplateId(), orderTemplateHistoryParams.isStatus(), pageable);
                 }
-                break;
-            }
-            case DESC: {
-                Assert.notNull(orderTemplateHistoryParams.getId(),"Id must not be null for this request");
-                orderTemplateHistories = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdLessThan(orderTemplateHistoryParams.getOrderTemplateId(),orderTemplateHistoryParams.isStatus(), orderTemplateHistoryParams.getId(), pageable);
                 break;
             }
         }
