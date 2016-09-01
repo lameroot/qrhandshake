@@ -1,17 +1,19 @@
 package ru.qrhandshake.qrpos.service;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.GeneralTest;
 import ru.qrhandshake.qrpos.api.*;
-import ru.qrhandshake.qrpos.domain.Terminal;
+import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 
 import javax.annotation.Resource;
 import javax.persistence.criteria.Order;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by lameroot on 08.08.16.
@@ -50,4 +52,6 @@ public class OrderTemplateServiceTest extends GeneralTest {
         assertNotNull(orderTemplateResponse.getId());
         assertEquals(ResponseStatus.SUCCESS,orderTemplateResponse.getStatus());
     }
+
+
 }

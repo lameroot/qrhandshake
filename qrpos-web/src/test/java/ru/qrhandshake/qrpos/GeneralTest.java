@@ -11,6 +11,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import ru.qrhandshake.qrpos.config.ApplicationConfig;
 import ru.qrhandshake.qrpos.repository.*;
+import ru.qrhandshake.qrpos.service.OrderTemplateHistoryService;
 
 import javax.annotation.Resource;
 
@@ -36,6 +37,8 @@ public class GeneralTest extends TestCase {
     protected MerchantOrderRepository merchantOrderRepository;
     @Resource
     protected OrderTemplateHistoryRepository orderTemplateHistoryRepository;
+    @Resource
+    protected OrderTemplateHistoryService orderTemplateHistoryService;
 
     @Test
     public void testExists() {

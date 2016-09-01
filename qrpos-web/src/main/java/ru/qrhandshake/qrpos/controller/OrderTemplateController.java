@@ -5,6 +5,7 @@ import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.support.FormattingConversionService;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.WebDataBinder;
@@ -31,7 +32,7 @@ import java.util.Set;
  * Created by lameroot on 08.08.16.
  */
 @Controller
-@RequestMapping(value = "/order_template")
+@RequestMapping(value = "/order_template", produces = {MediaType.APPLICATION_JSON_VALUE})
 public class OrderTemplateController {
 
     @Resource
@@ -79,33 +80,14 @@ public class OrderTemplateController {
 
     @RequestMapping(value = "/get_orders")
     @ResponseBody
-    public OrderTemplateHistoryResponse getOrders(@Valid OrderTemplateHistoryRequest orderTemplateHistoryRequest) throws AuthException {
+    public OrderTemplateHistoryResponse getOrders(@Valid OrderTemplateHistoryRequest orderTemplateHistoryRequest, Pageable pageable) throws AuthException {
         authService.terminalAuth(null, orderTemplateHistoryRequest);//todo авторизацию тут и везде вынесте из методов в обработчики на спринге
 
         OrderTemplateHistoryParams orderTemplateHistoryParams = conversionService.convert(orderTemplateHistoryRequest,OrderTemplateHistoryParams.class);
-        OrderTemplateHistoryResult orderTemplateHistoryResult = orderTemplateHistoryService.getLastSuccessFromDate(orderTemplateHistoryParams);
+        OrderTemplateHistoryResult orderTemplateHistoryResult = orderTemplateHistoryService.getOrders(orderTemplateHistoryParams, pageable);
         return conversionService.convert(orderTemplateHistoryResult, OrderTemplateHistoryResponse.class);
     }
 
-    @RequestMapping(value = "/get_orders_from")
-    @ResponseBody
-    public OrderTemplateHistoryResponse getOrdersFrom(@Valid OrderTemplateHistoryRequest orderTemplateHistoryRequest, Pageable pageable) throws AuthException {
-        authService.terminalAuth(null, orderTemplateHistoryRequest);//todo авторизацию тут и везде вынесте из методов в обработчики на спринге
-
-        OrderTemplateHistoryParams orderTemplateHistoryParams = conversionService.convert(orderTemplateHistoryRequest,OrderTemplateHistoryParams.class);
-        OrderTemplateHistoryResult orderTemplateHistoryResult = orderTemplateHistoryService.getFromId(orderTemplateHistoryParams, pageable);
-        return conversionService.convert(orderTemplateHistoryResult, OrderTemplateHistoryResponse.class);
-    }
-
-    @RequestMapping(value = "/get_orders_until")
-    @ResponseBody
-    public OrderTemplateHistoryResponse getOrdersUntil(@Valid OrderTemplateHistoryRequest orderTemplateHistoryRequest, Pageable pageable) throws AuthException {
-        authService.terminalAuth(null, orderTemplateHistoryRequest);//todo авторизацию тут и везде вынесте из методов в обработчики на спринге
-
-        OrderTemplateHistoryParams orderTemplateHistoryParams = conversionService.convert(orderTemplateHistoryRequest,OrderTemplateHistoryParams.class);
-        OrderTemplateHistoryResult orderTemplateHistoryResult = orderTemplateHistoryService.getUntilId(orderTemplateHistoryParams, pageable);
-        return conversionService.convert(orderTemplateHistoryResult, OrderTemplateHistoryResponse.class);
-    }
 
     private String getReturnUrl(HttpServletRequest request, String orderTemplateId){
         return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()

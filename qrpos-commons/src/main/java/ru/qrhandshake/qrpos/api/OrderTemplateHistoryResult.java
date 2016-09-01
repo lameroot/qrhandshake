@@ -23,6 +23,7 @@ public class OrderTemplateHistoryResult {
         String deviceModel;
         String deviceMobileNumberMasked;
         Date date;
+        Long id;
 
         public OrderTemplateHistoryData setHumanOrderNumber(String humanOrderNumber) {
             this.humanOrderNumber = humanOrderNumber;
@@ -45,6 +46,12 @@ public class OrderTemplateHistoryResult {
         public OrderTemplateHistoryData setDate(Date date) {
             this.date = date;
             asMap.put("date",date);
+            return this;
+        }
+
+        public OrderTemplateHistoryData setId(Long id) {
+            this.id = id;
+            asMap.put("id",id);
             return this;
         }
 

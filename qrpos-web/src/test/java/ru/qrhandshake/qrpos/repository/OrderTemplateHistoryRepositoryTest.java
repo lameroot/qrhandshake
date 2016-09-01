@@ -81,11 +81,11 @@ public class OrderTemplateHistoryRepositoryTest extends GeneralTest {
         List<Long> successIds = success.stream().map(s -> s.getId()).collect(Collectors.toList());
         assertEquals(count / 2, successIds.size());
 
-        Page<OrderTemplateHistory> orderTemplateHistoryPageLessThan = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdLessThanEqual(orderTemplate.getId(), true, successIds.get(successIds.size() - successIds.size() + 1), new PageRequest(0, 10));
+        Page<OrderTemplateHistory> orderTemplateHistoryPageLessThan = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdLessThan(orderTemplate.getId(), true, successIds.get(successIds.size() - successIds.size() + 1), new PageRequest(0, 10));
         assertNotNull(orderTemplateHistoryPageLessThan);
         assertEquals(successIds.get(1),orderTemplateHistoryPageLessThan.getContent().get(1).getId());
 
-        Page<OrderTemplateHistory> orderTemplateHistoryPageGreaterThan = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdGreaterThanEqual(orderTemplate.getId(), true, successIds.get(successIds.size() - successIds.size() + 1), new PageRequest(0,10));
+        Page<OrderTemplateHistory> orderTemplateHistoryPageGreaterThan = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdGreaterThan(orderTemplate.getId(), true, successIds.get(successIds.size() - successIds.size() + 1), new PageRequest(0,10));
         assertNotNull(orderTemplateHistoryPageGreaterThan);
         assertEquals(successIds.get(2), orderTemplateHistoryPageGreaterThan.getContent().get(1).getId());
     }

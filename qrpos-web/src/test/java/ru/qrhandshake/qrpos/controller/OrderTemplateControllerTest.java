@@ -307,17 +307,11 @@ public class OrderTemplateControllerTest extends ItTest {
 
     @Test
     public void testGetOrdersFrom() throws Exception {
-        Merchant merchant = new Merchant();
-        merchant.setName(UUID.randomUUID().toString());
-        merchant.setCreatedDate(new Date());
-        merchantRepository.save(merchant);
+        MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
+        TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
 
-        Terminal terminal = new Terminal();
-        terminal.setEnabled(true);
-        terminal.setMerchant(merchant);
-        terminal.setAuthName(UUID.randomUUID().toString());
-        terminal.setAuthPassword("password");
-        terminalRepository.save(terminal);
+        Terminal terminal = terminalRepository.findByAuthName(terminalRegisterResponse.getAuth().getAuthName());
+        assertNotNull(terminal);
 
         OrderTemplate orderTemplate = new OrderTemplate();
         orderTemplate.setTerminal(terminal);
@@ -363,12 +357,60 @@ public class OrderTemplateControllerTest extends ItTest {
         List<Long> successIds = success.stream().map(s -> s.getId()).collect(Collectors.toList());
         assertEquals(count / 2, successIds.size());
 
-        mockMvc.perform(get("/order_template/get_orders_from")
-                .param("page","0")
-                .param("size","10")
-                .param("orderTemplateId",String.valueOf(orderTemplate.getId()))
+        //get last desc
+        MvcResult mvcResultDesc = mockMvc.perform(get("/order_template/get_orders")
+                        .param("authName",terminalRegisterResponse.getAuth().getAuthName())
+                        .param("authPassword",terminalRegisterResponse.getAuth().getAuthPassword())
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("orderTemplateId", String.valueOf(orderTemplate.getId()))
+                        .param("id", String.valueOf(successIds.get(2)))
+                        .param("sort", "id,desc")
+        ).andDo(print()).andReturn();
 
-        );
+        OrderTemplateHistoryResult orderTemplateHistoryResultDesc = objectMapper.readValue(mvcResultDesc.getResponse().getContentAsString(), OrderTemplateHistoryResult.class);
+        assertNotNull(orderTemplateHistoryResultDesc);
+
+        for (OrderTemplateHistoryResult.OrderTemplateHistoryData orderTemplateHistoryData : orderTemplateHistoryResultDesc.getOrders()) {
+            System.out.println(orderTemplateHistoryData.toMap());
+        }
+
+        //get last asc
+        MvcResult mvcResultAsc = mockMvc.perform(get("/order_template/get_orders")
+                        .param("authName",terminalRegisterResponse.getAuth().getAuthName())
+                        .param("authPassword",terminalRegisterResponse.getAuth().getAuthPassword())
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("orderTemplateId", String.valueOf(orderTemplate.getId()))
+                        .param("id", String.valueOf(successIds.get(2)))
+                        .param("sort", "id,asc")
+        ).andDo(print()).andReturn();
+
+        OrderTemplateHistoryResult orderTemplateHistoryResultAsc = objectMapper.readValue(mvcResultAsc.getResponse().getContentAsString(), OrderTemplateHistoryResult.class);
+        assertNotNull(orderTemplateHistoryResultAsc);
+
+        for (OrderTemplateHistoryResult.OrderTemplateHistoryData orderTemplateHistoryData : orderTemplateHistoryResultAsc.getOrders()) {
+            System.out.println(orderTemplateHistoryData.toMap());
+        }
+
+        //
+        //get last
+        MvcResult mvcResultAscNull = mockMvc.perform(get("/order_template/get_orders")
+                        .param("authName",terminalRegisterResponse.getAuth().getAuthName())
+                        .param("authPassword",terminalRegisterResponse.getAuth().getAuthPassword())
+                        .param("page", "0")
+                        .param("size", "3")
+                        .param("orderTemplateId", String.valueOf(orderTemplate.getId()))
+                        //.param("id", String.valueOf(successIds.get(2)))
+                        //.param("sort", "id,asc")
+        ).andDo(print()).andReturn();
+
+        OrderTemplateHistoryResult orderTemplateHistoryResultAscNull = objectMapper.readValue(mvcResultAscNull.getResponse().getContentAsString(), OrderTemplateHistoryResult.class);
+        assertNotNull(orderTemplateHistoryResultAscNull);
+
+        for (OrderTemplateHistoryResult.OrderTemplateHistoryData orderTemplateHistoryData : orderTemplateHistoryResultAscNull.getOrders()) {
+            System.out.println(orderTemplateHistoryData.toMap());
+        }
     }
 
 }

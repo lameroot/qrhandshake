@@ -24,7 +24,9 @@ public interface OrderTemplateHistoryRepository extends PagingAndSortingReposito
 
     OrderTemplateHistory findByMerchantOrderId(Long merchantOrderId);
 
-    Page<OrderTemplateHistory> findByOrderTemplateIdAndStatusAndIdLessThanEqual(Long orderTemplateId, boolean status, Long id, Pageable pageable);
+    Page<OrderTemplateHistory> findByOrderTemplateIdAndStatusAndIdLessThan(Long orderTemplateId, boolean status, Long id, Pageable pageable);
 
-    Page<OrderTemplateHistory> findByOrderTemplateIdAndStatusAndIdGreaterThanEqual(Long orderTemplateId, boolean status, Long id, Pageable pageable);
+    Page<OrderTemplateHistory> findByOrderTemplateIdAndStatusAndIdGreaterThan(Long orderTemplateId, boolean status, Long id, Pageable pageable);
+
+    Page<OrderTemplateHistory> findByOrderTemplateIdAndStatus(Long orderTemplateId, boolean status, Pageable pageable);
 }

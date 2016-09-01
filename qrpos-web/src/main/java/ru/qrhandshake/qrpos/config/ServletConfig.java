@@ -5,10 +5,12 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.format.support.FormattingConversionServiceFactoryBean;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.servlet.ViewResolver;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
@@ -24,6 +26,8 @@ import java.util.List;
  */
 @Configuration
 @ComponentScan(basePackages = {"ru.qrhandshake.qrpos.controller"})
+@EnableWebMvc
+@EnableSpringDataWebSupport
 public class ServletConfig extends WebMvcConfigurationSupport {
 
     @Resource

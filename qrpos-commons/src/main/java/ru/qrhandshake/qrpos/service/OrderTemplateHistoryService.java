@@ -3,21 +3,16 @@ package ru.qrhandshake.qrpos.service;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import ru.qrhandshake.qrpos.api.OrderTemplateHistoryParams;
 import ru.qrhandshake.qrpos.api.OrderTemplateHistoryResult;
-import ru.qrhandshake.qrpos.config.DatabaseConfig;
-import ru.qrhandshake.qrpos.domain.Client;
-import ru.qrhandshake.qrpos.domain.MerchantOrder;
-import ru.qrhandshake.qrpos.domain.OrderTemplate;
 import ru.qrhandshake.qrpos.domain.OrderTemplateHistory;
-import ru.qrhandshake.qrpos.repository.ClientRepository;
 import ru.qrhandshake.qrpos.repository.OrderTemplateHistoryRepository;
 import ru.qrhandshake.qrpos.util.MaskUtil;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -55,33 +50,40 @@ public class OrderTemplateHistoryService {
         return orderTemplateHistoryResult;
     }
 
-    public OrderTemplateHistoryResult getFromId(OrderTemplateHistoryParams orderTemplateHistoryParams, Pageable pageable) {
-        Assert.notNull(orderTemplateHistoryParams.getId(),"Id must not be null for this request");
+    public OrderTemplateHistoryResult getOrders(OrderTemplateHistoryParams orderTemplateHistoryParams, Pageable pageable) {
         OrderTemplateHistoryResult orderTemplateHistoryResult = new OrderTemplateHistoryResult();
-        Page<OrderTemplateHistory> orderTemplateHistoryPage = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdGreaterThanEqual(orderTemplateHistoryParams.getOrderTemplateId(), orderTemplateHistoryParams.isStatus(), orderTemplateHistoryParams.getId(), pageable);
-        for (OrderTemplateHistory orderTemplateHistory : orderTemplateHistoryPage) {
-            orderTemplateHistoryResult.getOrders().add(new OrderTemplateHistoryResult.OrderTemplateHistoryData()
-                    .setDeviceMobileNumberMasked(MaskUtil.getMaskedMobileNumber(orderTemplateHistory.getDeviceMobileNumber()))
-                    .setDate(orderTemplateHistory.getDate())
-                    .setDeviceModel(orderTemplateHistory.getDeviceModel())
-                    .setHumanOrderNumber(orderTemplateHistory.getHumanOrderNumber())
-            );
+        Sort.Direction direction = Sort.Direction.ASC;
+        if ( null != pageable && null != pageable.getSort() && null != pageable.getSort().getOrderFor("id")) {
+            Sort sort = pageable.getSort();
+            direction = sort.getOrderFor("id").getDirection();
         }
-        return orderTemplateHistoryResult;
-    }
-
-    public OrderTemplateHistoryResult getUntilId(OrderTemplateHistoryParams orderTemplateHistoryParams, Pageable pageable) {
-        Assert.notNull(orderTemplateHistoryParams.getId(),"Id must not be null for this request");
-        OrderTemplateHistoryResult orderTemplateHistoryResult = new OrderTemplateHistoryResult();
-        Page<OrderTemplateHistory> orderTemplateHistoryPage = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdLessThanEqual(orderTemplateHistoryParams.getOrderTemplateId(), orderTemplateHistoryParams.isStatus(), orderTemplateHistoryParams.getId(), pageable);
-        for (OrderTemplateHistory orderTemplateHistory : orderTemplateHistoryPage) {
+        Page<OrderTemplateHistory> orderTemplateHistories = null;
+        switch (direction) {
+            case ASC: {
+                if ( null != orderTemplateHistoryParams.getId() ) {
+                    orderTemplateHistories = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdGreaterThan(orderTemplateHistoryParams.getOrderTemplateId(), orderTemplateHistoryParams.isStatus(), orderTemplateHistoryParams.getId(), pageable);
+                }
+                else {
+                    orderTemplateHistories = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatus(orderTemplateHistoryParams.getOrderTemplateId(), orderTemplateHistoryParams.isStatus(), pageable);
+                }
+                break;
+            }
+            case DESC: {
+                Assert.notNull(orderTemplateHistoryParams.getId(),"Id must not be null for this request");
+                orderTemplateHistories = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdLessThan(orderTemplateHistoryParams.getOrderTemplateId(),orderTemplateHistoryParams.isStatus(), orderTemplateHistoryParams.getId(), pageable);
+                break;
+            }
+        }
+        for (OrderTemplateHistory orderTemplateHistory : orderTemplateHistories) {
             orderTemplateHistoryResult.getOrders().add(new OrderTemplateHistoryResult.OrderTemplateHistoryData()
                             .setDeviceMobileNumberMasked(MaskUtil.getMaskedMobileNumber(orderTemplateHistory.getDeviceMobileNumber()))
                             .setDate(orderTemplateHistory.getDate())
                             .setDeviceModel(orderTemplateHistory.getDeviceModel())
                             .setHumanOrderNumber(orderTemplateHistory.getHumanOrderNumber())
+                            .setId(orderTemplateHistory.getId())
             );
         }
         return orderTemplateHistoryResult;
     }
+
 }
