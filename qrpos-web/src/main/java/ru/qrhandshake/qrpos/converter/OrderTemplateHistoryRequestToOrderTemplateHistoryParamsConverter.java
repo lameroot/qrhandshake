@@ -16,6 +16,8 @@ public class OrderTemplateHistoryRequestToOrderTemplateHistoryParamsConverter im
         OrderTemplateHistoryParams orderTemplateHistoryParams = new OrderTemplateHistoryParams();
         orderTemplateHistoryParams.setFrom(orderTemplateHistoryRequest.getFrom());
         orderTemplateHistoryParams.setOrderTemplateId(orderTemplateHistoryRequest.getOrderTemplateId());
+        orderTemplateHistoryParams.setId(orderTemplateHistoryRequest.getId());
+        orderTemplateHistoryParams.setStatus(orderTemplateHistoryRequest.isStatus());
         return orderTemplateHistoryParams;
     }
 }

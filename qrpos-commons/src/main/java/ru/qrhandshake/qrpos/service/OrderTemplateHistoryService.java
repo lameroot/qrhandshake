@@ -1,7 +1,10 @@
 package ru.qrhandshake.qrpos.service;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import ru.qrhandshake.qrpos.api.OrderTemplateHistoryParams;
 import ru.qrhandshake.qrpos.api.OrderTemplateHistoryResult;
 import ru.qrhandshake.qrpos.config.DatabaseConfig;
@@ -47,6 +50,36 @@ public class OrderTemplateHistoryService {
                     .setDate(orderTemplateHistory.getDate())
                     .setDeviceModel(orderTemplateHistory.getDeviceModel())
                     .setHumanOrderNumber(orderTemplateHistory.getHumanOrderNumber())
+            );
+        }
+        return orderTemplateHistoryResult;
+    }
+
+    public OrderTemplateHistoryResult getFromId(OrderTemplateHistoryParams orderTemplateHistoryParams, Pageable pageable) {
+        Assert.notNull(orderTemplateHistoryParams.getId(),"Id must not be null for this request");
+        OrderTemplateHistoryResult orderTemplateHistoryResult = new OrderTemplateHistoryResult();
+        Page<OrderTemplateHistory> orderTemplateHistoryPage = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdGreaterThanEqual(orderTemplateHistoryParams.getOrderTemplateId(), orderTemplateHistoryParams.isStatus(), orderTemplateHistoryParams.getId(), pageable);
+        for (OrderTemplateHistory orderTemplateHistory : orderTemplateHistoryPage) {
+            orderTemplateHistoryResult.getOrders().add(new OrderTemplateHistoryResult.OrderTemplateHistoryData()
+                    .setDeviceMobileNumberMasked(MaskUtil.getMaskedMobileNumber(orderTemplateHistory.getDeviceMobileNumber()))
+                    .setDate(orderTemplateHistory.getDate())
+                    .setDeviceModel(orderTemplateHistory.getDeviceModel())
+                    .setHumanOrderNumber(orderTemplateHistory.getHumanOrderNumber())
+            );
+        }
+        return orderTemplateHistoryResult;
+    }
+
+    public OrderTemplateHistoryResult getUntilId(OrderTemplateHistoryParams orderTemplateHistoryParams, Pageable pageable) {
+        Assert.notNull(orderTemplateHistoryParams.getId(),"Id must not be null for this request");
+        OrderTemplateHistoryResult orderTemplateHistoryResult = new OrderTemplateHistoryResult();
+        Page<OrderTemplateHistory> orderTemplateHistoryPage = orderTemplateHistoryRepository.findByOrderTemplateIdAndStatusAndIdLessThanEqual(orderTemplateHistoryParams.getOrderTemplateId(), orderTemplateHistoryParams.isStatus(), orderTemplateHistoryParams.getId(), pageable);
+        for (OrderTemplateHistory orderTemplateHistory : orderTemplateHistoryPage) {
+            orderTemplateHistoryResult.getOrders().add(new OrderTemplateHistoryResult.OrderTemplateHistoryData()
+                            .setDeviceMobileNumberMasked(MaskUtil.getMaskedMobileNumber(orderTemplateHistory.getDeviceMobileNumber()))
+                            .setDate(orderTemplateHistory.getDate())
+                            .setDeviceModel(orderTemplateHistory.getDeviceModel())
+                            .setHumanOrderNumber(orderTemplateHistory.getHumanOrderNumber())
             );
         }
         return orderTemplateHistoryResult;

@@ -49,6 +49,8 @@ public class ItTest extends ServletConfigTest {
     protected RbsIntegrationFacade rbsIntegrationFacade;
     @Resource
     protected IntegrationService integrationService;
+    @Resource
+    protected OrderTemplateHistoryRepository orderTemplateHistoryRepository;
 
     protected MerchantRegisterResponse registerMerchant(String name) throws Exception {
         Merchant merchant = merchantRepository.findByName(name);

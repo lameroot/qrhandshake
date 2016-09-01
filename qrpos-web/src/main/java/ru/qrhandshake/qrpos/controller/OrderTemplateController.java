@@ -3,6 +3,7 @@ package ru.qrhandshake.qrpos.controller;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -83,6 +84,26 @@ public class OrderTemplateController {
 
         OrderTemplateHistoryParams orderTemplateHistoryParams = conversionService.convert(orderTemplateHistoryRequest,OrderTemplateHistoryParams.class);
         OrderTemplateHistoryResult orderTemplateHistoryResult = orderTemplateHistoryService.getLastSuccessFromDate(orderTemplateHistoryParams);
+        return conversionService.convert(orderTemplateHistoryResult, OrderTemplateHistoryResponse.class);
+    }
+
+    @RequestMapping(value = "/get_orders_from")
+    @ResponseBody
+    public OrderTemplateHistoryResponse getOrdersFrom(@Valid OrderTemplateHistoryRequest orderTemplateHistoryRequest, Pageable pageable) throws AuthException {
+        authService.terminalAuth(null, orderTemplateHistoryRequest);//todo авторизацию тут и везде вынесте из методов в обработчики на спринге
+
+        OrderTemplateHistoryParams orderTemplateHistoryParams = conversionService.convert(orderTemplateHistoryRequest,OrderTemplateHistoryParams.class);
+        OrderTemplateHistoryResult orderTemplateHistoryResult = orderTemplateHistoryService.getFromId(orderTemplateHistoryParams, pageable);
+        return conversionService.convert(orderTemplateHistoryResult, OrderTemplateHistoryResponse.class);
+    }
+
+    @RequestMapping(value = "/get_orders_until")
+    @ResponseBody
+    public OrderTemplateHistoryResponse getOrdersUntil(@Valid OrderTemplateHistoryRequest orderTemplateHistoryRequest, Pageable pageable) throws AuthException {
+        authService.terminalAuth(null, orderTemplateHistoryRequest);//todo авторизацию тут и везде вынесте из методов в обработчики на спринге
+
+        OrderTemplateHistoryParams orderTemplateHistoryParams = conversionService.convert(orderTemplateHistoryRequest,OrderTemplateHistoryParams.class);
+        OrderTemplateHistoryResult orderTemplateHistoryResult = orderTemplateHistoryService.getUntilId(orderTemplateHistoryParams, pageable);
         return conversionService.convert(orderTemplateHistoryResult, OrderTemplateHistoryResponse.class);
     }
 
