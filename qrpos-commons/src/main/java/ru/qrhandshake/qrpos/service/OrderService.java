@@ -182,7 +182,7 @@ public class OrderService {
             paymentResponse.setMessage("Unknown type of payment request: " +  paymentParams);
         }
 
-        if (ResponseStatus.SUCCESS == paymentResponse.getStatus()) {
+        if (OrderStatus.PAID == paymentResponse.getOrderStatus()) {
             OrderTemplateHistory orderTemplateHistory = orderTemplateHistoryService.findByOrderTemplateIdAndMerchantOrderId(merchantOrder.getId());
             if (orderTemplateHistory != null) {
                 orderTemplateHistory.setStatus(true);
