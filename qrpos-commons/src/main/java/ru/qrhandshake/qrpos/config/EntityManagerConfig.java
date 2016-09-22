@@ -13,6 +13,7 @@ import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManagerFactory;
@@ -88,6 +89,11 @@ public class EntityManagerConfig {
         vendorAdapter.setShowSql(showSql());
         vendorAdapter.setDatabasePlatform(hibernateDialect());
         return vendorAdapter;
+    }
+
+    @Bean
+    public TransactionTemplate transactionTemplate() {
+        return new TransactionTemplate(transactionManager());
     }
 
     public boolean showSql() {

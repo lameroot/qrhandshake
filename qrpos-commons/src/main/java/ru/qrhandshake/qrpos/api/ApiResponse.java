@@ -19,16 +19,18 @@ public class ApiResponse {
         return status;
     }
 
-    public void setStatus(ResponseStatus status) {
+    public ApiResponse setStatus(ResponseStatus status) {
         this.status = status;
+        return this;
     }
 
     public String getMessage() {
         return message;
     }
 
-    public void setMessage(String message) {
+    public ApiResponse setMessage(String message) {
         this.message = message;
+        return this;
     }
 
     public static class ErrorApiResponse extends ApiResponse {

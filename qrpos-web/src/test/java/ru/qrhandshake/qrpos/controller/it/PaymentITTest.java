@@ -44,21 +44,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
  */
 public class PaymentITTest extends ItTest {
 
-    private final static String SSL_CARD = "5555555555555599";
-    private final static String TDS_CARD = "4111111111111111";
-
     Long amount = 1000L;
     String sessionId = UUID.randomUUID().toString();
     String deviceId = UUID.randomUUID().toString();
 
-    @Resource
-    private MerchantOrderRepository merchantOrderRepository;
-    @Resource
-    private BindingRepository bindingRepository;
-    @Autowired(required = false)
-    private RbsIntegrationFacade rbsIntegrationFacade;
-    @Resource
-    private IntegrationService integrationService;
+
     private PaymentType expectedPaymentType;
 
     @Before
@@ -656,6 +646,10 @@ public class PaymentITTest extends ItTest {
         assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
     }
 
+    /*
+    Оплата по 3дс связке. Сначало делаем оплату 3дс картой, потом оплачиваем по связке. Взависимости от настроеке мерчанта
+    оплата по связке может идти или по 3дс или ссл (в коде условие). Также стоит возможность оплаты безе cvc
+     */
     @Test
     @Transactional
     public void testBindingTdsPayment() throws Exception {
@@ -732,7 +726,7 @@ public class PaymentITTest extends ItTest {
                         .principal(authentication)
                         .param("orderId", merchantOrderRegisterResponse1.getOrderId())
                         .param("bindingId", binding.getBindingId())
-                        .param("confirmValue", "123")
+                        //.param("confirmValue", "123")
                         .param("paymentWay", "binding")
         ).andDo(print()).andReturn();
 
@@ -740,33 +734,46 @@ public class PaymentITTest extends ItTest {
         PaymentResponse paymentResponseBinding = objectMapper.readValue(mvcResultBinding.getResponse().getContentAsString(), PaymentResponse.class);
         ReturnUrlObject returnUrlObjectBinding = paymentResponseBinding.getReturnUrlObject();
         assertNotNull(returnUrlObjectBinding);
-        assertEquals("post",returnUrlObjectBinding.getAction());
-        assertNotNull(returnUrlObjectBinding.getParams().get("MD"));
-        assertNotNull(returnUrlObjectBinding.getParams().get("PaReq"));
-        assertNotNull(returnUrlObjectBinding.getParams().get("TermUrl"));
-        assertNotNull(returnUrlObjectBinding.getUrl());
-        assertEquals(OrderStatus.REDIRECTED_TO_EXTERNAL, paymentResponse.getOrderStatus());
+        if ( "post".equals(returnUrlObjectBinding.getAction()) ) {//3ds
+            assertEquals("post", returnUrlObjectBinding.getAction());
+            assertNotNull(returnUrlObjectBinding.getParams().get("MD"));
+            assertNotNull(returnUrlObjectBinding.getParams().get("PaReq"));
+            assertNotNull(returnUrlObjectBinding.getParams().get("TermUrl"));
+            assertNotNull(returnUrlObjectBinding.getUrl());
+            assertEquals(OrderStatus.REDIRECTED_TO_EXTERNAL, paymentResponse.getOrderStatus());
 
-        String paResBinding = AcsUtils.emulateCommunicationWithACS(returnUrlObjectBinding.getParams().get("MD"), returnUrlObjectBinding.getParams().get("TermUrl"), returnUrlObjectBinding.getParams().get("PaReq"), true);
-        assertNotNull(paResBinding);
-        ResponseEntity<String> responseEntityBinding = restTemplate.getForEntity(returnUrlObjectBinding.getParams().get("TermUrl")
-                + "?PaRes=" + paResBinding
-                + "&MD=" + returnUrlObjectBinding.getParams().get("MD"), String.class);
-        assertNotNull(responseEntityBinding);
-        System.out.println(responseEntityBinding);
-        assertEquals(302,responseEntityBinding.getStatusCode().value());
-        String finishUriBinding = "/order/finish/" + merchantOrderRegisterResponse1.getOrderId() + "?orderId=" + returnUrlObjectBinding.getParams().get("MD");
-        assertTrue(responseEntityBinding.getHeaders().getLocation().toString().contains(finishUriBinding));
+            String paResBinding = AcsUtils.emulateCommunicationWithACS(returnUrlObjectBinding.getParams().get("MD"), returnUrlObjectBinding.getParams().get("TermUrl"), returnUrlObjectBinding.getParams().get("PaReq"), true);
+            assertNotNull(paResBinding);
+            ResponseEntity<String> responseEntityBinding = restTemplate.getForEntity(returnUrlObjectBinding.getParams().get("TermUrl")
+                    + "?PaRes=" + paResBinding
+                    + "&MD=" + returnUrlObjectBinding.getParams().get("MD"), String.class);
+            assertNotNull(responseEntityBinding);
+            System.out.println(responseEntityBinding);
+            assertEquals(302, responseEntityBinding.getStatusCode().value());
+            String finishUriBinding = "/order/finish/" + merchantOrderRegisterResponse1.getOrderId() + "?orderId=" + returnUrlObjectBinding.getParams().get("MD");
+            assertTrue(responseEntityBinding.getHeaders().getLocation().toString().contains(finishUriBinding));
 
-        MvcResult finishMvcResultBinding = mockMvc.perform(get(finishUriBinding))
-                .andDo(print())
-                .andReturn();
-        assertNotNull(finishMvcResultBinding);
-        Map<String,Object> finishModelBinding = finishMvcResultBinding.getModelAndView().getModel();
-        assertNotNull(finishModelBinding);
-        assertTrue(!finishModelBinding.isEmpty());
-        assertTrue(ResponseStatus.SUCCESS.equals(finishModelBinding.get("status")));
-        assertTrue(finishMvcResultBinding.getResponse().getForwardedUrl().contains("finish"));
+            MvcResult finishMvcResultBinding = mockMvc.perform(get(finishUriBinding))
+                    .andDo(print())
+                    .andReturn();
+            assertNotNull(finishMvcResultBinding);
+            Map<String, Object> finishModelBinding = finishMvcResultBinding.getModelAndView().getModel();
+            assertNotNull(finishModelBinding);
+            assertTrue(!finishModelBinding.isEmpty());
+            assertTrue(ResponseStatus.SUCCESS.equals(finishModelBinding.get("status")));
+            assertTrue(finishMvcResultBinding.getResponse().getForwardedUrl().contains("finish"));
+        }
+        else {
+            assertEquals("redirect", returnUrlObjectBinding.getAction());
+            assertTrue(returnUrlObjectBinding.getUrl().contains("/finish/"));
+            assertTrue(returnUrlObjectBinding.getUrl().contains(merchantOrderRegisterResponse1.getOrderId()));
+
+            MerchantOrder merchantOrder1 = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse1.getOrderId());
+            assertNotNull(merchantOrder1);
+            assertTrue(merchantOrder1.getOrderStatus() == OrderStatus.PAID);
+            assertNotNull(merchantOrder1.getPaymentDate());
+            assertEquals(PaymentWay.BINDING, merchantOrder1.getPaymentWay());
+        }
     }
 
     @Test

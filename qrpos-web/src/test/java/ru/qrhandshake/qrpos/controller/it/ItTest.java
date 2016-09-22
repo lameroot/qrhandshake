@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.controller.it;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MvcResult;
@@ -11,10 +12,9 @@ import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.Merchant;
 import ru.qrhandshake.qrpos.domain.Terminal;
 import ru.qrhandshake.qrpos.domain.User;
-import ru.qrhandshake.qrpos.repository.ClientRepository;
-import ru.qrhandshake.qrpos.repository.MerchantRepository;
-import ru.qrhandshake.qrpos.repository.TerminalRepository;
-import ru.qrhandshake.qrpos.repository.UserRepository;
+import ru.qrhandshake.qrpos.integration.IntegrationService;
+import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationFacade;
+import ru.qrhandshake.qrpos.repository.*;
 import ru.qrhandshake.qrpos.service.ClientService;
 
 import javax.annotation.Resource;
@@ -28,16 +28,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
  */
 public class ItTest extends ServletConfigTest {
 
+    protected final static String SSL_CARD = "5555555555555599";
+    protected final static String TDS_CARD = "4111111111111111";
+
     @Resource
     protected MerchantRepository merchantRepository;
     @Resource
-    private UserRepository userRepository;
+    protected UserRepository userRepository;
     @Resource
-    private ClientService clientService;
+    protected ClientService clientService;
     @Resource
-    private TerminalRepository terminalRepository;
+    protected TerminalRepository terminalRepository;
     @Resource
     protected ObjectMapper objectMapper;
+    @Resource
+    protected MerchantOrderRepository merchantOrderRepository;
+    @Resource
+    protected BindingRepository bindingRepository;
+    @Autowired(required = false)
+    protected RbsIntegrationFacade rbsIntegrationFacade;
+    @Resource
+    protected IntegrationService integrationService;
+    @Resource
+    protected OrderTemplateHistoryRepository orderTemplateHistoryRepository;
 
     protected MerchantRegisterResponse registerMerchant(String name) throws Exception {
         Merchant merchant = merchantRepository.findByName(name);
@@ -92,7 +105,8 @@ public class ItTest extends ServletConfigTest {
         MvcResult mvcResult = mockMvc.perform(post("/client/register")
                 .param("authName", username)
                 .param("authPassword", password)
-                .param("authType", null != authType ? authType.name() : ""))
+                .param("authType", null != authType ? authType.name() : "")
+                )
                 .andDo(print()).andReturn();
         assertNotNull(mvcResult);
         String response = mvcResult.getResponse().getContentAsString();

@@ -108,6 +108,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         }
         IntegrationPaymentResponse integrationPaymentResponse = new IntegrationPaymentResponse();
         integrationPaymentResponse.setOrderId(integrationPaymentBindingRequest.getOrderId());
+        integrationPaymentResponse.setPaymentType(PaymentType.PURCHASE);
 
         String externalOrderId = null;
         try {

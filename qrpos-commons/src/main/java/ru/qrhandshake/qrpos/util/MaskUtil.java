@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public class MaskUtil {
 
     private static final Pattern PAN_PATTERN = Pattern.compile("\\d{13,19}");
-    private static String panMask = "**";
+    private static String mask = "**";
 
     public static String mask(String string) {
         if (!StringUtils.isBlank(string)) {
@@ -19,12 +19,22 @@ public class MaskUtil {
         return string;
     }
 
+    //todo: сделать нормальное маскирование, чтобы было видно оператора и последние цифры
+    public static String getMaskedMobileNumber(String phone) {
+        if (StringUtils.isBlank(phone)) return phone;
+
+        if (phone.length() > 8 ) {
+            return phone.substring(0,4) + mask + phone.substring(phone.length()-4);
+        }
+        return phone;
+    }
+
     public static String getMaskedPan(String pan) {
         if (StringUtils.isBlank(pan)) return pan;
 
         if (!PAN_PATTERN.matcher(pan).matches()) return pan;
 
-        return pan.substring(0, 6) + panMask + pan.substring(pan.length() - 4);
+        return pan.substring(0, 6) + mask + pan.substring(pan.length() - 4);
     }
 
 

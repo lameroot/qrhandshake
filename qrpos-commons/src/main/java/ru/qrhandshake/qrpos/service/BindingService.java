@@ -1,10 +1,15 @@
 package ru.qrhandshake.qrpos.service;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import ru.qrhandshake.qrpos.api.PaymentParams;
+import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.domain.*;
+import ru.qrhandshake.qrpos.exception.IntegrationException;
+import ru.qrhandshake.qrpos.integration.IntegrationOrderStatusRequest;
+import ru.qrhandshake.qrpos.integration.IntegrationPaymentRequest;
+import ru.qrhandshake.qrpos.integration.IntegrationPaymentResponse;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.repository.BindingRepository;
 
@@ -26,6 +31,8 @@ public class BindingService {
     private JsonService jsonService;
     @Resource
     private IntegrationService integrationService;
+    @Resource
+    private IntegrationSupportService integrationSupportService;
 
 
 
@@ -73,6 +80,30 @@ public class BindingService {
         }
     }
 
+    //todo: объединить с методом выше
+    public void update(String orderId, BindingInfo bindingInfo, OrderStatus orderStatus, PaymentSecureType paymentSecureType) {
+        if (StringUtils.isBlank(orderId) || null == bindingInfo ) return;
+        Binding binding = bindingRepository.findByOrderId(orderId);
+        if ( null == binding ) {
+            logger.warn("Unable to find BINDING by orderId: {}", orderId);
+            return;
+        }
+        if ( binding.isCompleted() ) {
+            logger.debug("{} has already competed");
+            return;
+        }
+        if ( OrderStatus.PAID.equals(orderStatus) && binding.getClient().getClientId().equals(bindingInfo.getClientId())) {
+            binding.setEnabled(true);
+            binding.setPaymentSecureType(paymentSecureType);
+            binding.setExternalBindingId(bindingInfo.getBindingId());
+            bindingRepository.save(binding);
+        }
+        else if ( binding.isEnabled() ) {
+            binding.setEnabled(false);
+            bindingRepository.save(binding);
+        }
+    }
+
     public List<Binding> getBindings(Client client, PaymentWay... paymentWays) {
         return null != paymentWays && paymentWays.length > 0
                 ? bindingRepository.findByClientAndPaymentsWays(client, paymentWays)
@@ -80,9 +111,14 @@ public class BindingService {
     }
 
     public boolean isExists(Client client, PaymentParams paymentParams, PaymentWay paymentWay) {
+        return null != findByClientAndPaymentParams(client, paymentParams, paymentWay);
+    }
+
+    public Binding findByClientAndPaymentParams(Client client, PaymentParams paymentParams, PaymentWay paymentWay) {
         return getBindings(client,paymentWay).stream()
                 .filter(b-> jsonService.jsonToPaymentParams(b.getPaymentParams(), paymentWay).equals(paymentParams))
-                .findFirst().isPresent();
+                .findFirst()
+                .orElse(null);
     }
 
     public Binding findByBindingId(String bindingId) {
@@ -90,4 +126,83 @@ public class BindingService {
     }
 
     //todo: должен быть крон который проверяет новые биндинги и делает внешние запросы на получение внешнего binding_id
+
+    public PaymentResult createBinding(Client client, Long amount, PaymentParams paymentParams, PaymentWay paymentWay, String orderId) {
+        PaymentResult paymentResult = new PaymentResult();
+        paymentResult.setOrderId(orderId);
+        Binding binding = findByClientAndPaymentParams(client, paymentParams, paymentWay);
+        if ( null != binding ) {
+            logger.info("Binding for {} and {} and paymentWay: {} has already exist", client, paymentParams, paymentWay);
+            paymentResult.setBindingId(binding.getBindingId());
+            paymentResult.setCode(0);
+            paymentResult.setMessage("Binding has already exists");
+
+            return paymentResult;
+        }
+
+        IntegrationPaymentRequest integrationPaymentRequest = new IntegrationPaymentRequest(integrationSupportService.checkIntegrationSupport(null, paymentParams));
+        integrationPaymentRequest.setAmount(amount);
+        integrationPaymentRequest.setOrderId(orderId);
+        integrationPaymentRequest.setPaymentParams(paymentParams);
+        integrationPaymentRequest.setClient(client);
+        integrationPaymentRequest.setDescription("create binding request");
+        integrationPaymentRequest.setIp(paymentParams.getIp());
+        integrationPaymentRequest.setPaymentWay(paymentWay);
+        integrationPaymentRequest.setReturnUrl(paymentParams.getReturnUrl());
+
+        try {
+            IntegrationPaymentResponse integrationPaymentResponse = integrationService.payment(integrationPaymentRequest);
+
+            if ( integrationPaymentResponse.isSuccess() ) {
+                logger.debug("Payment on {} and orderId {} via {} was success, let's try to create binding", amount, orderId, integrationPaymentRequest.getIntegrationSupport());
+                binding.setPaymentSecureType(integrationPaymentResponse.getPaymentSecureType());
+                binding.setClient(client);
+                binding.setExternalBindingId(null);
+                binding.setIntegrationSupport(integrationPaymentRequest.getIntegrationSupport());
+                binding.setPaymentParams(jsonService.paymentParamsToJsonString(paymentParams));
+                binding.setEnabled(false);
+                binding.setBindingId(UUID.randomUUID().toString());
+                binding.setOrderId(integrationPaymentRequest.getOrderId());
+                binding.setPaymentWay(paymentWay);
+                binding.setPaymentSecureType(integrationPaymentResponse.getPaymentSecureType());
+
+                bindingRepository.save(binding);
+
+                paymentResult.setReturnUrlObject(integrationPaymentResponse.getReturnUrlObject());
+                paymentResult.setBindingId(binding.getBindingId());
+                paymentResult.setMessage("Binding created");
+                paymentResult.setCode(1);
+                paymentResult.setOrderId(orderId);
+                paymentResult.setOrderStatus(integrationPaymentResponse.getOrderStatus());
+
+                logger.debug("{} was created successfully", binding);
+            }
+            else {
+                paymentResult.setCode(0);
+                paymentResult.setMessage("Error integration via " + integrationPaymentRequest.getIntegrationSupport());
+            }
+
+        } catch (IntegrationException e) {
+            logger.error("Error integration payment for create binding",e);
+            paymentResult.setCode(0);
+            paymentResult.setMessage("Error create binding");
+        }
+
+        return paymentResult;
+    }
+
+    public FinishResult finish(FinishParams finishParams) {
+        FinishResult finishResult = new FinishResult();
+
+        Binding binding = bindingRepository.findByOrderId(finishParams.getOrderId());
+        if ( null == binding ) {
+            return new FinishResult.Result().setErrorMessage("Binding not exists").build();
+        }
+
+        //todo: нужно проводить операцию создания связки для основного мерчанта, а здесь использовать уже его параметры, так как бещ заказа и мерчанта такое не получится
+        //возможно использовтаь методы bindCard
+        IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(binding.getIntegrationSupport(),null);
+
+        return finishResult;
+    }
 }

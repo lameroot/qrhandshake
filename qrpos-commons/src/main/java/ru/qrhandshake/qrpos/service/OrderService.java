@@ -11,6 +11,7 @@ import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
+import ru.qrhandshake.qrpos.repository.OrderTemplateRepository;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -29,6 +30,8 @@ public class OrderService {
     @Resource
     private MerchantOrderRepository merchantOrderRepository;
     @Resource
+    private OrderTemplateRepository orderTemplateRepository;
+    @Resource
     private IntegrationService integrationService;
     @Resource
     private IntegrationSupportService integrationSupportService;
@@ -36,6 +39,51 @@ public class OrderService {
     private BindingService bindingService;
     @Resource
     private JsonService jsonService;
+    @Resource
+    private OrderTemplateHistoryService orderTemplateHistoryService;
+
+    public MerchantOrderRegisterResponse registerByTemplate(MerchantOrderRegisterByTemplateRequest request, String paymentPath) {
+
+        OrderTemplate orderTemplate = orderTemplateRepository.findOne(request.getTemplateId());
+        if (orderTemplate == null) {
+            throw new RuntimeException("order template not found");
+        }
+
+        Terminal terminal = orderTemplate.getTerminal();
+        Merchant merchant = terminal.getMerchant();
+
+        MerchantOrder merchantOrder = new MerchantOrder();
+        merchantOrder.setMerchant(merchant);
+        merchantOrder.setTerminal(terminal);
+        merchantOrder.setDeviceId(null);
+        merchantOrder.setAmount(orderTemplate.getAmount());
+        merchantOrder.setDescription(orderTemplate.getDescription());
+        merchantOrder.setOrderStatus(OrderStatus.REGISTERED);
+        merchantOrder.setSessionId(null);
+        merchantOrderRepository.save(merchantOrder);
+
+        String orderId = generateUniqueIdOrder(merchantOrder);
+        String paymentUrl = buildPaymentUrl(paymentPath, merchantOrder, orderId);
+        merchantOrder.setOrderId(orderId);
+        merchantOrderRepository.save(merchantOrder);
+
+        OrderTemplateHistory orderTemplateHistory = new OrderTemplateHistory();
+        orderTemplateHistory.setOrderTemplateId(orderTemplate.getId());
+        orderTemplateHistory.setMerchantOrderId(merchantOrder.getId());
+        orderTemplateHistory.setDate(new Date());
+        orderTemplateHistory.setHumanOrderNumber(orderTemplateHistoryService.generateHumanOrderNumber(merchantOrder.getId()));
+        orderTemplateHistory.setStatus(false);
+        orderTemplateHistoryService.save(orderTemplateHistory);
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = new MerchantOrderRegisterResponse();
+        merchantOrderRegisterResponse.setStatus(ResponseStatus.SUCCESS);
+        merchantOrderRegisterResponse.setMessage("Merchant order success created");
+        merchantOrderRegisterResponse.setOrderId(orderId);
+        merchantOrderRegisterResponse.setPaymentUrl(paymentUrl);
+        merchantOrderRegisterResponse.setId(merchantOrder.getId());
+
+        return merchantOrderRegisterResponse;
+    }
 
     public MerchantOrderRegisterResponse register(Terminal terminal, MerchantOrderRegisterRequest merchantOrderRegisterRequest, String paymentPath) {
         Merchant merchant = terminal.getMerchant();
@@ -60,6 +108,7 @@ public class OrderService {
         merchantOrderRegisterResponse.setMessage("Merchant order success created");
         merchantOrderRegisterResponse.setOrderId(orderId);
         merchantOrderRegisterResponse.setPaymentUrl(paymentUrl);
+        merchantOrderRegisterResponse.setId(merchantOrder.getId());
 
         return merchantOrderRegisterResponse;
     }
@@ -103,6 +152,7 @@ public class OrderService {
         return merchantOrderStatusResponse;
     }
 
+    //todo: заменить paymentResponse to PaymentResult и делать конвертацию в контроллере
     public PaymentResponse payment(Client client, PaymentParams paymentParams) throws AuthException {
         PaymentResponse paymentResponse = new PaymentResponse();
 
@@ -130,6 +180,14 @@ public class OrderService {
             logger.warn("Unknown type of payment request: {}", paymentParams);
             paymentResponse.setStatus(ResponseStatus.FAIL);
             paymentResponse.setMessage("Unknown type of payment request: " +  paymentParams);
+        }
+
+        if (OrderStatus.PAID == paymentResponse.getOrderStatus()) {
+            OrderTemplateHistory orderTemplateHistory = orderTemplateHistoryService.findByOrderTemplateIdAndMerchantOrderId(merchantOrder.getId());
+            if (orderTemplateHistory != null) {
+                orderTemplateHistory.setStatus(true);
+                orderTemplateHistoryService.save(orderTemplateHistory);
+            }
         }
         return paymentResponse;
     }
@@ -162,6 +220,7 @@ public class OrderService {
         }
         merchantOrder.setIntegrationSupport(integrationSupport);
         merchantOrder.setPaymentWay(PaymentWay.BINDING);
+        merchantOrder.setClient(client);
         IntegrationPaymentBindingRequest integrationPaymentBindingRequest = new IntegrationPaymentBindingRequest(integrationSupport,binding.getExternalBindingId());
         integrationPaymentBindingRequest.setPaymentParams(paymentParams);
         integrationPaymentBindingRequest.setAmount(merchantOrder.getAmount());
@@ -182,6 +241,7 @@ public class OrderService {
             paymentResponse.setOrderId(merchantOrder.getOrderId());
             paymentResponse.setMessage(integrationPaymentResponse.getMessage());
             merchantOrder.setPaymentSecureType(integrationPaymentResponse.getPaymentSecureType());
+            merchantOrder.setPaymentType(integrationPaymentResponse.getPaymentType());
             if ( integrationPaymentResponse.isSuccess() ) {
                 merchantOrder.setOrderStatus(integrationPaymentResponse.getOrderStatus());
                 merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());
@@ -409,7 +469,7 @@ public class OrderService {
     }
 
     private String buildPaymentUrl(String paymentPath, MerchantOrder merchantOrder, String orderId) {
-        return paymentPath + "/" + orderId;
+        return StringUtils.isNotBlank(paymentPath) ? paymentPath + "/" + orderId : null;
     }
 
     private String generateUniqueIdOrder(MerchantOrder merchantOrder) {

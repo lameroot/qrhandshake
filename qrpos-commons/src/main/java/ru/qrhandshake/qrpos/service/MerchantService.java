@@ -55,7 +55,8 @@ public class MerchantService {
         TerminalRegisterRequest terminalRegisterRequest = new TerminalRegisterRequest();
         terminalRegisterRequest.setAuthName(merchantRegisterRequest.getAuthName());
         terminalRegisterRequest.setAuthPassword(merchantRegisterRequest.getAuthPassword());
-        TerminalRegisterResponse terminalRegisterResponse = terminalService.create(merchant, new ApiAuth(merchantRegisterRequest.getAuthName(), merchantRegisterRequest.getAuthPassword()));
+        terminalRegisterRequest.setDefaultTerminal(true);
+        TerminalRegisterResponse terminalRegisterResponse = terminalService.create(merchant, terminalRegisterRequest);
 
         ApiAuth apiAuth = new ApiAuth(merchantRegisterRequest.getAuthName(), merchantRegisterRequest.getAuthPassword());
         merchantRegisterResponse.setAuth(apiAuth);

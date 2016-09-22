@@ -9,12 +9,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.format.support.FormattingConversionService;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
+import ru.qrhandshake.qrpos.converter.OrderTemplateRequestToOrderTemplateParamsConverter;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.integration.IntegrationFacade;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
@@ -32,7 +36,7 @@ import java.util.Map;
                 "classpath:config.properties",
                 "${" + ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION + "}"
         })
-@ComponentScan(basePackages = {"ru.qrhandshake.qrpos.service"})
+@ComponentScan(basePackages = {"ru.qrhandshake.qrpos.service","ru.qrhandshake.qrpos.converter"})
 @Import(value = {
         EntityManagerConfig.class,
         DatabaseConfig.class,
@@ -107,6 +111,15 @@ public class ApplicationConfig {
             logger.debug("Set system variable with name '" + ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION + "' as fake value.");
             System.setProperty(ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION,"fake value");
         }
+    }
+
+    @Bean
+    public ConversionService conversionService() {
+        FormattingConversionService formattingConversionService = new FormattingConversionService();
+        for (Map.Entry<String, Converter> entry : applicationContext.getBeansOfType(Converter.class).entrySet()) {
+            formattingConversionService.addConverter(entry.getValue());
+        }
+        return formattingConversionService;
     }
 
 }
