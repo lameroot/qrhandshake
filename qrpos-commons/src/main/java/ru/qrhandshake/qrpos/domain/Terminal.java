@@ -23,6 +23,9 @@ public class Terminal {
     private String authPassword;
     @Column(name = "enabled")
     private boolean enabled;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fk_terminal_group_id", nullable = true)
+    private TerminalGroup terminalGroup;
 
     public Long getId() {
         return id;
@@ -64,4 +67,11 @@ public class Terminal {
         this.enabled = enabled;
     }
 
+    public TerminalGroup getTerminalGroup() {
+        return terminalGroup;
+    }
+
+    public void setTerminalGroup(TerminalGroup terminalGroup) {
+        this.terminalGroup = terminalGroup;
+    }
 }
