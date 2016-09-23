@@ -5,13 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.util.Assert;
 import ru.qrhandshake.qrpos.ServletConfigTest;
 import ru.qrhandshake.qrpos.api.*;
+import ru.qrhandshake.qrpos.api.endpoint.EndpointRegisterResponse;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
-import ru.qrhandshake.qrpos.domain.Client;
-import ru.qrhandshake.qrpos.domain.Merchant;
-import ru.qrhandshake.qrpos.domain.Terminal;
-import ru.qrhandshake.qrpos.domain.User;
+import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationFacade;
 import ru.qrhandshake.qrpos.repository.*;
@@ -53,6 +52,8 @@ public class ItTest extends ServletConfigTest {
     protected OrderTemplateHistoryRepository orderTemplateHistoryRepository;
     @Resource
     protected EndpointRepository endpointRepository;
+    @Resource
+    private EndpointCatalogRepository endpointCatalogRepository;
 
     protected MerchantRegisterResponse registerMerchant(String name) throws Exception {
         Merchant merchant = merchantRepository.findByName(name);
@@ -76,6 +77,32 @@ public class ItTest extends ServletConfigTest {
         assertTrue(merchantRegisterResponse.getTerminalAuth().authIsNotBlank());
 
         return merchantRegisterResponse;
+    }
+
+    protected EndpointRegisterResponse registerEndpoint(String merchantName, IntegrationSupport integrationSupport, String username, String password) throws Exception {
+        Merchant merchant = merchantRepository.findOne(-1L);
+        if ( null == merchant ) throw new IllegalArgumentException("Merchant with name: " + merchantName + " unknown");
+        Terminal terminal = merchant.getTerminals().stream().filter(t -> t.isEnabled()).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Terminal invalid"));
+        EndpointCatalog endpointCatalog = endpointCatalogRepository.findByIntegrationSupport(integrationSupport);
+        Assert.notNull(endpointCatalog,"Invalid integration: " + integrationSupport);
+
+        MvcResult mvcResult = mockMvc.perform(post("/merchant/register")
+                .param("authName", terminal.getAuthName())
+                .param("authPassword", terminal.getAuthPassword())
+                .param("endpointCatalogId", String.valueOf(endpointCatalog.getId()))
+                .param("merchantId", String.valueOf(merchant.getId()))
+                .param("credentials","{username: " + username + ", password: " + password + "}")//todo: check
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResult);
+        String response = mvcResult.getResponse().getContentAsString();
+        assertNotNull(response);
+        EndpointRegisterResponse endpointRegisterResponse = objectMapper.readValue(response, EndpointRegisterResponse.class);
+        assertNotNull(endpointRegisterResponse);
+
+        //todo: continue here
+        return null;
+
     }
 
     protected User findUserByUsername(ApiAuth userAuth) {
