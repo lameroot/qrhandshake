@@ -391,7 +391,8 @@ public class PaymentITTest extends ItTest {
         assertNull(merchantOrder.getClient());
         assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
 
-        IntegrationCompletionRequest integrationCompletionRequest = new IntegrationCompletionRequest(merchantOrder.getIntegrationSupport(),merchantOrder.getExternalId());
+        Endpoint endpoint = endpointRepository.findByMerchantAndIntegrationSupport(merchantOrder.getMerchant(), merchantOrder.getIntegrationSupport());
+        IntegrationCompletionRequest integrationCompletionRequest = new IntegrationCompletionRequest(endpoint,merchantOrder.getExternalId());
         integrationCompletionRequest.setOrderId(merchantOrder.getOrderId());
         integrationCompletionRequest.setAmount(merchantOrder.getAmount());
         IntegrationCompletionResponse integrationCompletionResponse = integrationService.completion(integrationCompletionRequest);

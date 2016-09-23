@@ -7,20 +7,18 @@ import ru.qrhandshake.qrpos.exception.IntegrationException;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Created by lameroot on 19.05.16.
- */
 public class IntegrationService {
 
-
     private final Map<IntegrationSupport, IntegrationFacade> integrationFacades;
+    private final Map<IntegrationSupport, P2pIntegrationFacade> p2pIntegrationFacades;
 
-    public IntegrationService(Map<IntegrationSupport, IntegrationFacade> integrationFacades) {
+    public IntegrationService(Map<IntegrationSupport, IntegrationFacade> integrationFacades, Map<IntegrationSupport, P2pIntegrationFacade> p2pIntegrationFacades) {
         this.integrationFacades = integrationFacades;
+        this.p2pIntegrationFacades = p2pIntegrationFacades;
     }
 
     public IntegrationPaymentResponse paymentBinding(IntegrationPaymentBindingRequest integrationPaymentBindingRequest) throws IntegrationException {
-        IntegrationSupport integrationSupport = integrationPaymentBindingRequest.getIntegrationSupport();
+        IntegrationSupport integrationSupport = integrationPaymentBindingRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
         IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationSupport).paymentBinding(integrationPaymentBindingRequest);
         if ( !integrationPaymentResponse.isSuccess() ) throw new IntegrationException(integrationPaymentResponse.getMessage());
         integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport,integrationPaymentResponse.getIntegrationOrderStatus()));
@@ -29,14 +27,14 @@ public class IntegrationService {
 
     //todo: убрать все выбросы if ( !integrationPaymentResponse.isSuccess() ) throw new IntegrationException - сделать лучше заполнение статуса
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException {
-        IntegrationSupport integrationSupport = integrationPaymentRequest.getIntegrationSupport();
+        IntegrationSupport integrationSupport = integrationPaymentRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
         IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationSupport).payment(integrationPaymentRequest);
         integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport, integrationPaymentResponse.getIntegrationOrderStatus()));
         return integrationPaymentResponse;
     }
 
     public IntegrationOrderStatusResponse getOrderStatus(IntegrationOrderStatusRequest integrationOrderStatusRequest) throws IntegrationException {
-        IntegrationSupport integrationSupport = integrationOrderStatusRequest.getIntegrationSupport();
+        IntegrationSupport integrationSupport = integrationOrderStatusRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
         IntegrationOrderStatusResponse integrationOrderStatusResponse = getFacade(integrationSupport).getOrderStatus(integrationOrderStatusRequest);
         integrationOrderStatusResponse.setOrderId(integrationOrderStatusRequest.getOrderId());
         if ( !integrationOrderStatusResponse.isSuccess() ) throw new IntegrationException(integrationOrderStatusResponse.getMessage());
@@ -45,14 +43,14 @@ public class IntegrationService {
     }
 
     public IntegrationReverseResponse reverse(IntegrationReverseRequest integrationReverseRequest) throws IntegrationException {
-        IntegrationSupport integrationSupport = integrationReverseRequest.getIntegrationSupport();
+        IntegrationSupport integrationSupport = integrationReverseRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
         IntegrationReverseResponse integrationReverseResponse = getFacade(integrationSupport).reverse(integrationReverseRequest);
         if ( !integrationReverseResponse.isSuccess() ) throw new IntegrationException(integrationReverseResponse.getMessage());
         return integrationReverseResponse;
     }
 
     public IntegrationCompletionResponse completion(IntegrationCompletionRequest integrationCompletionRequest) throws IntegrationException {
-        IntegrationSupport integrationSupport = integrationCompletionRequest.getIntegrationSupport();
+        IntegrationSupport integrationSupport = integrationCompletionRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
         IntegrationCompletionResponse integrationCompletionResponse = getFacade(integrationSupport).completion(integrationCompletionRequest);
         integrationCompletionResponse.setOrderId(integrationCompletionRequest.getOrderId());
         if ( !integrationCompletionResponse.isSuccess() ) throw new IntegrationException(integrationCompletionResponse.getMessage());
@@ -60,14 +58,19 @@ public class IntegrationService {
     }
 
     public IntegrationP2PTransferResponse p2pTransfer(IntegrationP2PTransferRequest integrationP2PTransferRequest) throws IntegrationException {
-        IntegrationSupport integrationSupport = integrationP2PTransferRequest.getIntegrationSupport();
-        IntegrationP2PTransferResponse integrationP2PTransferResponse = getFacade(integrationSupport).p2pTransfer(integrationP2PTransferRequest);
+        IntegrationSupport integrationSupport = integrationP2PTransferRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
+        IntegrationP2PTransferResponse integrationP2PTransferResponse = getP2pFacade(integrationSupport).p2pTransfer(integrationP2PTransferRequest);
         if ( !integrationP2PTransferResponse.isSuccess() ) throw new IntegrationException(integrationP2PTransferResponse.getMessage());
         return integrationP2PTransferResponse;
     }
 
     private IntegrationFacade getFacade(IntegrationSupport integrationSupport) throws IntegrationException {
         return Optional.ofNullable(integrationFacades.get(integrationSupport))
+                .orElseThrow(() -> new IntegrationException("Unknown integration type: " + integrationSupport));
+    }
+
+    private P2pIntegrationFacade getP2pFacade(IntegrationSupport integrationSupport) throws IntegrationException {
+        return Optional.ofNullable(p2pIntegrationFacades.get(integrationSupport))
                 .orElseThrow(() -> new IntegrationException("Unknown integration type: " + integrationSupport));
     }
 

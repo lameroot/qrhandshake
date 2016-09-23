@@ -6,6 +6,7 @@ package ru.qrhandshake.qrpos.domain;
 public enum IntegrationSupport {
     RBS_SBRF_OWN,
     RBS_SBRF,
+    RBS_SBRF_P2P,
     RBS_ALFA,
     TINKOFF,
     YANDEX_WALLET,

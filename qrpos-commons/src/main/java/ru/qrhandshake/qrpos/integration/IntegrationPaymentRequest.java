@@ -2,10 +2,7 @@ package ru.qrhandshake.qrpos.integration;
 
 import org.springframework.ui.Model;
 import ru.qrhandshake.qrpos.api.PaymentParams;
-import ru.qrhandshake.qrpos.domain.Client;
-import ru.qrhandshake.qrpos.domain.IntegrationSupport;
-import ru.qrhandshake.qrpos.domain.OrderStatus;
-import ru.qrhandshake.qrpos.domain.PaymentWay;
+import ru.qrhandshake.qrpos.domain.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,8 +24,8 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
     private PaymentParams paymentParams;
     private String ip;
 
-    public IntegrationPaymentRequest(IntegrationSupport integrationSupport) {
-        super(integrationSupport);
+    public IntegrationPaymentRequest(Endpoint endpoint) {
+        super(endpoint);
     }
 
     public String getOrderId() {

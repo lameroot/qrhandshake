@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.integration;
 
+import ru.qrhandshake.qrpos.domain.Endpoint;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 
 import javax.validation.constraints.NotNull;
@@ -10,17 +11,17 @@ import javax.validation.constraints.NotNull;
 public class IntegrationRequest {
 
     @NotNull
-    private IntegrationSupport integrationSupport;
+    private Endpoint endpoint;
 
-    public IntegrationRequest(IntegrationSupport integrationSupport) {
-        this.integrationSupport = integrationSupport;
+    public IntegrationRequest(Endpoint endpoint) {
+        this.endpoint = endpoint;
     }
 
-    public IntegrationSupport getIntegrationSupport() {
-        return integrationSupport;
+    public Endpoint getEndpoint() {
+        return endpoint;
     }
 
-    public void setIntegrationSupport(IntegrationSupport integrationSupport) {
-        this.integrationSupport = integrationSupport;
+    public void setEndpoint(Endpoint endpoint) {
+        this.endpoint = endpoint;
     }
 }

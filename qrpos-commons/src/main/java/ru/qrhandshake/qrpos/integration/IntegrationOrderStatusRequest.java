@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.integration;
 
+import ru.qrhandshake.qrpos.domain.Endpoint;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 
 import javax.validation.constraints.NotNull;
@@ -13,12 +14,12 @@ public class IntegrationOrderStatusRequest extends IntegrationRequest {
     @NotNull
     private String externalId;
 
-    public IntegrationOrderStatusRequest(IntegrationSupport integrationSupport) {
-        super(integrationSupport);
+    public IntegrationOrderStatusRequest(Endpoint endpoint) {
+        super(endpoint);
 
     }
-    public IntegrationOrderStatusRequest(IntegrationSupport integrationSupport, String externalId) {
-        super(integrationSupport);
+    public IntegrationOrderStatusRequest(Endpoint endpoint, String externalId) {
+        super(endpoint);
         this.externalId = externalId;
     }
 

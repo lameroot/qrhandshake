@@ -51,6 +51,8 @@ public class ItTest extends ServletConfigTest {
     protected IntegrationService integrationService;
     @Resource
     protected OrderTemplateHistoryRepository orderTemplateHistoryRepository;
+    @Resource
+    protected EndpointRepository endpointRepository;
 
     protected MerchantRegisterResponse registerMerchant(String name) throws Exception {
         Merchant merchant = merchantRepository.findByName(name);

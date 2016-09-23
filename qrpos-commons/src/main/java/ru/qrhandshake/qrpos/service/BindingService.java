@@ -12,6 +12,8 @@ import ru.qrhandshake.qrpos.integration.IntegrationPaymentRequest;
 import ru.qrhandshake.qrpos.integration.IntegrationPaymentResponse;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.repository.BindingRepository;
+import ru.qrhandshake.qrpos.repository.EndpointRepository;
+import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -33,7 +35,10 @@ public class BindingService {
     private IntegrationService integrationService;
     @Resource
     private IntegrationSupportService integrationSupportService;
-
+    @Resource
+    private EndpointRepository endpointRepository;
+    @Resource
+    private MerchantOrderRepository merchantOrderRepository;
 
 
     public Binding register(Client client, PaymentParams paymentParams, MerchantOrder merchantOrder, boolean enabled) {
@@ -140,7 +145,16 @@ public class BindingService {
             return paymentResult;
         }
 
-        IntegrationPaymentRequest integrationPaymentRequest = new IntegrationPaymentRequest(integrationSupportService.checkIntegrationSupport(null, paymentParams));
+        MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(binding.getOrderId());
+        if ( null == merchantOrder ) {
+            logger.error("Unable to find merchantOrder by orderId: {}", binding.getOrderId());
+            paymentResult.setCode(0);
+            paymentResult.setMessage("Order not found with orderId: " + binding.getOrderId());
+            return paymentResult;
+        }
+        IntegrationSupport integrationSupport = integrationSupportService.checkIntegrationSupport(merchantOrder.getMerchant(), paymentParams);
+        Endpoint endpoint = endpointRepository.findByMerchantAndIntegrationSupport(merchantOrder.getMerchant(), integrationSupport);
+        IntegrationPaymentRequest integrationPaymentRequest = new IntegrationPaymentRequest(endpoint);
         integrationPaymentRequest.setAmount(amount);
         integrationPaymentRequest.setOrderId(orderId);
         integrationPaymentRequest.setPaymentParams(paymentParams);
@@ -154,11 +168,11 @@ public class BindingService {
             IntegrationPaymentResponse integrationPaymentResponse = integrationService.payment(integrationPaymentRequest);
 
             if ( integrationPaymentResponse.isSuccess() ) {
-                logger.debug("Payment on {} and orderId {} via {} was success, let's try to create binding", amount, orderId, integrationPaymentRequest.getIntegrationSupport());
+                logger.debug("Payment on {} and orderId {} via {} was success, let's try to create binding", amount, orderId, integrationSupport);
                 binding.setPaymentSecureType(integrationPaymentResponse.getPaymentSecureType());
                 binding.setClient(client);
                 binding.setExternalBindingId(null);
-                binding.setIntegrationSupport(integrationPaymentRequest.getIntegrationSupport());
+                binding.setIntegrationSupport(integrationSupport);
                 binding.setPaymentParams(jsonService.paymentParamsToJsonString(paymentParams));
                 binding.setEnabled(false);
                 binding.setBindingId(UUID.randomUUID().toString());
@@ -179,7 +193,7 @@ public class BindingService {
             }
             else {
                 paymentResult.setCode(0);
-                paymentResult.setMessage("Error integration via " + integrationPaymentRequest.getIntegrationSupport());
+                paymentResult.setMessage("Error integration via " + integrationSupport);
             }
 
         } catch (IntegrationException e) {
@@ -201,7 +215,7 @@ public class BindingService {
 
         //todo: нужно проводить операцию создания связки для основного мерчанта, а здесь использовать уже его параметры, так как бещ заказа и мерчанта такое не получится
         //возможно использовтаь методы bindCard
-        IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(binding.getIntegrationSupport(),null);
+
 
         return finishResult;
     }

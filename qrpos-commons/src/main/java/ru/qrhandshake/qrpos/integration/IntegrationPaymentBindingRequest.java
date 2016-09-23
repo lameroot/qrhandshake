@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.integration;
 
+import ru.qrhandshake.qrpos.domain.Endpoint;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 
 /**
@@ -10,8 +11,8 @@ public class IntegrationPaymentBindingRequest extends IntegrationPaymentRequest 
     private final String externalBindingId;
     private String bindingId;
 
-    public IntegrationPaymentBindingRequest(IntegrationSupport integrationSupport, String externalBindingId) {
-        super(integrationSupport);
+    public IntegrationPaymentBindingRequest(Endpoint endpoint, String externalBindingId) {
+        super(endpoint);
         this.externalBindingId = externalBindingId;
     }
 
