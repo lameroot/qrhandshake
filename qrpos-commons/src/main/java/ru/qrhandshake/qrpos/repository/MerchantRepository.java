@@ -4,6 +4,9 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.domain.Merchant;
+import ru.qrhandshake.qrpos.domain.Terminal;
+
+import java.util.List;
 
 /**
  * Created by lameroot on 18.05.16.

@@ -8,6 +8,14 @@ public class UserPasswordEndpointCredentialsRequest {
     private String username;
     private String password;
 
+    public UserPasswordEndpointCredentialsRequest() {
+    }
+
+    public UserPasswordEndpointCredentialsRequest(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
     public String getUsername() {
         return username;
     }

@@ -4,17 +4,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ru.qrhandshake.qrpos.ServletConfigTest;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.api.endpoint.EndpointRegisterResponse;
+import ru.qrhandshake.qrpos.api.endpoint.UserPasswordEndpointCredentialsRequest;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationFacade;
 import ru.qrhandshake.qrpos.repository.*;
 import ru.qrhandshake.qrpos.service.ClientService;
+import ru.qrhandshake.qrpos.service.MerchantService;
 
 import javax.annotation.Resource;
 
@@ -25,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 /**
  * Created by lameroot on 06.06.16.
  */
+@Transactional
 public class ItTest extends ServletConfigTest {
 
     protected final static String SSL_CARD = "5555555555555599";
@@ -42,6 +47,8 @@ public class ItTest extends ServletConfigTest {
     protected ObjectMapper objectMapper;
     @Resource
     protected MerchantOrderRepository merchantOrderRepository;
+    @Resource
+    protected MerchantService merchantService;
     @Resource
     protected BindingRepository bindingRepository;
     @Autowired(required = false)
@@ -76,32 +83,41 @@ public class ItTest extends ServletConfigTest {
         assertNotNull(merchantRegisterResponse.getTerminalAuth());
         assertTrue(merchantRegisterResponse.getTerminalAuth().authIsNotBlank());
 
+        EndpointRegisterResponse endpointRegisterResponse = registerEndpoint(name, IntegrationSupport.RBS_SBRF, environment.getRequiredProperty("merchant.trans1.username"), environment.getRequiredProperty("merchant.trans1.password"));
+
         return merchantRegisterResponse;
     }
 
-    protected EndpointRegisterResponse registerEndpoint(String merchantName, IntegrationSupport integrationSupport, String username, String password) throws Exception {
-        Merchant merchant = merchantRepository.findOne(-1L);
-        if ( null == merchant ) throw new IllegalArgumentException("Merchant with name: " + merchantName + " unknown");
-        Terminal terminal = merchant.getTerminals().stream().filter(t -> t.isEnabled()).findFirst()
+    EndpointRegisterResponse registerEndpoint(String merchantLogin, IntegrationSupport integrationSupport, String username, String password) throws Exception {
+        Merchant root = merchantRepository.findOne(-1L);
+        if ( null == root ) throw new IllegalArgumentException("Merchant with id: " + -1 + " unknown");
+        Terminal terminal = terminalRepository.findByMerchant(root).stream().filter(t -> t.isEnabled()).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Terminal invalid"));
+        TestingAuthenticationToken terminalPrincipal = new TestingAuthenticationToken(terminal,null);
         EndpointCatalog endpointCatalog = endpointCatalogRepository.findByIntegrationSupport(integrationSupport);
         Assert.notNull(endpointCatalog,"Invalid integration: " + integrationSupport);
 
-        MvcResult mvcResult = mockMvc.perform(post("/merchant/register")
-                .param("authName", terminal.getAuthName())
-                .param("authPassword", terminal.getAuthPassword())
+        Merchant merchant = merchantRepository.findByName(merchantLogin);
+        assertNotNull(merchant);
+
+        UserPasswordEndpointCredentialsRequest userPasswordEndpointCredentialsRequest = new UserPasswordEndpointCredentialsRequest(username,password);
+        String userPasswordJson = objectMapper.writeValueAsString(userPasswordEndpointCredentialsRequest);
+
+        MvcResult mvcResult = mockMvc.perform(post("/endpoint/register")
+                .principal(terminalPrincipal)
                 .param("endpointCatalogId", String.valueOf(endpointCatalog.getId()))
                 .param("merchantId", String.valueOf(merchant.getId()))
-                .param("credentials","{username: " + username + ", password: " + password + "}")//todo: check
+                .param("credentials", userPasswordJson)
         ).andDo(print()).andReturn();
         assertNotNull(mvcResult);
         String response = mvcResult.getResponse().getContentAsString();
         assertNotNull(response);
         EndpointRegisterResponse endpointRegisterResponse = objectMapper.readValue(response, EndpointRegisterResponse.class);
         assertNotNull(endpointRegisterResponse);
+        assertNotNull(endpointRegisterResponse.getEndpointId());
+        assertEquals(ResponseStatus.SUCCESS,endpointRegisterResponse.getStatus());
 
-        //todo: continue here
-        return null;
+        return endpointRegisterResponse;
 
     }
 

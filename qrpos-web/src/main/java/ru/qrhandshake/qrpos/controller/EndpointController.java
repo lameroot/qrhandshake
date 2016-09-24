@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.controller;
 
 import org.springframework.core.convert.ConversionService;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -19,7 +20,7 @@ import java.security.Principal;
  * Created by lameroot on 24.09.16.
  */
 @Controller
-@RequestMapping(value = "/endpoint")
+@RequestMapping(value = "/endpoint", produces = {MediaType.APPLICATION_JSON_VALUE})
 public class EndpointController {
 
     @Resource

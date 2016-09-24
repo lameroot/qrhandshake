@@ -1,19 +1,25 @@
 package ru.qrhandshake.qrpos.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.domain.Merchant;
 import ru.qrhandshake.qrpos.domain.User;
+import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.repository.MerchantRepository;
 import ru.qrhandshake.qrpos.util.Util;
 
 import javax.annotation.Resource;
+import java.util.Optional;
 
 /**
  * Created by lameroot on 18.05.16.
  */
 @Service
 public class MerchantService {
+
+    @Value("${merchant.root.id:-1}")
+    private Long rootMerchantId;
 
     @Resource
     private MerchantRepository merchantRepository;
@@ -75,4 +81,7 @@ public class MerchantService {
     }
 
 
+    public Merchant findRootMerchant() throws AuthException {
+        return Optional.of(merchantRepository.findOne(rootMerchantId)).orElseThrow(() -> new AuthException("Not found parent merchant"));
+    }
 }

@@ -56,7 +56,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         Assert.notNull(endpoint,"endpoint must not be null");
         MerchantService merchantService = null;
         UserPasswordEndpoint userPasswordEndpoint = (UserPasswordEndpoint)endpoint;
-        if ( null == (merchantServiceMap.get(userPasswordEndpoint)) ) {
+        if ( null == (merchantService = merchantServiceMap.get(userPasswordEndpoint)) ) {
             if ( null == merchantServiceProvider ) {
                 this.merchantServiceProvider = new MerchantServiceProvider();
                 this.merchantServiceProvider.setDebugSoap(true);

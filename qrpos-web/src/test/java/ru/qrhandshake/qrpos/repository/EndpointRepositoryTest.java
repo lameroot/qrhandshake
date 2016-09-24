@@ -17,7 +17,6 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @ActiveProfiles(value = RbsIntegrationConfig.RBS_PROFILE)
-@Sql(scripts = {"classpath:sql/postgres/migration/migration-endpoint_catalog.sql"})
 public class EndpointRepositoryTest extends GeneralTest {
 
     @Resource

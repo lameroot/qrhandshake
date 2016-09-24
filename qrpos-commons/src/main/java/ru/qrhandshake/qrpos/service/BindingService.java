@@ -145,7 +145,7 @@ public class BindingService {
             return paymentResult;
         }
 
-        MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(binding.getOrderId());
+        MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(orderId);
         if ( null == merchantOrder ) {
             logger.error("Unable to find merchantOrder by orderId: {}", binding.getOrderId());
             paymentResult.setCode(0);

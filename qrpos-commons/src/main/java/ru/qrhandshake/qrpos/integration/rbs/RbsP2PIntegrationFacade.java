@@ -48,7 +48,7 @@ public class RbsP2PIntegrationFacade implements P2pIntegrationFacade {
             throw new IllegalArgumentException("P2P unsupported");
         }
         UserPasswordEndpoint userPasswordEndpoint = (UserPasswordEndpoint)endpoint;
-        if ( null == (p2PWSControllerMap.get(userPasswordEndpoint)) ) {
+        if ( null == (p2PWSController = p2PWSControllerMap.get(userPasswordEndpoint)) ) {
             if ( null == p2PServiceProvider ) {
                 this.p2PServiceProvider = new P2PServiceProvider();
                 this.p2PServiceProvider.setDebugSoap(true);
