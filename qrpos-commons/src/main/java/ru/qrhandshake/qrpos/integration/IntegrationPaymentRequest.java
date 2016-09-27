@@ -23,6 +23,7 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
     private PaymentWay paymentWay = PaymentWay.CARD;
     private PaymentParams paymentParams;
     private String ip;
+    private PaymentType paymentType;
 
     public IntegrationPaymentRequest(Endpoint endpoint) {
         super(endpoint);
@@ -114,5 +115,13 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
 
     public void setIp(String ip) {
         this.ip = ip;
+    }
+
+    public PaymentType getPaymentType() {
+        return paymentType;
+    }
+
+    public void setPaymentType(PaymentType paymentType) {
+        this.paymentType = paymentType;
     }
 }

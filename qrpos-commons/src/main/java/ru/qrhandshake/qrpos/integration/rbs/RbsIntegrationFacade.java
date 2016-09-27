@@ -139,7 +139,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException {
         IntegrationPaymentResponse integrationPaymentResponse = new IntegrationPaymentResponse();
         integrationPaymentResponse.setOrderId(integrationPaymentRequest.getOrderId());
-        PaymentType paymentType = PaymentType.valueOf(sPaymentType);
+        PaymentType paymentType = null != integrationPaymentRequest.getPaymentType() ? integrationPaymentRequest.getPaymentType() : PaymentType.valueOf(sPaymentType);
         integrationPaymentResponse.setPaymentType(paymentType);
 
         String externalOrderId = integrationPaymentRequest.getExternalId();
