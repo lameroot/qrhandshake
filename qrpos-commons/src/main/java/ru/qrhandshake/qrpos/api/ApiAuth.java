@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.api;
 
 import org.apache.commons.lang.StringUtils;
+import ru.qrhandshake.qrpos.domain.AuthType;
 
 
 /**

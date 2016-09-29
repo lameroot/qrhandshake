@@ -41,7 +41,8 @@ import java.util.Map;
 @Import(value = {
         EntityManagerConfig.class,
         DatabaseConfig.class,
-        RbsIntegrationConfig.class
+        RbsIntegrationConfig.class,
+        MailConfig.class
 })
 @EnableJpaRepositories(basePackages = {"ru.qrhandshake.qrpos.repository"})
 public class ApplicationConfig {

@@ -6,15 +6,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import ru.qrhandshake.qrpos.api.*;
+import ru.qrhandshake.qrpos.api.client.ClientConfirmRequest;
+import ru.qrhandshake.qrpos.api.client.ClientConfirmResponse;
+import ru.qrhandshake.qrpos.api.client.ClientRegisterRequest;
+import ru.qrhandshake.qrpos.api.client.ClientRegisterResponse;
 import ru.qrhandshake.qrpos.service.ClientService;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.Optional;
 
-/**
- * Created by lameroot on 25.05.16.
- */
 @Controller
 @RequestMapping(value = "/client", produces = {MediaType.APPLICATION_JSON_VALUE})
 public class ClientController {
@@ -26,6 +27,12 @@ public class ClientController {
     @ResponseBody
     public ClientRegisterResponse register(@Valid ClientRegisterRequest clientRegisterRequest) {
         return clientService.register(clientRegisterRequest);
+    }
+
+    @RequestMapping(value = "/confirm", method = RequestMethod.POST)
+    @ResponseBody
+    public ClientConfirmResponse confirm(@Valid ClientConfirmRequest clientConfirmRequest) {
+        return clientService.confirm(clientConfirmRequest);
     }
 
     @RequestMapping(value = "/auth", method = RequestMethod.POST)

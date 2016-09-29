@@ -2,8 +2,8 @@ package ru.qrhandshake.qrpos.service;
 
 import org.junit.Test;
 import ru.qrhandshake.qrpos.GeneralTest;
-import ru.qrhandshake.qrpos.api.ClientRegisterRequest;
-import ru.qrhandshake.qrpos.api.ClientRegisterResponse;
+import ru.qrhandshake.qrpos.api.client.ClientRegisterRequest;
+import ru.qrhandshake.qrpos.api.client.ClientRegisterResponse;
 import ru.qrhandshake.qrpos.api.ResponseStatus;
 
 import javax.annotation.Resource;
