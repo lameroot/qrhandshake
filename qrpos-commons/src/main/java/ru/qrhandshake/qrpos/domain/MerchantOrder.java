@@ -12,8 +12,8 @@ public class MerchantOrder {
 
     @Id
     @Column(updatable = false, name="id")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "orderSequence")
-    @SequenceGenerator(name = "orderSequence", sequenceName = "seq_order", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "merchantOrderSequence")
+    @SequenceGenerator(name = "merchantOrderSequence", sequenceName = "seq_merchant_order", allocationSize = 1)
     private Long id;
     @Column(name = "order_id", unique = true)
     private String orderId;

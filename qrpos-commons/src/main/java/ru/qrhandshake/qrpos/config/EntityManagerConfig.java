@@ -70,9 +70,12 @@ public class EntityManagerConfig {
         Properties properties = new Properties();
         properties.put("hibernate.temp.use_jdbc_metadata_defaults", "false");
         properties.put("hibernate.jdbc.batch_size", 100);
-        properties.put("hibernate.hbm2ddl.auto", environment.getProperty("hibernate.hbm2ddl.auto","update"));
-//        if ( environment.containsProperty("hibernate.hbm2ddl.import_files") )
-//            properties.put("hibernate.hbm2ddl.import_files",environment.getProperty("hibernate.hbm2ddl.import_files"));
+        if ( environment.containsProperty("hibernate.hbm2ddl.auto") ) {
+            properties.put("hibernate.hbm2ddl.auto", environment.getProperty("hibernate.hbm2ddl.auto"));
+        }
+        if ( environment.containsProperty("hibernate.hbm2ddl.import_files") ) {
+            properties.put("hibernate.hbm2ddl.import_files", environment.getProperty("hibernate.hbm2ddl.import_files"));
+        }
         properties.put("hibernate.cache.region.factory_class", "org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory");
         properties.put("hibernate.cache.use_second_level_cache", "true");
         properties.put("hibernate.cache.use_query_cache", "true");
