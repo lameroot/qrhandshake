@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         ServletConfig.class
 })
 @ActiveProfiles(value = {"prod", RbsIntegrationConfig.RBS_PROFILE})
-public class ServletConfigTest extends TestCase {
+public class ServletConfigTest extends AbstractTest {
 
     @Resource
     private ApplicationContext applicationContext;

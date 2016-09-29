@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.integration;
 
+import ru.qrhandshake.qrpos.domain.Endpoint;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 
 /**
@@ -12,8 +13,8 @@ public class IntegrationCompletionRequest extends IntegrationRequest{
     private Long amount;
 
 
-    public IntegrationCompletionRequest(IntegrationSupport integrationSupport, String externalOrderId) {
-        super(integrationSupport);
+    public IntegrationCompletionRequest(Endpoint endpoint, String externalOrderId) {
+        super(endpoint);
         this.externalOrderId = externalOrderId;
     }
 

@@ -10,13 +10,12 @@ import org.springframework.web.bind.annotation.*;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.api.ResponseStatus;
 import ru.qrhandshake.qrpos.converter.PaymentWayConverter;
-import ru.qrhandshake.qrpos.domain.Client;
-import ru.qrhandshake.qrpos.domain.MerchantOrder;
-import ru.qrhandshake.qrpos.domain.PaymentWay;
+import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.dto.MerchantOrderDto;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
 import ru.qrhandshake.qrpos.service.AuthService;
+import ru.qrhandshake.qrpos.service.MerchantService;
 import ru.qrhandshake.qrpos.service.OrderService;
 
 import javax.annotation.Resource;
@@ -33,6 +32,7 @@ public class MerchantOrderController {
 
     public final static String MERCHANT_ORDER_PATH = "/order";
     public final static String REGISTER_PATH = "/register";
+    public final static String REGISTER_FOR_BINDING_PATH = "/register_for_binding";
     public final static String REGISTER_BY_TEMPLATE_PATH = "/registerByTemplate";
     public final static String ORDER_STATUS_PATH = "/status";
     public final static String SESSION_STATUS_PATH = "/sessionStatus";
@@ -45,6 +45,8 @@ public class MerchantOrderController {
     private OrderService orderService;
     @Resource
     private AuthService authService;
+    @Resource
+    private MerchantService merchantService;
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -69,6 +71,17 @@ public class MerchantOrderController {
             throws AuthException {
         String paymentPath = MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.PAYMENT_PATH;
         return orderService.register(authService.terminalAuth(principal, merchantOrderRegisterRequest), merchantOrderRegisterRequest, paymentPath);
+    }
+
+    @RequestMapping(value = REGISTER_FOR_BINDING_PATH)
+    @ResponseBody
+    public MerchantOrderRegisterResponse registerForBindingByClient(Principal principal, @Valid MerchantOrderRegisterRequest merchantOrderRegisterRequest)
+        throws AuthException {
+        String paymentPath = MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.PAYMENT_PATH;
+        authService.clientAuth(principal,merchantOrderRegisterRequest,true);
+        Merchant merchant = merchantService.findRootMerchant();
+        Terminal terminal = merchant.getTerminals().stream().filter(t -> t.isEnabled()).findFirst().orElseThrow(() -> new AuthException("Not found parent terminal"));
+        return orderService.register(terminal, merchantOrderRegisterRequest, paymentPath);
     }
 
     @RequestMapping(value = ORDER_STATUS_PATH)

@@ -1,10 +1,13 @@
 package ru.qrhandshake.qrpos.integration.rbs;
 
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.util.Assert;
 import ru.bpc.phoenix.proxy.api.MerchantServiceProvider;
 import ru.bpc.phoenix.proxy.api.NamePasswordToken;
 import ru.bpc.phoenix.proxy.api.P2PServiceProvider;
@@ -22,66 +25,48 @@ import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.util.Util;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Created by lameroot on 19.05.16.
- */
 public class RbsIntegrationFacade implements IntegrationFacade {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final static String language = "ru";
     private final static String currency = "643";
-    private final static String ACS_REDIRECT_PAGE = "rbs/acs_redirect";
 
     @Resource
     private Environment environment;
     private MerchantServiceProvider merchantServiceProvider;
-    private P2PServiceProvider p2PServiceProvider;
-    private final NamePasswordToken namePasswordToken;
-    private final NamePasswordToken p2pNamePasswordToken;
-    private MerchantService merchantService;
-    private P2PWSController p2PWSController;
     private IntegrationSupport integrationSupport;
+
+    private Map<Endpoint, MerchantService> merchantServiceMap = new HashMap<>();
 
     @Value("${rbs.paymentType:PURCHASE}")
     private String sPaymentType;
 
-    public RbsIntegrationFacade(NamePasswordToken namePasswordToken, String wsdlLocation, IntegrationSupport integrationSupport) {
-        this(namePasswordToken, wsdlLocation, null, null, integrationSupport);
-    }
-
-    public RbsIntegrationFacade(NamePasswordToken namePasswordToken, String wsdlLocation, NamePasswordToken p2pNamePasswordToken, String p2pWsdlLocation, IntegrationSupport integrationSupport) {
-        this.namePasswordToken = namePasswordToken;
-        this.p2pNamePasswordToken = p2pNamePasswordToken;
-
-        this.merchantServiceProvider = new MerchantServiceProvider();
-        this.merchantServiceProvider.setDebugSoap(true);
-        this.merchantServiceProvider.setWsdlLocation(wsdlLocation);
-
-        if ( null != p2pWsdlLocation ) {
-            this.p2PServiceProvider = new P2PServiceProvider();
-            this.p2PServiceProvider.setDebugSoap(true);
-            this.p2PServiceProvider.setWsdlLocation(p2pWsdlLocation);
-        }
-
+    public RbsIntegrationFacade(@NotNull IntegrationSupport integrationSupport) {
+        Assert.notNull(integrationSupport,"integrationSupport must not be null");
         this.integrationSupport = integrationSupport;
     }
 
-    MerchantService getMerchantService() {
-        if ( null == merchantService ) {
-            merchantService = merchantServiceProvider.getMerchantService(namePasswordToken);
+    @NotNull
+    MerchantService getMerchantService(Endpoint endpoint) {
+        Assert.notNull(endpoint,"endpoint must not be null");
+        MerchantService merchantService = null;
+        UserPasswordEndpoint userPasswordEndpoint = (UserPasswordEndpoint)endpoint;
+        if ( null == (merchantService = merchantServiceMap.get(userPasswordEndpoint)) ) {
+            if ( null == merchantServiceProvider ) {
+                this.merchantServiceProvider = new MerchantServiceProvider();
+                this.merchantServiceProvider.setDebugSoap(true);
+                this.merchantServiceProvider.setWsdlLocation(endpoint.getEndpointCatalog().getAddress());
+            }
+            merchantService = merchantServiceProvider.getMerchantService(new NamePasswordToken(userPasswordEndpoint.getUsername(),userPasswordEndpoint.getPassword()));
+            merchantServiceMap.put(userPasswordEndpoint,merchantService);
         }
+        if ( null == merchantService ) throw new IllegalArgumentException("Can't create merchantService");
         return merchantService;
-    }
-
-    P2PWSController getP2PWSController() {
-        if ( null == p2PWSController && null != p2PServiceProvider && null != p2pNamePasswordToken ) {
-            p2PWSController = p2PServiceProvider.getP2PService(p2pNamePasswordToken);
-        }
-        return p2PWSController;
     }
 
     @Override
@@ -112,7 +97,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
 
         String externalOrderId = null;
         try {
-            RegisterOrderResponse registerOrderResponse = getMerchantService().registerOrder(rbsParams);
+            RegisterOrderResponse registerOrderResponse = getMerchantService(integrationPaymentBindingRequest.getEndpoint()).registerOrder(rbsParams);
             integrationPaymentResponse.setMessage(registerOrderResponse.getErrorMessage());
             if ( 0 != registerOrderResponse.getErrorCode() ) {
                 logger.error("Error register order: " + integrationPaymentBindingRequest.getOrderId() + " because : " + registerOrderResponse.getErrorMessage());
@@ -142,7 +127,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         paymentOrderBindingParams.setMdOrder(externalOrderId);
 
         try {
-            PaymentOrderResult paymentOrderResult = getMerchantService().paymentOrderBinding(paymentOrderBindingParams);
+            PaymentOrderResult paymentOrderResult = getMerchantService(integrationPaymentBindingRequest.getEndpoint()).paymentOrderBinding(paymentOrderBindingParams);
             handlePaymentResult(integrationPaymentResponse, integrationPaymentBindingRequest, externalOrderId, paymentOrderResult);
         } catch (Exception e) {
             throw new IntegrationException("Error integration BINDING payment order by orderId: " + integrationPaymentBindingRequest.getOrderId(),e);
@@ -154,7 +139,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException {
         IntegrationPaymentResponse integrationPaymentResponse = new IntegrationPaymentResponse();
         integrationPaymentResponse.setOrderId(integrationPaymentRequest.getOrderId());
-        PaymentType paymentType = PaymentType.valueOf(sPaymentType);
+        PaymentType paymentType = null != integrationPaymentRequest.getPaymentType() ? integrationPaymentRequest.getPaymentType() : PaymentType.valueOf(sPaymentType);
         integrationPaymentResponse.setPaymentType(paymentType);
 
         String externalOrderId = integrationPaymentRequest.getExternalId();
@@ -187,9 +172,9 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             try {
                 RegisterOrderResponse registerOrderResponse = null;
                 if (PaymentType.PURCHASE == paymentType) {
-                    registerOrderResponse = getMerchantService().registerOrder(rbsParams);
+                    registerOrderResponse = getMerchantService(integrationPaymentRequest.getEndpoint()).registerOrder(rbsParams);
                 } else if (PaymentType.DEPOSIT == paymentType) {
-                    registerOrderResponse = getMerchantService().registerOrderPreAuth(rbsParams);
+                    registerOrderResponse = getMerchantService(integrationPaymentRequest.getEndpoint()).registerOrderPreAuth(rbsParams);
                 } else {
                     integrationPaymentResponse.setSuccess(false);
                     integrationPaymentResponse.setMessage("Unknown paymentTye: " + paymentType);
@@ -212,7 +197,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         else {
             integrationPaymentResponse.setExternalId(externalOrderId);
             logger.debug("Order with orderId: {} was already registered",integrationPaymentRequest.getOrderId());
-            IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(integrationPaymentRequest.getIntegrationSupport(),externalOrderId);
+            IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(integrationPaymentRequest.getEndpoint(),externalOrderId);
             IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(integrationOrderStatusRequest);
 
             if ( !(integrationOrderStatusResponse.getIntegrationOrderStatus().getStatus().equals(RbsOrderStatus.CREATED.getStatus())
@@ -245,7 +230,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             paymentOrderParams.setEmail(integrationPaymentRequest.getClient().getEmail());
         }
         try {
-            PaymentOrderResult paymentOrderResult = getMerchantService().paymentOrder(paymentOrderParams);
+            PaymentOrderResult paymentOrderResult = getMerchantService(integrationPaymentRequest.getEndpoint()).paymentOrder(paymentOrderParams);
             handlePaymentResult(integrationPaymentResponse,integrationPaymentRequest,externalOrderId,paymentOrderResult);
         } catch (Exception e) {
             throw new IntegrationException("Error integration payment order by orderId: " + integrationPaymentRequest.getOrderId(),e);
@@ -254,93 +239,12 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         return integrationPaymentResponse;
     }
 
-    @Override
-    public IntegrationP2PTransferResponse p2pTransfer(IntegrationP2PTransferRequest integrationP2PTransferRequest) throws IntegrationException {
-        IntegrationP2PTransferResponse integrationP2PTransferResponse = new IntegrationP2PTransferResponse();
-        //1. p2pregister
-        P2PRegistrationRequest p2PRegistrationRequest = new P2PRegistrationRequest();
-        p2PRegistrationRequest.setAmount(integrationP2PTransferRequest.getAmount());
-        p2PRegistrationRequest.setCurrency(currency);
-        p2PRegistrationRequest.setOrderDescription(integrationP2PTransferRequest.getDescription());
-        p2PRegistrationRequest.setEmail(integrationP2PTransferRequest.getEmail());
-        p2PRegistrationRequest.setLanguage(language);
-        p2PRegistrationRequest.setFailUrl("http://google.com");
-        p2PRegistrationRequest.setReturnUrl("http://ya.ru");
-        p2PRegistrationRequest.setOrderNumber(UUID.randomUUID().toString());
-        P2PRegistrationResponse p2PRegistrationResponse = getP2PWSController().registerP2P(p2PRegistrationRequest);
-        if ( 0 != p2PRegistrationResponse.getErrorCode() ) {
-            integrationP2PTransferResponse.setSuccess(false);
-            integrationP2PTransferResponse.setMessage(p2PRegistrationResponse.getErrorMessage());
-            return integrationP2PTransferResponse;
-        }
-        integrationP2PTransferResponse.setExternalOrderId(p2PRegistrationResponse.getOrderId());
-        integrationP2PTransferResponse.setOrderNumber(p2PRegistrationResponse.getOrderNumber());
-
-        //2. p2pverify
-        P2PTransferVerificationRequest p2PTransferVerificationRequest = new P2PTransferVerificationRequest();
-        p2PTransferVerificationRequest.setOrderId(p2PRegistrationResponse.getOrderId());
-        PaymentParams paymentParams = integrationP2PTransferRequest.getPaymentParams();
-        if ( !(paymentParams instanceof CardPaymentParams) ) {
-            integrationP2PTransferResponse.setSuccess(false);
-            integrationP2PTransferResponse.setMessage("Card data invalid");
-            return integrationP2PTransferResponse;
-        }
-        CardPaymentParams cardPaymentParams = (CardPaymentParams)paymentParams;
-        if ( !cardPaymentParams.isNotBlank() ) {
-            integrationP2PTransferResponse.setSuccess(false);
-            integrationP2PTransferResponse.setMessage("Card data invalid");
-            return integrationP2PTransferResponse;
-        }
-        CardData fromCard = new CardData();
-        fromCard.setCardholderName(cardPaymentParams.getCardHolderName());
-        fromCard.setCvc(cardPaymentParams.getCvc());
-        fromCard.setExpirationMonth(Integer.valueOf(cardPaymentParams.getMonth()));
-        fromCard.setExpirationYear(Integer.valueOf(cardPaymentParams.getYear()));
-        fromCard.setPan(cardPaymentParams.getPan());
-
-        CardData toCard = new CardData();
-        toCard.setPan(integrationP2PTransferRequest.getTo());
-
-        p2PTransferVerificationRequest.setFromCard(fromCard);
-        p2PTransferVerificationRequest.setToCard(toCard);
-        P2PTransferVerificationResponse p2PTransferVerificationResponse = getP2PWSController().verifyP2P(p2PTransferVerificationRequest);
-        if ( 0 != p2PTransferVerificationResponse.getErrorCode() ) {
-            integrationP2PTransferResponse.setSuccess(false);
-            integrationP2PTransferResponse.setMessage(p2PTransferVerificationResponse.getErrorMessage());
-            return integrationP2PTransferResponse;
-        }
-        long totalFee = 0L;
-        for (FeeDescription feeDescription : p2PTransferVerificationResponse.getFeeDescriptionList()) {
-            totalFee += feeDescription.getFeeAmount();
-        }
-        logger.debug("Total fee p2p transfer: {} ", totalFee);
-
-        //3. p2pperform
-        P2PTransferRequest p2PTransferRequest = new P2PTransferRequest();
-        p2PTransferRequest.setOrderId(p2PRegistrationResponse.getOrderId());
-        p2PTransferRequest.setFromCard(fromCard);
-        p2PTransferRequest.setToCard(toCard);
-        p2PTransferRequest.setAmountInput(integrationP2PTransferRequest.getAmount());//todo: тут надо вычитать комиссию
-        p2PTransferRequest.setType(P2PTransferType.STANDARD);
-        p2PTransferRequest.setEmail(integrationP2PTransferRequest.getEmail());
-        P2PTransferResponse p2PTransferResponse = getP2PWSController().performP2P(p2PTransferRequest);
-        if ( 0 != p2PTransferResponse.getErrorCode() ) {
-            integrationP2PTransferResponse.setSuccess(false);
-            integrationP2PTransferResponse.setMessage(p2PTransferResponse.getErrorMessage());
-            return integrationP2PTransferResponse;
-        }
-        //todo: сделать проверку на наличие ацс
-        integrationP2PTransferResponse.setSuccess(true);
-        integrationP2PTransferResponse.setMessage("P2P transfer success");
-        return integrationP2PTransferResponse;
-    }
-
     private void handlePaymentResult(IntegrationPaymentResponse integrationPaymentResponse, IntegrationPaymentRequest integrationPaymentRequest, String externalOrderId, PaymentOrderResult paymentOrderResult) throws IntegrationException {
         integrationPaymentResponse.setMessage(paymentOrderResult.getErrorMessage());
         if ( 0 != paymentOrderResult.getErrorCode() ) {
             logger.error("Error payment order: " + integrationPaymentRequest.getOrderId() + " because: " + paymentOrderResult.getErrorMessage());
             integrationPaymentResponse.setSuccess(false);
-            IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(integrationPaymentRequest.getIntegrationSupport(), externalOrderId));
+            IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(integrationPaymentRequest.getEndpoint(), externalOrderId));
             integrationPaymentResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
             integrationPaymentResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
             return;
@@ -360,7 +264,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.TDS);
         }
         else {
-            IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(integrationPaymentRequest.getIntegrationSupport(), externalOrderId));
+            IntegrationOrderStatusResponse integrationOrderStatusResponse = getOrderStatus(new IntegrationOrderStatusRequest(integrationPaymentRequest.getEndpoint(), externalOrderId));
             integrationPaymentResponse.setIntegrationOrderStatus(integrationOrderStatusResponse.getIntegrationOrderStatus());
             integrationPaymentResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
             integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.SSL);
@@ -377,7 +281,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         GetOrderStatusExtendedRequest getOrderStatusExtendedRequest = new GetOrderStatusExtendedRequest();
         getOrderStatusExtendedRequest.setOrderId(integrationOrderStatusRequest.getExternalId());
         try {
-            GetOrderStatusExtendedResponse getOrderStatusExtendedResponse = getMerchantService().getOrderStatusExtended(getOrderStatusExtendedRequest);
+            GetOrderStatusExtendedResponse getOrderStatusExtendedResponse = getMerchantService(integrationOrderStatusRequest.getEndpoint()).getOrderStatusExtended(getOrderStatusExtendedRequest);
             integrationOrderStatusResponse.setMessage(getOrderStatusExtendedResponse.getErrorMessage());
             if ( !"0".equals(getOrderStatusExtendedResponse.getErrorCode()) ) {
                 logger.error("Error get order status: {}, because: {}, code: {}",
@@ -410,7 +314,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             IntegrationReverseResponse integrationReverseResponse = new IntegrationReverseResponse();
             integrationReverseResponse.setOrderId(integrationReverseRequest.getOrderId());
             integrationReverseResponse.setExternalId(integrationReverseRequest.getExternalId());
-            OrderResult orderResult = getMerchantService().reverseOrder(reversalOrderParams);
+            OrderResult orderResult = getMerchantService(integrationReverseRequest.getEndpoint()).reverseOrder(reversalOrderParams);
             integrationReverseResponse.setMessage(orderResult.getErrorMessage());
             if ( 0 == orderResult.getErrorCode() ) {
                 integrationReverseResponse.setSuccess(true);
@@ -420,7 +324,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             }
             return integrationReverseResponse;
         } catch (Exception e) {
-            throw new IntegrationException("Error reverse orderId: " + integrationReverseRequest.getExternalId() + " by system: " + integrationSupport,e);
+            throw new IntegrationException("Error reverse orderId: " + integrationReverseRequest.getExternalId() + " by system: " + integrationReverseRequest.getEndpoint(),e);
         }
     }
 
@@ -433,7 +337,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             DepositOrderParams depositOrderParams = new DepositOrderParams();
             depositOrderParams.setOrderId(integrationCompletionRequest.getExternalOrderId());
             depositOrderParams.setDepositAmount(integrationCompletionRequest.getAmount());
-            OrderResult orderResult = getMerchantService().depositOrder(depositOrderParams);
+            OrderResult orderResult = getMerchantService(integrationCompletionRequest.getEndpoint()).depositOrder(depositOrderParams);
             if ( 0 != orderResult.getErrorCode() ) {
                 integrationCompletionResponse.setSuccess(false);
                 integrationCompletionResponse.setMessage(orderResult.getErrorMessage());

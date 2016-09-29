@@ -7,6 +7,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import ru.qrhandshake.qrpos.config.ApplicationConfig;
@@ -21,7 +22,7 @@ import javax.annotation.Resource;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = ApplicationConfig.class, loader = AnnotationConfigContextLoader.class)
 @ActiveProfiles(value = {"prod"})
-public class GeneralTest extends TestCase {
+public class GeneralTest extends AbstractTest {
 
     @Resource
     protected ApplicationContext applicationContext;

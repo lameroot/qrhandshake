@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 /**
  * Created by lameroot on 22.06.16.
  */
-public class YandexMoneyIntegrationFacade implements IntegrationFacade {
+public class YandexMoneyIntegrationFacade implements P2pIntegrationFacade {
 
     @Value("${yandex.money.clientId}")
     private String clientId;
@@ -36,37 +36,7 @@ public class YandexMoneyIntegrationFacade implements IntegrationFacade {
     private String testResult;
 
     @Override
-    public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException {
-        return null;
-    }
-
-    @Override
-    public IntegrationCompletionResponse completion(IntegrationCompletionRequest integrationCompletionRequest) throws IntegrationException {
-        return null;
-    }
-
-    @Override
-    public IntegrationPaymentResponse paymentBinding(IntegrationPaymentBindingRequest integrationPaymentBindingRequest) throws IntegrationException {
-        return null;
-    }
-
-    @Override
-    public IntegrationOrderStatusResponse getOrderStatus(IntegrationOrderStatusRequest integrationOrderStatusRequest) throws IntegrationException {
-        return null;
-    }
-
-    @Override
     public IntegrationSupport getIntegrationSupport() {
-        return null;
-    }
-
-    @Override
-    public OrderStatus toOrderStatus(IntegrationOrderStatus integrationOrderStatus) {
-        return null;
-    }
-
-    @Override
-    public IntegrationReverseResponse reverse(IntegrationReverseRequest integrationReverseRequest) throws IntegrationException {
         return null;
     }
 

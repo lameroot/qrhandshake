@@ -22,6 +22,7 @@ import ru.qrhandshake.qrpos.converter.OrderTemplateRequestToOrderTemplateParamsC
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.integration.IntegrationFacade;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
+import ru.qrhandshake.qrpos.integration.P2pIntegrationFacade;
 import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationConfig;
 import ru.rbs.util.SyncSimpleDateFormat;
 
@@ -98,8 +99,17 @@ public class ApplicationConfig {
     }
 
     @Bean
+    public Map<IntegrationSupport, P2pIntegrationFacade> p2pIntegrationFacades() {
+        Map<IntegrationSupport, P2pIntegrationFacade> map = new HashMap<>();
+        for (Map.Entry<String, P2pIntegrationFacade> entry : applicationContext.getBeansOfType(P2pIntegrationFacade.class).entrySet()) {
+            if ( entry.getValue().isApplicable() ) map.put(entry.getValue().getIntegrationSupport(),entry.getValue());
+        }
+        return map;
+    }
+
+    @Bean
     public IntegrationService integrationService() {
-        return new IntegrationService(integrationFacades());
+        return new IntegrationService(integrationFacades(), p2pIntegrationFacades());
     }
 
     /**

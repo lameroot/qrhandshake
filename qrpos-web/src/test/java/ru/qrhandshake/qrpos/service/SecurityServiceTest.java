@@ -30,4 +30,12 @@ public class SecurityServiceTest extends GeneralTest {
             assertTrue(securityService.match(password,encodedPassword));
         }
     }
+
+    @Test
+    public void testEncode() throws Exception {
+        String password = "paystudio-admin";
+        String encoded = securityService.encodePassword(password);
+        assertTrue(securityService.match(password,encoded));
+        System.out.println(encoded);
+    }
 }

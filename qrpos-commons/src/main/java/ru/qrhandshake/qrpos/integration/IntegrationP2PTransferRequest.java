@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.integration;
 
 import ru.qrhandshake.qrpos.api.PaymentParams;
+import ru.qrhandshake.qrpos.domain.Endpoint;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 
 /**
@@ -14,8 +15,8 @@ public class IntegrationP2PTransferRequest extends IntegrationRequest {
     private String description;
     private String email;
 
-    public IntegrationP2PTransferRequest(IntegrationSupport integrationSupport, PaymentParams paymentParams, String to, Long amount) {
-        super(integrationSupport);
+    public IntegrationP2PTransferRequest(Endpoint endpoint, PaymentParams paymentParams, String to, Long amount) {
+        super(endpoint);
         this.paymentParams = paymentParams;
         this.to = to;
         this.amount = amount;

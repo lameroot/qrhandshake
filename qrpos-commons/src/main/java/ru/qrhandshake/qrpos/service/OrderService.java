@@ -10,6 +10,7 @@ import ru.qrhandshake.qrpos.dto.BindingDto;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.integration.*;
+import ru.qrhandshake.qrpos.repository.EndpointRepository;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 import ru.qrhandshake.qrpos.repository.OrderTemplateRepository;
 
@@ -41,6 +42,8 @@ public class OrderService {
     private JsonService jsonService;
     @Resource
     private OrderTemplateHistoryService orderTemplateHistoryService;
+    @Resource
+    private EndpointRepository endpointRepository;
 
     public MerchantOrderRegisterResponse registerByTemplate(MerchantOrderRegisterByTemplateRequest request, String paymentPath) {
 
@@ -221,7 +224,9 @@ public class OrderService {
         merchantOrder.setIntegrationSupport(integrationSupport);
         merchantOrder.setPaymentWay(PaymentWay.BINDING);
         merchantOrder.setClient(client);
-        IntegrationPaymentBindingRequest integrationPaymentBindingRequest = new IntegrationPaymentBindingRequest(integrationSupport,binding.getExternalBindingId());
+
+        Endpoint endpoint = endpointRepository.findByMerchantAndIntegrationSupport(merchantOrder.getMerchant(), integrationSupport);
+        IntegrationPaymentBindingRequest integrationPaymentBindingRequest = new IntegrationPaymentBindingRequest(endpoint,binding.getExternalBindingId());
         integrationPaymentBindingRequest.setPaymentParams(paymentParams);
         integrationPaymentBindingRequest.setAmount(merchantOrder.getAmount());
         integrationPaymentBindingRequest.setClient(client);
@@ -287,7 +292,8 @@ public class OrderService {
         merchantOrder.setPaymentWay(PaymentWay.CARD);
         merchantOrder.setIntegrationSupport(integrationSupport);
         merchantOrder.setClient(client);
-        IntegrationPaymentRequest integrationPaymentRequest = new IntegrationPaymentRequest(integrationSupport);
+        Endpoint endpoint = endpointRepository.findByMerchantAndIntegrationSupport(merchantOrder.getMerchant(), integrationSupport);
+        IntegrationPaymentRequest integrationPaymentRequest = new IntegrationPaymentRequest(endpoint);
         integrationPaymentRequest.setPaymentParams(paymentParams);
         integrationPaymentRequest.setAmount(merchantOrder.getAmount());
         integrationPaymentRequest.setClient(client);
@@ -369,7 +375,8 @@ public class OrderService {
             return merchantOrderReverseResponse;
         }
         try {
-            IntegrationReverseRequest integrationReverseRequest = new IntegrationReverseRequest(merchantOrder.getIntegrationSupport(),merchantOrder.getExternalId());
+            Endpoint endpoint = endpointRepository.findByMerchantAndIntegrationSupport(merchantOrder.getMerchant(), merchantOrder.getIntegrationSupport());
+            IntegrationReverseRequest integrationReverseRequest = new IntegrationReverseRequest(endpoint,merchantOrder.getExternalId());
             integrationReverseRequest.setOrderId(merchantOrderReverseRequest.getOrderId());
 
             IntegrationReverseResponse integrationReverseResponse = integrationService.reverse(integrationReverseRequest);
@@ -451,7 +458,8 @@ public class OrderService {
     }
 
     private IntegrationOrderStatusResponse doInnerGetOrderStatus(MerchantOrder merchantOrder) throws IntegrationException {
-        IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(merchantOrder.getIntegrationSupport(),merchantOrder.getExternalId());
+        Endpoint endpoint = endpointRepository.findByMerchantAndIntegrationSupport(merchantOrder.getMerchant(), merchantOrder.getIntegrationSupport());
+        IntegrationOrderStatusRequest integrationOrderStatusRequest = new IntegrationOrderStatusRequest(endpoint,merchantOrder.getExternalId());
         IntegrationOrderStatusResponse integrationOrderStatusResponse = integrationService.getOrderStatus(integrationOrderStatusRequest);
         integrationOrderStatusResponse.setOrderId(merchantOrder.getOrderId());
         if ( !merchantOrder.getOrderStatus().equals(integrationOrderStatusResponse.getOrderStatus()) ) {

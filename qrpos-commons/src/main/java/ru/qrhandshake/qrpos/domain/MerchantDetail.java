@@ -12,7 +12,7 @@ public class MerchantDetail {
     @Id
     @Column(updatable = false, name="id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "merchantDetailSequence")
-    @SequenceGenerator(name = "merchantDetailSequence", sequenceName = "seq_merchantDetail", allocationSize = 1)
+    @SequenceGenerator(name = "merchantDetailSequence", sequenceName = "seq_merchant_detail", allocationSize = 1)
     private Long id;
     private String okato;
     private String bik;
