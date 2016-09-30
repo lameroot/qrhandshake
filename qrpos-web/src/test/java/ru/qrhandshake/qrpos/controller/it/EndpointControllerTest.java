@@ -1,15 +1,11 @@
 package ru.qrhandshake.qrpos.controller.it;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.springframework.transaction.annotation.Transactional;
-import ru.qrhandshake.qrpos.api.MerchantRegisterResponse;
+import ru.qrhandshake.qrpos.api.merchant.MerchantRegisterResponse;
 import ru.qrhandshake.qrpos.api.endpoint.EndpointRegisterResponse;
-import ru.qrhandshake.qrpos.api.endpoint.UserPasswordEndpointCredentialsRequest;
 import ru.qrhandshake.qrpos.domain.Endpoint;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
-
-import javax.annotation.Resource;
 
 /**
  * Created by lameroot on 24.09.16.

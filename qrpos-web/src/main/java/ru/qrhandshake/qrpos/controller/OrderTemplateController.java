@@ -4,20 +4,20 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Pageable;
-import org.springframework.format.support.FormattingConversionService;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
-import ru.qrhandshake.qrpos.api.*;
+import ru.qrhandshake.qrpos.api.binding.BindingPaymentByOrderTemplateParams;
+import ru.qrhandshake.qrpos.api.binding.BindingPaymentByOrderTemplateRequest;
+import ru.qrhandshake.qrpos.api.binding.BindingPaymentByOrderTemplateResponse;
+import ru.qrhandshake.qrpos.api.binding.BindingPaymentByOrderTemplateResult;
+import ru.qrhandshake.qrpos.api.ordertemplate.*;
 import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.service.AuthService;
 import ru.qrhandshake.qrpos.service.OrderTemplateHistoryService;
 import ru.qrhandshake.qrpos.service.OrderTemplateService;
-import ru.qrhandshake.qrpos.service.TerminalService;
-import ru.qrhandshake.qrpos.util.MaskUtil;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -25,8 +25,6 @@ import javax.validation.Valid;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Created by lameroot on 08.08.16.

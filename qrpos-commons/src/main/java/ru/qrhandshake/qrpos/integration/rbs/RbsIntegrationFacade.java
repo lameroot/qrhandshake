@@ -2,7 +2,6 @@ package ru.qrhandshake.qrpos.integration.rbs;
 
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,14 +9,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.Assert;
 import ru.bpc.phoenix.proxy.api.MerchantServiceProvider;
 import ru.bpc.phoenix.proxy.api.NamePasswordToken;
-import ru.bpc.phoenix.proxy.api.P2PServiceProvider;
 import ru.bpc.phoenix.web.api.merchant.soap.MerchantService;
-import ru.bpc.phoenix.web.api.merchant.soap.p2p.P2PWSController;
 import ru.paymentgate.engine.webservices.merchant.*;
-import ru.paymentgate.engine.webservices.p2p.*;
-import ru.qrhandshake.qrpos.api.BindingPaymentParams;
+import ru.qrhandshake.qrpos.api.binding.BindingPaymentParams;
 import ru.qrhandshake.qrpos.api.CardPaymentParams;
-import ru.qrhandshake.qrpos.api.PaymentParams;
 import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.dto.ReturnUrlObject;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
@@ -27,7 +22,6 @@ import ru.qrhandshake.qrpos.util.Util;
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class RbsIntegrationFacade implements IntegrationFacade {
 

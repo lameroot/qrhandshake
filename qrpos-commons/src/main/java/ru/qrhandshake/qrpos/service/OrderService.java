@@ -5,6 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.*;
+import ru.qrhandshake.qrpos.api.binding.BindingPaymentParams;
+import ru.qrhandshake.qrpos.api.binding.GetBindingsRequest;
+import ru.qrhandshake.qrpos.api.binding.GetBindingsResponse;
+import ru.qrhandshake.qrpos.api.merchantorder.*;
 import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.dto.BindingDto;
 import ru.qrhandshake.qrpos.exception.AuthException;
@@ -176,7 +180,7 @@ public class OrderService {
         if ( paymentParams instanceof CardPaymentParams ) {
             paymentResponse = cardPayment(client, (CardPaymentParams)paymentParams, merchantOrder);
         }
-        else if ( paymentParams instanceof BindingPaymentParams ) {
+        else if ( paymentParams instanceof BindingPaymentParams) {
             paymentResponse = bindingPayment(client, (BindingPaymentParams) paymentParams, merchantOrder);
         }
         else {

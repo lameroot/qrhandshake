@@ -1,19 +1,21 @@
 package ru.qrhandshake.qrpos.service;
 
-import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.GeneralTest;
 import ru.qrhandshake.qrpos.api.*;
+import ru.qrhandshake.qrpos.api.merchant.MerchantRegisterRequest;
+import ru.qrhandshake.qrpos.api.merchant.MerchantRegisterResponse;
+import ru.qrhandshake.qrpos.api.ordertemplate.OrderTemplateParams;
+import ru.qrhandshake.qrpos.api.ordertemplate.OrderTemplateRequest;
+import ru.qrhandshake.qrpos.api.ordertemplate.OrderTemplateResponse;
+import ru.qrhandshake.qrpos.api.ordertemplate.OrderTemplateResult;
 import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 
 import javax.annotation.Resource;
-import javax.persistence.criteria.Order;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Created by lameroot on 08.08.16.

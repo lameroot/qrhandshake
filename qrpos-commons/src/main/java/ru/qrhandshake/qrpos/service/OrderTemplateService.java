@@ -4,6 +4,13 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.*;
+import ru.qrhandshake.qrpos.api.binding.BindingPaymentByOrderTemplateParams;
+import ru.qrhandshake.qrpos.api.binding.BindingPaymentByOrderTemplateResult;
+import ru.qrhandshake.qrpos.api.binding.BindingPaymentParams;
+import ru.qrhandshake.qrpos.api.merchantorder.MerchantOrderRegisterRequest;
+import ru.qrhandshake.qrpos.api.merchantorder.MerchantOrderRegisterResponse;
+import ru.qrhandshake.qrpos.api.ordertemplate.OrderTemplateParams;
+import ru.qrhandshake.qrpos.api.ordertemplate.OrderTemplateResult;
 import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.repository.MerchantRepository;
@@ -12,8 +19,6 @@ import ru.qrhandshake.qrpos.repository.TerminalRepository;
 
 import javax.annotation.Resource;
 import java.util.Date;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by lameroot on 08.08.16.

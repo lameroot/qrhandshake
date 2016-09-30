@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import ru.qrhandshake.qrpos.api.BindingPaymentParams;
+import ru.qrhandshake.qrpos.api.binding.BindingPaymentParams;
 import ru.qrhandshake.qrpos.api.CardPaymentParams;
 import ru.qrhandshake.qrpos.api.PaymentParams;
 import ru.qrhandshake.qrpos.api.YandexMoneyPaymentParams;

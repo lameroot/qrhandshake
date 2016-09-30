@@ -1,10 +1,12 @@
 package ru.qrhandshake.qrpos.service;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.api.client.ClientConfirmRequest;
@@ -20,10 +22,10 @@ import ru.qrhandshake.qrpos.service.confirm.ConfirmService;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-/**
- * Created by lameroot on 25.05.16.
- */
 @Service
 public class ClientService {
 
@@ -60,56 +62,40 @@ public class ClientService {
 
     public ClientRegisterResponse register(ClientRegisterRequest clientRegisterRequest) {
         ClientRegisterResponse clientRegisterResponse = new ClientRegisterResponse();
-        Client client = null;
-        if ( null != clientRegisterRequest.getAuthType() ) {
-            switch (clientRegisterRequest.getAuthType()) {
-                case PASSWORD: {
-                    client = findByUsername(clientRegisterRequest.getAuthName());
-                    break;
-                }
+        final AuthType authType = null != clientRegisterRequest.getAuthType() ? clientRegisterRequest.getAuthType() : AuthType.PASSWORD;
+
+        Client client = findByUsername(clientRegisterRequest.getAuthName());
+        //todo: добавить проверку почты если она есть в параметрах?
+
+        if ( null == client ) {
+            client = new Client();
+            client.setClientId(UUID.randomUUID().toString());
+            client.setUsername(clientRegisterRequest.getAuthName());
+            switch (authType) {
                 case EMAIL: {
-                    //valid here email
-                    client = findByUsername(clientRegisterRequest.getAuthName());
+                    client.setEmail(clientRegisterRequest.getAuthName());
                     break;
                 }
                 case PHONE: {
-                    //valid here phonenumber
-                    client = findByUsername(clientRegisterRequest.getAuthName());
+                    client.setPhone(clientRegisterRequest.getAuthName());
                     break;
                 }
             }
+            client.setEnabled(false);
         }
-        if ( null != client ) {
+        else if ( null != client && client.isEnabled() ) {
+            logger.info("Client with name: " + clientRegisterRequest.getAuthName() + " already exists");
             clientRegisterResponse.setStatus(ResponseStatus.FAIL);
             clientRegisterResponse.setMessage("Client with name: " + clientRegisterRequest.getAuthName() + " already exists");
             return clientRegisterResponse;
         }
-        client = new Client();
-        client.setClientId(UUID.randomUUID().toString());
-        final AuthType authType = null != clientRegisterRequest.getAuthType() ? clientRegisterRequest.getAuthType() : AuthType.PASSWORD;
-        switch (authType) {
-            case PASSWORD: {
-                client.setUsername(clientRegisterRequest.getAuthName());
-                break;
-            }
-            case EMAIL: {
-                client.setUsername(clientRegisterRequest.getAuthName());
-                client.setEmail(clientRegisterRequest.getAuthName());
-                break;
-            }
-            case PHONE: {
-                client.setUsername(clientRegisterRequest.getAuthName());
-                client.setPhone(clientRegisterRequest.getAuthName());
-                break;
-            }
-        }
-        client.setEnabled(false);
+
         if ( !clientRegisterRequest.isConfirm() || null == confirmServices || confirmServices.isEmpty() ) {
             client.setPassword(securityService.encodePassword(clientRegisterRequest.getAuthPassword()));
             client.setEnabled(true);
         }
         else {
-            ConfirmService confirmService = confirmServices.stream().filter(c -> authType == c.getAuthType()).findFirst().get();
+            ConfirmService confirmService = confirmServices.stream().filter(c -> authType == c.getAuthType()).findFirst().orElse(null);
             if ( null == confirmService ) {
                 logger.error("Unable to find confirmService for authType: " + authType);
                 clientRegisterResponse.setStatus(ResponseStatus.FAIL);

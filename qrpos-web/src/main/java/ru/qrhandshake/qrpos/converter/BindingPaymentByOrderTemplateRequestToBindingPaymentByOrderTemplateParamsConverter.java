@@ -2,8 +2,8 @@ package ru.qrhandshake.qrpos.converter;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import ru.qrhandshake.qrpos.api.BindingPaymentByOrderTemplateParams;
-import ru.qrhandshake.qrpos.api.BindingPaymentByOrderTemplateRequest;
+import ru.qrhandshake.qrpos.api.binding.BindingPaymentByOrderTemplateParams;
+import ru.qrhandshake.qrpos.api.binding.BindingPaymentByOrderTemplateRequest;
 import ru.qrhandshake.qrpos.repository.OrderTemplateRepository;
 
 import javax.annotation.Resource;
