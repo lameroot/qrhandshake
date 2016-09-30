@@ -3,37 +3,21 @@ package ru.qrhandshake.qrpos.controller.it;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.Model;
-import org.springframework.util.ReflectionUtils;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.*;
-import ru.qrhandshake.qrpos.dto.MerchantOrderDto;
 import ru.qrhandshake.qrpos.dto.ReturnUrlObject;
-import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
 import ru.qrhandshake.qrpos.integration.IntegrationCompletionRequest;
 import ru.qrhandshake.qrpos.integration.IntegrationCompletionResponse;
-import ru.qrhandshake.qrpos.integration.IntegrationService;
-import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationFacade;
-import ru.qrhandshake.qrpos.repository.BindingRepository;
-import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
-import ru.qrhandshake.qrpos.repository.UserRepository;
-import ru.qrhandshake.qrpos.service.UserService;
 import ru.qrhandshake.qrpos.util.Util;
 import ru.rbs.mpi.test.acs.AcsUtils;
 
-import javax.annotation.Resource;
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 

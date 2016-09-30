@@ -2,6 +2,7 @@ package ru.qrhandshake.qrpos.service;
 
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.*;
+import ru.qrhandshake.qrpos.domain.AuthType;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.repository.ClientRepository;
 
