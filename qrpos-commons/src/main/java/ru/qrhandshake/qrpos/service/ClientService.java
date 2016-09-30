@@ -103,7 +103,7 @@ public class ClientService {
             }
         }
         client.setEnabled(false);
-        if ( !clientRegisterRequest.isConfirm() ) {
+        if ( !clientRegisterRequest.isConfirm() || null == confirmServices || confirmServices.isEmpty() ) {
             client.setPassword(securityService.encodePassword(clientRegisterRequest.getAuthPassword()));
             client.setEnabled(true);
         }
