@@ -4,6 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.api.client.ClientConfirmRequest;
@@ -32,7 +33,7 @@ public class ClientService {
     private ClientRepository clientRepository;
     @Resource
     private SecurityService securityService;
-    @Resource
+    @Autowired(required = false)
     private List<ConfirmService> confirmServices;
 
     @Nullable
