@@ -1,14 +1,13 @@
 package ru.qrhandshake.qrpos.service;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import ru.qrhandshake.qrpos.api.*;
+import ru.qrhandshake.qrpos.api.ApiAuth;
+import ru.qrhandshake.qrpos.api.ResponseStatus;
 import ru.qrhandshake.qrpos.api.client.ClientConfirmRequest;
 import ru.qrhandshake.qrpos.api.client.ClientConfirmResponse;
 import ru.qrhandshake.qrpos.api.client.ClientRegisterRequest;
@@ -22,9 +21,6 @@ import ru.qrhandshake.qrpos.service.confirm.ConfirmService;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class ClientService {
