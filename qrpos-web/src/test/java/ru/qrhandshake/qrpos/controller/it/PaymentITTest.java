@@ -35,11 +35,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
  */
 public class PaymentITTest extends ItTest {
 
-    Long amount = 1000L;
-    String sessionId = UUID.randomUUID().toString();
-    String deviceId = UUID.randomUUID().toString();
-
-
     private PaymentType expectedPaymentType;
 
     @Before

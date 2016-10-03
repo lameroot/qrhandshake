@@ -35,8 +35,6 @@ public class Client implements UserDetails {
     private boolean isExpired;
     @Column(name = "is_locked")
     private boolean isLocked;
-    @Column(name = "confirm_code")
-    private String confirmCode;
     private String name;
     private String phone;
     private String email;
@@ -161,14 +159,6 @@ public class Client implements UserDetails {
 
     public void setLocked(boolean isLocked) {
         this.isLocked = isLocked;
-    }
-
-    public String getConfirmCode() {
-        return confirmCode;
-    }
-
-    public void setConfirmCode(String confirmCode) {
-        this.confirmCode = confirmCode;
     }
 
     @Override

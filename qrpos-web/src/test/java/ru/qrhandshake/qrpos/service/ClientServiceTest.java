@@ -15,7 +15,9 @@ import ru.qrhandshake.qrpos.api.client.ClientRegisterResponse;
 import ru.qrhandshake.qrpos.api.ResponseStatus;
 import ru.qrhandshake.qrpos.domain.AuthType;
 import ru.qrhandshake.qrpos.domain.Client;
+import ru.qrhandshake.qrpos.domain.Confirm;
 import ru.qrhandshake.qrpos.repository.ClientRepository;
+import ru.qrhandshake.qrpos.repository.ConfirmRepository;
 import ru.qrhandshake.qrpos.service.confirm.MailConfirmService;
 import ru.qrhandshake.qrpos.service.mail.MailSender;
 import ru.qrhandshake.qrpos.service.mail.MailSenderException;
@@ -33,6 +35,9 @@ public class ClientServiceTest extends GeneralTest {
     private MailConfirmService mailConfirmService;
     @Resource
     private SecurityService securityService;
+    @Resource
+    private ConfirmRepository confirmRepository;
+
     private MailSender mailSender = Mockito.mock(MailSender.class);
 
     @Test
@@ -72,7 +77,10 @@ public class ClientServiceTest extends GeneralTest {
         assertNotNull(client);
         assertTrue(!client.isEnabled());
         assertNull(client.getPassword());
-        assertNotNull(client.getConfirmCode());
+        Confirm confirm = confirmRepository.findByClientAndAuthType(client, AuthType.EMAIL);
+        assertNotNull(confirm);
+        assertTrue(confirm.isEnabled());
+        assertNotNull(confirm.getCode());
 
         //change password
         password = "password_changed";
@@ -80,7 +88,7 @@ public class ClientServiceTest extends GeneralTest {
         clientConfirmRequest.setAuthType(AuthType.EMAIL);
         clientConfirmRequest.setAuthName("client@mail.ru");
         clientConfirmRequest.setAuthPassword(password);
-        clientConfirmRequest.setConfirmCode(client.getConfirmCode());
+        clientConfirmRequest.setConfirmCode(confirm.getCode());
 
         ClientConfirmResponse clientConfirmResponse = clientService.confirm(clientConfirmRequest);
         assertNotNull(clientConfirmResponse);
@@ -90,7 +98,9 @@ public class ClientServiceTest extends GeneralTest {
         assertNotNull(client);
         assertTrue(client.isEnabled());
         assertNotNull(client.getPassword());
-        assertNull(client.getConfirmCode());
+        confirm = confirmRepository.findByClientAndAuthType(client,AuthType.EMAIL);
+        assertNull(confirm.getCode());
+        assertTrue(!confirm.isEnabled());
 
         assertTrue(securityService.match(password,client.getPassword()));
     }
@@ -116,15 +126,18 @@ public class ClientServiceTest extends GeneralTest {
         assertNotNull(client);
         assertTrue(!client.isEnabled());
         assertNull(client.getPassword());
-        assertNotNull(client.getConfirmCode());
+        Confirm confirm = confirmRepository.findByClientAndAuthType(client, AuthType.PHONE);
+        assertNotNull(confirm);
+        assertTrue(confirm.isEnabled());
+        assertNotNull(confirm.getCode());
 
         //change password
         password = "password_changed";
         ClientConfirmRequest clientConfirmRequest = new ClientConfirmRequest();
-        clientConfirmRequest.setAuthType(AuthType.EMAIL);
+        clientConfirmRequest.setAuthType(AuthType.PHONE);
         clientConfirmRequest.setAuthName(authName);
         clientConfirmRequest.setAuthPassword(password);
-        clientConfirmRequest.setConfirmCode(client.getConfirmCode());
+        clientConfirmRequest.setConfirmCode(confirm.getCode());
 
         ClientConfirmResponse clientConfirmResponse = clientService.confirm(clientConfirmRequest);
         assertNotNull(clientConfirmResponse);
@@ -134,7 +147,9 @@ public class ClientServiceTest extends GeneralTest {
         assertNotNull(client);
         assertTrue(client.isEnabled());
         assertNotNull(client.getPassword());
-        assertNull(client.getConfirmCode());
+        confirm = confirmRepository.findByClientAndAuthType(client,AuthType.PHONE);
+        assertNull(confirm.getCode());
+        assertTrue(!confirm.isEnabled());
 
         assertTrue(securityService.match(password,client.getPassword()));
     }
@@ -158,7 +173,10 @@ public class ClientServiceTest extends GeneralTest {
         assertNotNull(client);
         assertTrue(!client.isEnabled());
         assertNull(client.getPassword());
-        assertNotNull(client.getConfirmCode());
+        Confirm confirm = confirmRepository.findByClientAndAuthType(client, AuthType.PHONE);
+        assertNotNull(confirm);
+        assertTrue(confirm.isEnabled());
+        assertNotNull(confirm.getCode());
     }
 
 

@@ -5,6 +5,9 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.ApiAuth;
 import ru.qrhandshake.qrpos.api.ResponseStatus;
@@ -14,7 +17,11 @@ import ru.qrhandshake.qrpos.api.client.ClientRegisterRequest;
 import ru.qrhandshake.qrpos.api.client.ClientRegisterResponse;
 import ru.qrhandshake.qrpos.domain.AuthType;
 import ru.qrhandshake.qrpos.domain.Client;
+import ru.qrhandshake.qrpos.domain.Confirm;
+import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.repository.ClientRepository;
+import ru.qrhandshake.qrpos.repository.ConfirmRepository;
+import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 import ru.qrhandshake.qrpos.service.confirm.ConfirmResult;
 import ru.qrhandshake.qrpos.service.confirm.ConfirmService;
 
@@ -31,8 +38,15 @@ public class ClientService {
     private ClientRepository clientRepository;
     @Resource
     private SecurityService securityService;
+    @Resource
+    private MerchantOrderRepository merchantOrderRepository;
+    @Resource
+    private ConfirmRepository confirmRepository;
     @Autowired(required = false)
     private List<ConfirmService> confirmServices;
+
+    @Value("${confirm.attempt.max:3}")
+    private Integer maxConfirmAttempt;
 
     @Nullable
     public Client findByUsername(String username) {
@@ -89,8 +103,10 @@ public class ClientService {
         if ( !clientRegisterRequest.isConfirm() || null == confirmServices || confirmServices.isEmpty() ) {
             client.setPassword(securityService.encodePassword(clientRegisterRequest.getAuthPassword()));
             client.setEnabled(true);
+            clientRepository.save(client);
         }
         else {
+            clientRepository.save(client);
             ConfirmService confirmService = confirmServices.stream().filter(c -> authType == c.getAuthType()).findFirst().orElse(null);
             if ( null == confirmService ) {
                 logger.error("Unable to find confirmService for authType: " + authType);
@@ -100,15 +116,14 @@ public class ClientService {
             }
             ConfirmResult confirmResult = confirmService.sendConfirmRequest(client);
             if ( !confirmResult.isStatus() ) {
-                logger.error("We tried send confirm request for {} use {}, but occurred error");
+                logger.error("We tried send confirm request for {} use {}, but occurred error", client, authType);
                 clientRegisterResponse.setStatus(ResponseStatus.FAIL);
                 clientRegisterResponse.setMessage("We tried send confirm request use " + authType + " confirm service, but occurred error");
                 return clientRegisterResponse;
             }
-            client.setConfirmCode(confirmResult.getConfirmCode());
             clientRegisterResponse.setConfirmCode(confirmResult.getConfirmCode());
         }
-        clientRepository.save(client);
+
 
         clientRegisterResponse.setStatus(ResponseStatus.SUCCESS);
         clientRegisterResponse.setMessage("Client registered successfully");
@@ -132,26 +147,48 @@ public class ClientService {
             clientConfirmResponse.setMessage("Client with authName:" + clientConfirmRequest.getAuthPassword() + " not found");
             return clientConfirmResponse;
         }
-        if ( StringUtils.isBlank(client.getConfirmCode()) || StringUtils.isBlank(clientConfirmRequest.getConfirmCode()) ) {
+        Confirm confirm = confirmRepository.findByClientAndAuthType(client, clientConfirmRequest.getAuthType());
+        if ( null == confirm || !confirm.isEnabled() || StringUtils.isBlank(confirm.getCode()) ) {
+            logger.error("Confirm not found for {} and authType: {}", client, clientConfirmRequest.getAuthType());
+            clientConfirmResponse.setStatus(ResponseStatus.FAIL);
+            clientConfirmResponse.setMessage("Confirm not found");
+            return clientConfirmResponse;
+        }
+        if ( StringUtils.isBlank(confirm.getCode()) || StringUtils.isBlank(clientConfirmRequest.getConfirmCode()) ) {
             logger.error("Either client confirmCode or confirmCode from request is null");
             clientConfirmResponse.setStatus(ResponseStatus.FAIL);
             clientConfirmResponse.setMessage("Either client confirmCode or confirmCode from request is null");
             return clientConfirmResponse;
         }
-        boolean isConfirmed = client.getConfirmCode().equalsIgnoreCase(clientConfirmRequest.getConfirmCode());
+        if ( maxConfirmAttempt >= confirm.getAttempt() ) {
+            logger.error("Count of confirm attempt more than {}, confirm failed", maxConfirmAttempt);
+            clientConfirmResponse.setStatus(ResponseStatus.FAIL);
+            clientConfirmResponse.setMessage("Max attempts of confirm exceeded");
+            return clientConfirmResponse;
+        }
+        boolean isConfirmed = confirm.getCode().equalsIgnoreCase(clientConfirmRequest.getConfirmCode());
         if ( !isConfirmed ) {
             logger.error("Confirm codes a client and request aren't equals");
             clientConfirmResponse.setStatus(ResponseStatus.FAIL);
             clientConfirmResponse.setMessage("Confirm codes a client and request aren't equals");
+            confirm.setAttempt(confirm.getAttempt() + 1);
+            confirmRepository.save(confirm);
             return clientConfirmResponse;
         }
         client.setPassword(securityService.encodePassword(clientConfirmRequest.getAuthPassword()));
         client.setEnabled(true);
-        client.setConfirmCode(null);
+        confirm.setEnabled(false);
+        confirm.setCode(null);
+        confirmRepository.save(confirm);
 
         clientRepository.save(client);
         clientConfirmResponse.setStatus(ResponseStatus.SUCCESS);
         clientConfirmResponse.setMessage("Client updated");
         return clientConfirmResponse;
+    }
+
+    public List<MerchantOrder> getOrders(Client client, Pageable pageable) {
+        List<MerchantOrder> merchantOrders = merchantOrderRepository.findByClient(client, pageable);
+        return merchantOrders;
     }
 }

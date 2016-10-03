@@ -25,6 +25,8 @@ import ru.qrhandshake.qrpos.service.MerchantService;
 
 import javax.annotation.Resource;
 
+import java.util.UUID;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -37,7 +39,12 @@ public class ItTest extends ServletConfigTest {
 
     protected final static String SSL_CARD = "5555555555555599";
     protected final static String TDS_CARD = "4111111111111111";
+    protected Long amount = 1000L;
+    protected String sessionId = UUID.randomUUID().toString();
+    protected String deviceId = UUID.randomUUID().toString();
 
+    @Resource
+    protected ClientRepository clientRepository;
     @Resource
     protected MerchantRepository merchantRepository;
     @Resource
