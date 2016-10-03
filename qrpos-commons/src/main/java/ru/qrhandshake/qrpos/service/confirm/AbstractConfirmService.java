@@ -10,11 +10,14 @@ import ru.qrhandshake.qrpos.repository.ConfirmRepository;
 import ru.qrhandshake.qrpos.util.Util;
 
 import javax.annotation.Resource;
+import java.util.Calendar;
 
 public abstract class AbstractConfirmService implements ConfirmService {
 
     @Value("${confirm.code.length:4}")
     private Integer confirmCodeLength;
+    @Value("${confirm.expiry.hours:24}")
+    private Integer maxExpiry;
     private final static Logger logger = LoggerFactory.getLogger(AbstractConfirmService.class);
 
     @Resource
@@ -28,6 +31,10 @@ public abstract class AbstractConfirmService implements ConfirmService {
             confirm.setClient(client);
             confirm.setEnabled(true);
             confirm.setAttempt(0);
+            confirm.setAuthType(getAuthType());
+            Calendar expiryDate = Calendar.getInstance();
+            expiryDate.add(Calendar.HOUR,maxExpiry);
+            confirm.setExpiry(expiryDate.getTime());
         }
         else {
             confirm.setAttempt(confirm.getAttempt() + 1);
@@ -35,10 +42,12 @@ public abstract class AbstractConfirmService implements ConfirmService {
         ConfirmResult confirmResult = new ConfirmResult();
         String confirmCode = Util.generatePseudoUniqueNumber(confirmCodeLength);
         confirmResult.setConfirmCode(confirmCode);
-
+        confirm.setCode(confirmCode);
         try {
             send(client, confirmCode);
-        } catch (Exception e) {
+            confirmRepository.save(confirm);
+            confirmResult.setStatus(true);
+        } catch (Throwable e) {
             logger.error("Error send confirm code",e);
         }
 

@@ -99,8 +99,7 @@ public class ClientServiceTest extends GeneralTest {
         assertTrue(client.isEnabled());
         assertNotNull(client.getPassword());
         confirm = confirmRepository.findByClientAndAuthType(client,AuthType.EMAIL);
-        assertNull(confirm.getCode());
-        assertTrue(!confirm.isEnabled());
+        assertNull(confirm);
 
         assertTrue(securityService.match(password,client.getPassword()));
     }
@@ -148,10 +147,111 @@ public class ClientServiceTest extends GeneralTest {
         assertTrue(client.isEnabled());
         assertNotNull(client.getPassword());
         confirm = confirmRepository.findByClientAndAuthType(client,AuthType.PHONE);
-        assertNull(confirm.getCode());
-        assertTrue(!confirm.isEnabled());
+        assertNull(confirm);
 
         assertTrue(securityService.match(password,client.getPassword()));
+    }
+
+    @Test
+    public void testMaxAttempts() throws Exception {
+        ReflectionTestUtils.setField(mailConfirmService,"mailSender",mailSender);
+        doNothing().when(mailSender).send(anyObject());
+        ReflectionTestUtils.setField(clientService,"maxConfirmAttempt",3);
+
+        String authName = "+79267787787";
+        String password = "password";
+        ClientRegisterRequest clientRegisterRequest = new ClientRegisterRequest();
+        clientRegisterRequest.setAuthType(AuthType.PHONE);
+        clientRegisterRequest.setAuthName(authName);
+        clientRegisterRequest.setAuthPassword(password);
+        clientRegisterRequest.setConfirm(true);
+
+        ClientRegisterResponse clientRegisterResponse = clientService.register(clientRegisterRequest);
+        assertNotNull(clientRegisterResponse);
+        assertTrue(clientRegisterResponse.getStatus().equals(ResponseStatus.SUCCESS));
+
+        Client client = clientRepository.findByUsername(clientRegisterRequest.getAuthName());
+        assertNotNull(client);
+        assertTrue(!client.isEnabled());
+        assertNull(client.getPassword());
+        Confirm confirm = confirmRepository.findByClientAndAuthType(client, AuthType.PHONE);
+        assertNotNull(confirm);
+        assertTrue(confirm.isEnabled());
+        assertNotNull(confirm.getCode());
+
+        Integer maxAttempts = environment.getProperty("confirm.attempt.max",Integer.class, 3);
+
+        ClientConfirmResponse clientConfirmResponse = null;
+        for (int i = 0; i <= maxAttempts; i++) {
+            //change password
+            password = "password_changed";
+            ClientConfirmRequest clientConfirmRequest = new ClientConfirmRequest();
+            clientConfirmRequest.setAuthType(AuthType.PHONE);
+            clientConfirmRequest.setAuthName(authName);
+            clientConfirmRequest.setAuthPassword(password);
+            clientConfirmRequest.setConfirmCode(confirm.getCode() + "_invalid");
+
+            clientConfirmResponse = clientService.confirm(clientConfirmRequest);
+            assertEquals(ResponseStatus.FAIL,clientConfirmResponse.getStatus());
+        }
+        assertEquals("Max attempts of confirm exceeded",clientConfirmResponse.getMessage());
+
+        client = clientRepository.findByUsername(clientRegisterRequest.getAuthName());
+        assertTrue(!client.isEnabled());
+        confirm = confirmRepository.findByClientAndAuthType(client, AuthType.PHONE);
+        assertNull(confirm);
+    }
+
+    @Test
+    public void testRegisterSomeTimes() throws Exception {
+        ReflectionTestUtils.setField(mailConfirmService,"mailSender",mailSender);
+        doNothing().when(mailSender).send(anyObject());
+        ReflectionTestUtils.setField(clientService,"maxConfirmAttempt",10);
+
+        ClientRegisterResponse clientRegisterResponse = null;
+        String authName = "+79267787787";
+        String password = "password";
+        int max = 5;
+        for (int i = 0; i <= max; i++) {
+            password = "password" + "_" + i;
+            ClientRegisterRequest clientRegisterRequest = new ClientRegisterRequest();
+            clientRegisterRequest.setAuthType(AuthType.PHONE);
+            clientRegisterRequest.setAuthName(authName);
+            clientRegisterRequest.setAuthPassword(password);
+            clientRegisterRequest.setConfirm(true);
+
+            clientRegisterResponse = clientService.register(clientRegisterRequest);
+            assertNotNull(clientRegisterResponse);
+            assertTrue(clientRegisterResponse.getStatus().equals(ResponseStatus.SUCCESS));
+
+        }
+        Client client = clientRepository.findByUsername(authName);
+        assertNotNull(client);
+        assertTrue(!client.isEnabled());
+        assertEquals("password_" + max, password);
+        assertNull(client.getPassword());
+
+        //change password
+        password = "password_changed";
+        ClientConfirmRequest clientConfirmRequest = new ClientConfirmRequest();
+        clientConfirmRequest.setAuthType(AuthType.PHONE);
+        clientConfirmRequest.setAuthName(authName);
+        clientConfirmRequest.setAuthPassword(password);
+        clientConfirmRequest.setConfirmCode(clientRegisterResponse.getConfirmCode());
+
+        ClientConfirmResponse clientConfirmResponse = clientService.confirm(clientConfirmRequest);
+        assertNotNull(clientConfirmResponse);
+        assertEquals(ResponseStatus.SUCCESS,clientConfirmResponse.getStatus());
+
+        client = clientRepository.findByUsername(clientConfirmRequest.getAuthName());
+        assertNotNull(client);
+        assertTrue(client.isEnabled());
+        assertNotNull(client.getPassword());
+        Confirm confirm = confirmRepository.findByClientAndAuthType(client,AuthType.PHONE);
+        assertNull(confirm);
+
+        assertTrue(securityService.match(password,client.getPassword()));
+
     }
 
     @Test

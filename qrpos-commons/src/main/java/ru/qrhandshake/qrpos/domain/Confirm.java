@@ -17,15 +17,15 @@ public class Confirm {
     @Column
     private Integer attempt;
     @Temporal(TemporalType.TIMESTAMP)
-    @Column
+    @Column(nullable = false)
     private Date expiry;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fk_client_id", nullable = true)
+    @JoinColumn(name = "fk_client_id", nullable = false)
     private Client client;
     @Column(name = "enabled")
     private boolean enabled;
     @Enumerated(EnumType.STRING)
-    @Column(name = "auth_type")
+    @Column(name = "auth_type", nullable = false)
     private AuthType authType;
 
     public Long getId() {

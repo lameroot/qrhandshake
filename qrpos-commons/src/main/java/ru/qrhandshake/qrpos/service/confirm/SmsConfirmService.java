@@ -16,8 +16,6 @@ public class SmsConfirmService extends AbstractConfirmService {
 
     @Autowired(required = false)
     private MailConfirmService mailConfirmService;
-    @Resource
-    private ConfirmRepository confirmRepository;
 
     @Value("${confirm.sms.useMail:false}")
     private boolean useMail;

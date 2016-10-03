@@ -2,6 +2,7 @@ package ru.qrhandshake.qrpos.service;
 
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,8 @@ import ru.qrhandshake.qrpos.service.confirm.ConfirmResult;
 import ru.qrhandshake.qrpos.service.confirm.ConfirmService;
 
 import javax.annotation.Resource;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,6 +50,8 @@ public class ClientService {
 
     @Value("${confirm.attempt.max:3}")
     private Integer maxConfirmAttempt;
+    @Value("${confirm.expiry.hours:24}")
+    private Integer maxExpiry;
 
     @Nullable
     public Client findByUsername(String username) {
@@ -92,12 +97,6 @@ public class ClientService {
                 }
             }
             client.setEnabled(false);
-        }
-        else if ( null != client && client.isEnabled() ) {
-            logger.info("Client with name: " + clientRegisterRequest.getAuthName() + " already exists");
-            clientRegisterResponse.setStatus(ResponseStatus.FAIL);
-            clientRegisterResponse.setMessage("Client with name: " + clientRegisterRequest.getAuthName() + " already exists");
-            return clientRegisterResponse;
         }
 
         if ( !clientRegisterRequest.isConfirm() || null == confirmServices || confirmServices.isEmpty() ) {
@@ -160,12 +159,30 @@ public class ClientService {
             clientConfirmResponse.setMessage("Either client confirmCode or confirmCode from request is null");
             return clientConfirmResponse;
         }
-        if ( maxConfirmAttempt >= confirm.getAttempt() ) {
-            logger.error("Count of confirm attempt more than {}, confirm failed", maxConfirmAttempt);
+        if ( maxConfirmAttempt <= confirm.getAttempt() ) {
+            confirmRepository.delete(confirm);
+            logger.error("Count of confirm attempt [{}] more than {}, confirm failed", confirm.getAttempt(), maxConfirmAttempt);
             clientConfirmResponse.setStatus(ResponseStatus.FAIL);
             clientConfirmResponse.setMessage("Max attempts of confirm exceeded");
             return clientConfirmResponse;
         }
+        if ( null == confirm.getExpiry() ) {
+            logger.error("Expiry is null");
+            clientConfirmResponse.setStatus(ResponseStatus.FAIL);
+            clientConfirmResponse.setMessage("Expiry is null");
+            return clientConfirmResponse;
+        }
+        Calendar expiryDate = Calendar.getInstance();
+        expiryDate.setTime(confirm.getExpiry());
+        expiryDate.add(Calendar.HOUR,maxExpiry);
+        if ( expiryDate.getTime().before(new Date()) ) {
+            confirmRepository.delete(confirm);
+            logger.error("Confirm is expired");
+            clientConfirmResponse.setStatus(ResponseStatus.FAIL);
+            clientConfirmResponse.setMessage("Confirm is expired");
+            return clientConfirmResponse;
+        }
+
         boolean isConfirmed = confirm.getCode().equalsIgnoreCase(clientConfirmRequest.getConfirmCode());
         if ( !isConfirmed ) {
             logger.error("Confirm codes a client and request aren't equals");
@@ -177,9 +194,8 @@ public class ClientService {
         }
         client.setPassword(securityService.encodePassword(clientConfirmRequest.getAuthPassword()));
         client.setEnabled(true);
-        confirm.setEnabled(false);
-        confirm.setCode(null);
-        confirmRepository.save(confirm);
+
+        confirmRepository.delete(confirm);
 
         clientRepository.save(client);
         clientConfirmResponse.setStatus(ResponseStatus.SUCCESS);
