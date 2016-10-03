@@ -25,11 +25,19 @@ public class Client implements UserDetails {
     private Long id;
     @Column(name = "client_id", nullable = false, unique = true)
     private String clientId;
+    @Column(name = "username", nullable = false, unique = true)
     private String username;//todo: возмоно сделать по телефону
+    @Column(name = "password", nullable = true)
     private String password;
+    @Column(name = "is_enabled")
+    private boolean isEnabled;
+    @Column(name = "is_expired")
+    private boolean isExpired;
+    @Column(name = "is_locked")
+    private boolean isLocked;
     private String name;
-    private String phone;//unique
-    private String email;//unique
+    private String phone;
+    private String email;
     private String address;
     private Double lat;
     private Double lon;
@@ -123,22 +131,34 @@ public class Client implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return false;
+        return !isExpired;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return false;
+        return !isLocked;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return false;
+        return !isExpired;
     }
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return isEnabled;
+    }
+
+    public void setEnabled(boolean isEnabled) {
+        this.isEnabled = isEnabled;
+    }
+
+    public void setExpired(boolean isExpired) {
+        this.isExpired = isExpired;
+    }
+
+    public void setLocked(boolean isLocked) {
+        this.isLocked = isLocked;
     }
 
     @Override

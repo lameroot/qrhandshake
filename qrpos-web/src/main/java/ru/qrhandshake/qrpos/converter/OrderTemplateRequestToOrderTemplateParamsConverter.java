@@ -2,12 +2,8 @@ package ru.qrhandshake.qrpos.converter;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import ru.qrhandshake.qrpos.api.OrderTemplateParams;
-import ru.qrhandshake.qrpos.api.OrderTemplateRequest;
-import ru.qrhandshake.qrpos.domain.Terminal;
-import ru.qrhandshake.qrpos.service.TerminalService;
-
-import javax.annotation.Resource;
+import ru.qrhandshake.qrpos.api.ordertemplate.OrderTemplateParams;
+import ru.qrhandshake.qrpos.api.ordertemplate.OrderTemplateRequest;
 
 /**
  * Created by lameroot on 09.08.16.

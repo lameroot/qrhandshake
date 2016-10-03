@@ -68,6 +68,10 @@ create table client (
   password varchar(255),
   phone varchar(255),
   username varchar(255),
+  confirm_code varchar(255),
+  is_enabled boolean,
+  is_expired boolean,
+  is_locked boolean,
   constraint UK_CLIENT_client_id unique (client_id)
 );
 

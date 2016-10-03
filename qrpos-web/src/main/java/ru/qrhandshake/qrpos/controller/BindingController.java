@@ -6,11 +6,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import ru.qrhandshake.qrpos.api.*;
+import ru.qrhandshake.qrpos.api.binding.CardBindingCreateRequest;
+import ru.qrhandshake.qrpos.api.binding.CardBindingCreateResponse;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.service.AuthService;
 import ru.qrhandshake.qrpos.service.BindingService;
-import ru.qrhandshake.qrpos.service.OrderService;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;

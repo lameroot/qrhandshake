@@ -2,8 +2,8 @@ package ru.qrhandshake.qrpos.converter;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import ru.qrhandshake.qrpos.api.OrderTemplateHistoryResponse;
-import ru.qrhandshake.qrpos.api.OrderTemplateHistoryResult;
+import ru.qrhandshake.qrpos.api.ordertemplate.OrderTemplateHistoryResponse;
+import ru.qrhandshake.qrpos.api.ordertemplate.OrderTemplateHistoryResult;
 import ru.qrhandshake.qrpos.api.ResponseStatus;
 
 /**

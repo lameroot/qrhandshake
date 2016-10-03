@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import ru.qrhandshake.qrpos.api.MerchantRegisterRequest;
-import ru.qrhandshake.qrpos.api.MerchantRegisterResponse;
+import ru.qrhandshake.qrpos.api.merchant.MerchantRegisterRequest;
+import ru.qrhandshake.qrpos.api.merchant.MerchantRegisterResponse;
 import ru.qrhandshake.qrpos.service.MerchantService;
 
 import javax.annotation.Resource;

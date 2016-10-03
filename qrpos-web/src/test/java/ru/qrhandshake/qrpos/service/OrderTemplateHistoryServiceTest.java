@@ -7,8 +7,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import ru.qrhandshake.qrpos.GeneralTest;
-import ru.qrhandshake.qrpos.api.OrderTemplateHistoryParams;
-import ru.qrhandshake.qrpos.api.OrderTemplateHistoryResult;
+import ru.qrhandshake.qrpos.api.ordertemplate.OrderTemplateHistoryParams;
+import ru.qrhandshake.qrpos.api.ordertemplate.OrderTemplateHistoryResult;
 import ru.qrhandshake.qrpos.domain.*;
 
 import java.util.*;
