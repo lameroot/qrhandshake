@@ -178,7 +178,10 @@ public class MerchantOrderController {
     }
 
     private String getReturnUrl(HttpServletRequest request, String orderId){
-        return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+        logger.debug("request schema: {}", request.getScheme());
+//        return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+//                + MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.FINISH_PATH + "/" + orderId;
+        return "https" + "://" + request.getServerName() + request.getContextPath()
                 + MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.FINISH_PATH + "/" + orderId;
     }
 }

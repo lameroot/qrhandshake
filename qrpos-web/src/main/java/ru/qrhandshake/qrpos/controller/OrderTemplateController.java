@@ -1,6 +1,8 @@
 package ru.qrhandshake.qrpos.controller;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +34,8 @@ import java.util.Date;
 @Controller
 @RequestMapping(value = "/order_template", produces = {MediaType.APPLICATION_JSON_VALUE})
 public class OrderTemplateController {
+
+    private final static Logger logger = LoggerFactory.getLogger(OrderTemplateController.class);
 
     @Resource
     private AuthService authService;
@@ -88,7 +92,10 @@ public class OrderTemplateController {
 
 
     private String getReturnUrl(HttpServletRequest request, String orderTemplateId){
-        return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+        logger.debug("request schema: {}", request.getScheme());
+//        return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+//                + "/order_template/finish" + "/" + orderTemplateId;
+        return "https" + "://" + request.getServerName() + request.getContextPath()
                 + "/order_template/finish" + "/" + orderTemplateId;
     }
 }

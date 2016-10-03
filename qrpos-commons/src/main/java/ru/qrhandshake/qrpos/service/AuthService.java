@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.service;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.ApiAuth;
 import ru.qrhandshake.qrpos.domain.Client;
@@ -21,6 +22,10 @@ public class AuthService {
     private TerminalService terminalService;
     @Resource
     private ClientService clientService;
+    @Resource
+    private UserService userService;
+    @Resource
+    private SecurityService securityService;
 
     public Terminal terminalAuth(Principal principal, ApiAuth apiAuth) throws AuthException {
         Terminal terminal = null;
@@ -44,5 +49,20 @@ public class AuthService {
         }
         if ( null == client && throwExceptionIfNull ) throw new AuthException("Client not auth");
         return client;
+    }
+
+    public User userAuth(Principal principal, ApiAuth apiAuth, boolean throwExceptionIfNull) throws AuthException {
+        User user = null;
+        if ( null != principal ) {
+            user = (User)((Authentication) principal).getPrincipal();
+        }
+        else if ( null != apiAuth && apiAuth.authIsNotBlank() ) {
+            UserDetails userDetails = userService.loadUserByUsername(apiAuth.getAuthName());
+            if ( securityService.match(apiAuth.getAuthPassword(),userDetails.getPassword()) ) {
+                user = (User)userDetails;
+            }
+        }
+        if ( null == user && throwExceptionIfNull ) throw new AuthException("User not auth");
+        return user;
     }
 }
