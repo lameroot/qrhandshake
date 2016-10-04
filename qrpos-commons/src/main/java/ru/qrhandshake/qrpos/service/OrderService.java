@@ -232,6 +232,12 @@ public class OrderService {
         merchantOrder.setClient(client);
 
         Endpoint endpoint = endpointRepository.findByMerchantAndIntegrationSupport(merchantOrder.getMerchant(), integrationSupport);
+        if ( null == endpoint ) {
+            paymentResponse.setStatus(ResponseStatus.FAIL);
+            paymentResponse.setOrderStatus(merchantOrder.getOrderStatus());
+            paymentResponse.setMessage("Unknown endpoint for order: " + merchantOrder.getOrderId());
+            return paymentResponse;
+        }
         logger.debug("PaymentByBinding via {}",endpoint);
         IntegrationPaymentBindingRequest integrationPaymentBindingRequest = new IntegrationPaymentBindingRequest(endpoint,binding.getExternalBindingId());
         integrationPaymentBindingRequest.setPaymentParams(paymentParams);

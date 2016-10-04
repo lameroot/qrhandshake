@@ -2,6 +2,7 @@ package ru.qrhandshake.qrpos.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -51,6 +52,9 @@ public class MerchantOrderController {
     private AuthService authService;
     @Resource
     private MerchantService merchantService;
+
+    @Value("${buildHttpsRequest:false}")
+    private boolean buildHttpsRequest;
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -179,9 +183,13 @@ public class MerchantOrderController {
 
     private String getReturnUrl(HttpServletRequest request, String orderId){
         logger.debug("request schema: {}", request.getScheme());
-//        return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
-//                + MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.FINISH_PATH + "/" + orderId;
-        return "https" + "://" + request.getServerName() + request.getContextPath()
-                + MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.FINISH_PATH + "/" + orderId;
+        if ( buildHttpsRequest ) {
+            return "https" + "://" + request.getServerName() + request.getContextPath()
+                    + MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.FINISH_PATH + "/" + orderId;
+        }
+        else {
+            return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+                    + MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.FINISH_PATH + "/" + orderId;
+        }
     }
 }

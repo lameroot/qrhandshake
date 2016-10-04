@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.controller.it;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;

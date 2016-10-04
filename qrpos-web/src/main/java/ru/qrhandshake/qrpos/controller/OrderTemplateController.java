@@ -3,6 +3,7 @@ package ru.qrhandshake.qrpos.controller;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +46,9 @@ public class OrderTemplateController {
     private OrderTemplateHistoryService orderTemplateHistoryService;
     @Resource
     private ConversionService conversionService;
+
+    @Value("${buildHttpsRequest:false}")
+    private boolean buildHttpsRequest;
 
     @InitBinder
     public void init(WebDataBinder webDataBinder) {
@@ -93,9 +97,13 @@ public class OrderTemplateController {
 
     private String getReturnUrl(HttpServletRequest request, String orderTemplateId){
         logger.debug("request schema: {}", request.getScheme());
-//        return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
-//                + "/order_template/finish" + "/" + orderTemplateId;
-        return "https" + "://" + request.getServerName() + request.getContextPath()
+        if ( buildHttpsRequest ) {
+            return "https" + "://" + request.getServerName() + request.getContextPath()
                 + "/order_template/finish" + "/" + orderTemplateId;
+        }
+        else {
+            return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+                    + "/order_template/finish" + "/" + orderTemplateId;
+        }
     }
 }
