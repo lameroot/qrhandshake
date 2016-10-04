@@ -1,5 +1,7 @@
 package ru.qrhandshake.qrpos.integration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.domain.OrderStatus;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
@@ -8,6 +10,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public class IntegrationService {
+
+    private final static Logger logger = LoggerFactory.getLogger(IntegrationService.class);
 
     private final Map<IntegrationSupport, IntegrationFacade> integrationFacades;
     private final Map<IntegrationSupport, P2pIntegrationFacade> p2pIntegrationFacades;
@@ -18,6 +22,7 @@ public class IntegrationService {
     }
 
     public IntegrationPaymentResponse paymentBinding(IntegrationPaymentBindingRequest integrationPaymentBindingRequest) throws IntegrationException {
+        logger.trace("Integration, paymentBinding: {}", integrationPaymentBindingRequest);
         IntegrationSupport integrationSupport = integrationPaymentBindingRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
         IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationSupport).paymentBinding(integrationPaymentBindingRequest);
         if ( !integrationPaymentResponse.isSuccess() ) throw new IntegrationException(integrationPaymentResponse.getMessage());

@@ -27,4 +27,14 @@ public class IntegrationPaymentBindingRequest extends IntegrationPaymentRequest 
     public void setBindingId(String bindingId) {
         this.bindingId = bindingId;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("IntegrationPaymentBindingRequest{");
+        sb.append(super.toString()).append('\'');
+        sb.append("externalBindingId='").append(externalBindingId).append('\'');
+        sb.append(", bindingId='").append(bindingId).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

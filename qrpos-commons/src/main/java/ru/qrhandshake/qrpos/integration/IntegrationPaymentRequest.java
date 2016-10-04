@@ -124,4 +124,23 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
     public void setPaymentType(PaymentType paymentType) {
         this.paymentType = paymentType;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("IntegrationPaymentRequest{");
+        sb.append("orderId='").append(orderId).append('\'');
+        sb.append(", externalId='").append(externalId).append('\'');
+        sb.append(", returnUrl='").append(returnUrl).append('\'');
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", amount=").append(amount);
+        sb.append(", client=").append(client);
+        sb.append(", orderStatus=").append(orderStatus);
+        sb.append(", params=").append(params);
+        sb.append(", paymentWay=").append(paymentWay);
+        sb.append(", paymentParams=").append(paymentParams);
+        sb.append(", ip='").append(ip).append('\'');
+        sb.append(", paymentType=").append(paymentType);
+        sb.append('}');
+        return sb.toString();
+    }
 }

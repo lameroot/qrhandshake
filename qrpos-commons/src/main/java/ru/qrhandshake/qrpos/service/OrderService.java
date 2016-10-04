@@ -213,6 +213,7 @@ public class OrderService {
             paymentResponse.setMessage("Unable to find BINDING by bindingId: " + paymentParams.getBindingId());
             return paymentResponse;
         }
+        logger.trace(binding.toString());
         if ( !client.getClientId().equals(binding.getClient().getClientId()) ) {
             paymentResponse.setStatus(ResponseStatus.FAIL);
             paymentResponse.setMessage("ClientId: " + binding.getClient().getClientId() + " not equals clientId of current client");
@@ -225,11 +226,13 @@ public class OrderService {
             paymentResponse.setMessage("Unknown integration support for orderId: " + paymentParams.getOrderId());
             return paymentResponse;
         }
+        logger.trace(integrationSupport.toString());
         merchantOrder.setIntegrationSupport(integrationSupport);
         merchantOrder.setPaymentWay(PaymentWay.BINDING);
         merchantOrder.setClient(client);
 
         Endpoint endpoint = endpointRepository.findByMerchantAndIntegrationSupport(merchantOrder.getMerchant(), integrationSupport);
+        logger.debug("PaymentByBinding via {}",endpoint);
         IntegrationPaymentBindingRequest integrationPaymentBindingRequest = new IntegrationPaymentBindingRequest(endpoint,binding.getExternalBindingId());
         integrationPaymentBindingRequest.setPaymentParams(paymentParams);
         integrationPaymentBindingRequest.setAmount(merchantOrder.getAmount());
