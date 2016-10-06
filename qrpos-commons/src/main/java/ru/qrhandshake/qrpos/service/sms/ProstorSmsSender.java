@@ -39,6 +39,7 @@ public class ProstorSmsSender implements SmsSender {
                     .queryParam("text", smsObject.getText())
                     //.queryParam("sender", StringUtils.isNotBlank(smsObject.getSender()) ? smsObject.getSender() : defaultSender)
                     .build().encode().toUriString();
+            logger.debug("Try to send {} via {}",smsObject,url);
             HttpGet httpGet = new HttpGet(encodedUri);
             HttpResponse httpResponse = httpClient.execute(httpGet);
             if ( httpResponse.getStatusLine().getStatusCode() != 200 || null == httpResponse.getEntity() ) {
