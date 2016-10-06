@@ -255,9 +255,9 @@ public class ClientServiceTest extends GeneralTest {
     }
 
     @Test
-    @Ignore
+    //@Ignore
     public void testRegisterViaPhoneReal() throws MailSenderException {
-        String authName = "+79267787787";
+        String authName = "+79267796753";
         String password = "password";
         ClientRegisterRequest clientRegisterRequest = new ClientRegisterRequest();
         clientRegisterRequest.setAuthType(AuthType.PHONE);

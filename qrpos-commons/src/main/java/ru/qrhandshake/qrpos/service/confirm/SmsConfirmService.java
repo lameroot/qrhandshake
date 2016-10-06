@@ -8,17 +8,26 @@ import ru.qrhandshake.qrpos.domain.AuthType;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.domain.Confirm;
 import ru.qrhandshake.qrpos.repository.ConfirmRepository;
+import ru.qrhandshake.qrpos.service.sms.SmsObject;
+import ru.qrhandshake.qrpos.service.sms.SmsSender;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @Service
 public class SmsConfirmService extends AbstractConfirmService {
 
     @Autowired(required = false)
     private MailConfirmService mailConfirmService;
+    @Resource
+    private SmsSender smsSender;
 
     @Value("${confirm.sms.useMail:false}")
     private boolean useMail;
+    @Value("${confirm.sms.phonesViaMail:}")
+    private List<String> phonesViaMail;
+    @Value("${confirm.sms.text:Confirm code: %s}")
+    private String confirmSmsText;
 
     @Override
     public AuthType getAuthType() {
@@ -30,9 +39,11 @@ public class SmsConfirmService extends AbstractConfirmService {
         if ( null != mailConfirmService && useMail ) {
             mailConfirmService.send(client,confirmCode);
         }
-        else {
-            throw new IllegalArgumentException("Not working now, use dummySmsConfirmService");
+        else if ( phonesViaMail.contains(client.getPhone()) && null != mailConfirmService ) {
+            mailConfirmService.send(client,confirmCode);
         }
+        SmsObject smsObject = new SmsObject().setPhone(client.getPhone()).setText(String.format(confirmSmsText,confirmCode));
+        smsSender.send(smsObject);
     }
 
 }

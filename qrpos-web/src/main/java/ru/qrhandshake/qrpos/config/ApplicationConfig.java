@@ -18,7 +18,6 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
-import ru.qrhandshake.qrpos.converter.OrderTemplateRequestToOrderTemplateParamsConverter;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.integration.IntegrationFacade;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
@@ -42,7 +41,8 @@ import java.util.Map;
         EntityManagerConfig.class,
         DatabaseConfig.class,
         RbsIntegrationConfig.class,
-        MailConfig.class
+        MailConfig.class,
+        SmsConfig.class
 })
 @EnableJpaRepositories(basePackages = {"ru.qrhandshake.qrpos.repository"})
 public class ApplicationConfig {
