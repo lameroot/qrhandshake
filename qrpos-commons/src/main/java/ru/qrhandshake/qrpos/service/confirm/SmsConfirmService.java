@@ -42,7 +42,7 @@ public class SmsConfirmService extends AbstractConfirmService {
         else if ( phonesViaMail.contains(client.getPhone()) && null != mailConfirmService ) {
             mailConfirmService.send(client,confirmCode);
         }
-        SmsObject smsObject = new SmsObject().setPhone(client.getPhone()).setText(String.format(confirmSmsText,confirmCode));
+        SmsObject smsObject = new SmsObject().setPhone(client.getPhone().startsWith("+7") ? client.getPhone() : "+7" + client.getPhone()).setText(String.format(confirmSmsText,confirmCode));
         smsSender.send(smsObject);
     }
 
