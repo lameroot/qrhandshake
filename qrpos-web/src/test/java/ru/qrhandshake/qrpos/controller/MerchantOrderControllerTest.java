@@ -324,7 +324,7 @@ public class MerchantOrderControllerTest extends ServletConfigTest {
         assertNotNull(client);
         Authentication authentication = new TestingAuthenticationToken(client, null);
 
-        mockMvc.perform(get("/order/getBindings")
+        mockMvc.perform(get("/binding/getBindings")
                 .principal(authentication)
         //        .param("", "")
         )

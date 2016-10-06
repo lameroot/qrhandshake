@@ -24,9 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by lameroot on 25.05.16.
- */
 @Service
 public class OrderService {
 
@@ -42,8 +39,6 @@ public class OrderService {
     private IntegrationSupportService integrationSupportService;
     @Resource
     private BindingService bindingService;
-    @Resource
-    private JsonService jsonService;
     @Resource
     private OrderTemplateHistoryService orderTemplateHistoryService;
     @Resource
@@ -442,28 +437,6 @@ public class OrderService {
             finishResponse.setMessage("Error finish payment with order:" + finishRequest.getOrderId() + ", cause: " + e.getMessage());
         }
         return finishResponse;
-    }
-
-    public GetBindingsResponse getBindings(Client client, GetBindingsRequest getBindingsRequest) {
-        GetBindingsResponse getBindingsResponse = new GetBindingsResponse();
-        if ( null == client ) {
-            getBindingsResponse.setStatus(ResponseStatus.FAIL);
-            getBindingsResponse.setMessage("GetBinding request requires client auth");
-            return getBindingsResponse;
-        }
-
-        List<Binding> bindings = bindingService.getBindings(client, null != getBindingsRequest.getPaymentWays() ? getBindingsRequest.getPaymentWays().toArray(new PaymentWay[]{}) : null);
-        for (Binding binding : bindings) {
-            BindingDto bindingDto = new BindingDto();
-            bindingDto.setBindingId(binding.getBindingId());
-            bindingDto.setPaymentWay(binding.getPaymentWay());
-            bindingDto.setPaymentParams(jsonService.jsonToPaymentParams(binding.getPaymentParams(), PaymentParams.class));
-            getBindingsResponse.getBindings().add(bindingDto);
-        }
-        getBindingsResponse.setStatus(ResponseStatus.SUCCESS);
-        getBindingsResponse.setMessage("Get bindings success");
-
-        return getBindingsResponse;
     }
 
     public MerchantOrder findByOrderId(String orderId) {

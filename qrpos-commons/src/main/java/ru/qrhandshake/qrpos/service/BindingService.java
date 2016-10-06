@@ -5,9 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.*;
+import ru.qrhandshake.qrpos.api.binding.BindingDeleteResponse;
+import ru.qrhandshake.qrpos.api.binding.GetBindingsRequest;
+import ru.qrhandshake.qrpos.api.binding.GetBindingsResponse;
 import ru.qrhandshake.qrpos.domain.*;
+import ru.qrhandshake.qrpos.dto.BindingDto;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
-import ru.qrhandshake.qrpos.integration.IntegrationOrderStatusRequest;
 import ru.qrhandshake.qrpos.integration.IntegrationPaymentRequest;
 import ru.qrhandshake.qrpos.integration.IntegrationPaymentResponse;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
@@ -218,5 +221,58 @@ public class BindingService {
 
 
         return finishResult;
+    }
+
+    public BindingDeleteResponse delete(Client client, String bindingId, boolean returnNewBindingList) {
+        BindingDeleteResponse bindingDeleteResponse = new BindingDeleteResponse();
+        Binding binding = bindingRepository.findByBindingId(bindingId);
+        if ( null == binding ) {
+            bindingDeleteResponse.setStatus(ResponseStatus.FAIL);
+            bindingDeleteResponse.setMessage("Binding with id: " + bindingId + " not found");
+            return bindingDeleteResponse;
+        }
+        if ( client.getId() != binding.getClient().getId() ) {
+            bindingDeleteResponse.setStatus(ResponseStatus.FAIL);
+            bindingDeleteResponse.setMessage("Binding with id: " + bindingId + " not belongs to client");
+            return bindingDeleteResponse;
+        }
+        bindingRepository.delete(binding);
+        if ( returnNewBindingList ) {
+            List<Binding> bindings = bindingRepository.findByClientAndEnabled(client, true);
+            if ( null != bindings && !bindings.isEmpty() ) {
+                for (Binding newBinding : bindings) {
+                    BindingDto bindingDto = new BindingDto();
+                    bindingDto.setBindingId(newBinding.getBindingId());
+                    bindingDto.setPaymentWay(newBinding.getPaymentWay());
+                    bindingDto.setPaymentParams(jsonService.jsonToPaymentParams(newBinding.getPaymentParams(), PaymentParams.class));
+                    bindingDeleteResponse.getBindings().add(bindingDto);
+                }
+            }
+        }
+        bindingDeleteResponse.setStatus(ResponseStatus.SUCCESS);
+        bindingDeleteResponse.setMessage("Binding with id: " + bindingId + " was deleted successfully");
+        return bindingDeleteResponse;
+    }
+
+    public GetBindingsResponse getBindings(Client client, GetBindingsRequest getBindingsRequest) {
+        GetBindingsResponse getBindingsResponse = new GetBindingsResponse();
+        if ( null == client ) {
+            getBindingsResponse.setStatus(ResponseStatus.FAIL);
+            getBindingsResponse.setMessage("GetBinding request requires client auth");
+            return getBindingsResponse;
+        }
+
+        List<Binding> bindings = getBindings(client, null != getBindingsRequest.getPaymentWays() ? getBindingsRequest.getPaymentWays().toArray(new PaymentWay[]{}) : null);
+        for (Binding binding : bindings) {
+            BindingDto bindingDto = new BindingDto();
+            bindingDto.setBindingId(binding.getBindingId());
+            bindingDto.setPaymentWay(binding.getPaymentWay());
+            bindingDto.setPaymentParams(jsonService.jsonToPaymentParams(binding.getPaymentParams(), PaymentParams.class));
+            getBindingsResponse.getBindings().add(bindingDto);
+        }
+        getBindingsResponse.setStatus(ResponseStatus.SUCCESS);
+        getBindingsResponse.setMessage("Get bindings success");
+
+        return getBindingsResponse;
     }
 }

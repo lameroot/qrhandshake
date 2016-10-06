@@ -12,8 +12,6 @@ import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.api.ResponseStatus;
 import ru.qrhandshake.qrpos.api.binding.BindingPaymentParams;
 import ru.qrhandshake.qrpos.api.binding.BindingPaymentRequest;
-import ru.qrhandshake.qrpos.api.binding.GetBindingsRequest;
-import ru.qrhandshake.qrpos.api.binding.GetBindingsResponse;
 import ru.qrhandshake.qrpos.api.merchantorder.*;
 import ru.qrhandshake.qrpos.converter.PaymentWayConverter;
 import ru.qrhandshake.qrpos.domain.*;
@@ -44,7 +42,6 @@ public class MerchantOrderController {
     public final static String PAYMENT_PATH = "/payment";
     public final static String FINISH_PATH = "/finish";
     public final static String REVERSE_PATH = "/reverse";
-    public final static String GET_BINDINGS_PATH = "/getBindings";
 
     @Resource
     private OrderService orderService;
@@ -173,12 +170,6 @@ public class MerchantOrderController {
     @ResponseBody
     public MerchantOrderReverseResponse reverse(Principal principal, @Valid MerchantOrderReverseRequest merchantOrderReverseRequest) throws AuthException {
         return orderService.reverse(authService.terminalAuth(principal, merchantOrderReverseRequest), merchantOrderReverseRequest);
-    }
-
-    @RequestMapping(value = GET_BINDINGS_PATH)
-    @ResponseBody
-    public GetBindingsResponse getBindings(Principal principal, @Valid GetBindingsRequest getBindingsRequest) throws AuthException {
-        return orderService.getBindings(authService.clientAuth(principal, getBindingsRequest, true), getBindingsRequest);
     }
 
     private String getReturnUrl(HttpServletRequest request, String orderId){

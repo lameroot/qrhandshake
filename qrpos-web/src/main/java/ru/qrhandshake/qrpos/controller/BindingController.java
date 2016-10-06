@@ -1,13 +1,13 @@
 package ru.qrhandshake.qrpos.controller;
 
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import ru.qrhandshake.qrpos.api.*;
-import ru.qrhandshake.qrpos.api.binding.CardBindingCreateRequest;
-import ru.qrhandshake.qrpos.api.binding.CardBindingCreateResponse;
+import ru.qrhandshake.qrpos.api.binding.*;
 import ru.qrhandshake.qrpos.domain.Client;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.service.AuthService;
@@ -23,12 +23,14 @@ import java.util.UUID;
  * Created by lameroot on 17.08.16.
  */
 @Controller
-@RequestMapping(value = BindingController.BINDING_PATH)
+@RequestMapping(value = BindingController.BINDING_PATH, produces = {MediaType.APPLICATION_JSON_VALUE})
 public class BindingController {
 
     private final static Long MIN_AMOUNT_FOR_CREATE_BINDING = 100L;
     public final static String BINDING_PATH = "/binding";
     public final static String FINISH_PATH = "/finish";
+    public final static String GET_BINDINGS_PATH = "/getBindings";
+    public final static String DELETE_PATH = "/delete";
 
     @Resource
     private BindingService bindingService;
@@ -63,6 +65,19 @@ public class BindingController {
         cardBindingCreateResponse.setReturnUrlObject(paymentResult.getReturnUrlObject());
 
         return cardBindingCreateResponse;
+    }
+
+    @RequestMapping(value = DELETE_PATH)
+    @ResponseBody
+    public BindingDeleteResponse delete(Principal principal, @Valid BindingDeleteRequest bindingDeleteRequest) throws AuthException {
+        Client client = authService.clientAuth(principal, bindingDeleteRequest, true);
+        return bindingService.delete(client, bindingDeleteRequest.getBindingId(), bindingDeleteRequest.isReturnNewBindingList());
+    }
+
+    @RequestMapping(value = GET_BINDINGS_PATH)
+    @ResponseBody
+    public GetBindingsResponse getBindings(Principal principal, @Valid GetBindingsRequest getBindingsRequest) throws AuthException {
+        return bindingService.getBindings(authService.clientAuth(principal, getBindingsRequest, true), getBindingsRequest);
     }
 
     @RequestMapping(value = FINISH_PATH + "/{orderId}")

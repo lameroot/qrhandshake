@@ -1107,7 +1107,7 @@ public class PaymentITTest extends ItTest {
         assertEquals(clientRegisterResponse.getAuth().getAuthName(),merchantOrder.getClient().getUsername());
 
 
-        MvcResult mvcResultGetBindings = mockMvc.perform(get("/order/getBindings")
+        MvcResult mvcResultGetBindings = mockMvc.perform(get("/binding/getBindings")
                         .principal(authentication)
         ).andDo(print()).andReturn();
         assertNotNull(mvcResultGetBindings);
