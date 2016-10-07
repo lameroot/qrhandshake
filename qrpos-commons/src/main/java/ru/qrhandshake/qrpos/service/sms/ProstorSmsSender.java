@@ -138,11 +138,6 @@ public class ProstorSmsSender implements SmsSender {
             }
         }).start();
     }
-
-    public static void main(String[] args) {
-        String s = "1975349003;delivered";
-        System.out.println(s.contains("delivered"));
-    }
 }
 
 
