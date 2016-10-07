@@ -13,7 +13,6 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.format.support.FormattingConversionService;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
@@ -26,7 +25,6 @@ import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationConfig;
 import ru.rbs.util.SyncSimpleDateFormat;
 
 import javax.annotation.Resource;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,6 +47,7 @@ public class ApplicationConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationConfig.class);
     public static final String SYSTEM_VARIABLE_CONFIG_LOCATION = "qrConfigLocation";
+    public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.'f'ZZZZZ";
 
     @Resource
     private ApplicationContext applicationContext;
@@ -66,6 +65,7 @@ public class ApplicationConfig {
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS,false);
         objectMapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
         //objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        objectMapper.setDateFormat(new SyncSimpleDateFormat(DATE_FORMAT));
         return objectMapper;
     }
 
@@ -76,12 +76,10 @@ public class ApplicationConfig {
 
     @Bean
     public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
-        Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
-        builder.serializationInclusion(JsonInclude.Include.NON_NULL);
-        builder.serializationInclusion(JsonInclude.Include.NON_EMPTY);
-        SimpleDateFormat simpleDateFormat = new SyncSimpleDateFormat("yyyyMMddHHmmss");
-        builder.indentOutput(true).dateFormat(simpleDateFormat);
-        return new MappingJackson2HttpMessageConverter(builder.build());
+        MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter = new MappingJackson2HttpMessageConverter();
+        mappingJackson2HttpMessageConverter.setObjectMapper(objectMapper());
+        mappingJackson2HttpMessageConverter.setPrettyPrint(false);
+        return mappingJackson2HttpMessageConverter;
     }
 
     @Bean

@@ -66,6 +66,7 @@ public class ClientController {
             merchantOrderStatusResponse.setStatus(ResponseStatus.SUCCESS);
             merchantOrderStatusResponse.setCreatedDate(merchantOrder.getCreatedDate());
             merchantOrderStatusResponse.setPaymentDate(merchantOrder.getPaymentDate());
+            merchantOrderStatusResponse.setDescription(merchantOrder.getDescription());
 
             clientOrderHistoryResponse.getOrders().add(merchantOrderStatusResponse);
         }

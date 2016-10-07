@@ -255,7 +255,7 @@ public class ClientServiceTest extends GeneralTest {
     }
 
     @Test
-    //@Ignore
+    @Ignore
     public void testRegisterViaPhoneReal() throws MailSenderException {
         String authName = "+79267796753";
         String password = "password";
@@ -277,6 +277,12 @@ public class ClientServiceTest extends GeneralTest {
         assertNotNull(confirm);
         assertTrue(confirm.isEnabled());
         assertNotNull(confirm.getCode());
+
+        try {
+            Thread.sleep(30000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 

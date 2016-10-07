@@ -15,6 +15,7 @@ public class MerchantOrderStatusResponse extends ApiResponse {
     private OrderStatus orderStatus;
     private Date createdDate;
     private Date paymentDate;
+    private String description;
 
     public String getOrderId() {
         return orderId;
@@ -54,5 +55,13 @@ public class MerchantOrderStatusResponse extends ApiResponse {
 
     public void setPaymentDate(Date paymentDate) {
         this.paymentDate = paymentDate;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

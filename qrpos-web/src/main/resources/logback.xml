@@ -3,8 +3,26 @@
 <configuration>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d %-5level | %thread | qr-pos | %logger{36}:%line - %msg%n</pattern>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="ru.rbs.commons.logs.MaskingPatternLayout">
+                <patternsProperty>
+                    <![CDATA[
+                            {
+                                "\"?pan\"?[ ]*[=:][ ]*\"[^\"]*\""   :   "11~**~5",
+                                "targetPan[ ]*=[ ]*\"[^\"]*\""      :   "17~**~5",
+                                "year[ ]*=[ ]*\"[^\"]*\""           :   "year=\"****\"",
+                                "cvc[ ]*=[ ]*\"[^\"]*\""            :   "cvc=\"****\"",
+                                "cvv[ ]*=[ ]*\"[^\"]*\""            :   "cvv=\"****\"",
+                                "month[ ]*=[ ]*\"[^\"]*\""          :   "month=\"****\"",
+                                "\"?expiry\"?[ ]*[=:][ ]*\"[^\"]*\"" :   "expiry=\"****\"",
+                                ">([^>]*)<\\/([^>]*):Password>"     :   ">****<\\/Password>",
+                                ">([^>]*)<\/pan>"                   :   "7~**~10",
+                                ">([^>]*)<\/cvc>"                   :   "1~**~6"
+                            }
+                            ]]>
+                </patternsProperty>
+                <pattern>%d %-5level | %thread | qr-pos | %logger{36}:%line - %msg%n</pattern>
+            </layout>
         </encoder>
     </appender>
 

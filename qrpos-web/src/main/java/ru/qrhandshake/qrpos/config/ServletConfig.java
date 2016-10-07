@@ -9,11 +9,9 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.format.support.FormattingConversionService;
 import org.springframework.format.support.FormattingConversionServiceFactoryBean;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.ViewResolver;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
+import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import ru.qrhandshake.qrpos.converter.OrderTemplateRequestToOrderTemplateParamsConverter;
 import ru.qrhandshake.qrpos.interceptor.PostLoggingInterceptor;
@@ -28,10 +26,10 @@ import java.util.List;
 @ComponentScan(basePackages = {"ru.qrhandshake.qrpos.controller"})
 @EnableWebMvc
 @EnableSpringDataWebSupport
-public class ServletConfig extends WebMvcConfigurationSupport {
+public class ServletConfig extends WebMvcConfigurerAdapter {
 
     @Resource
-    private HttpMessageConverter mappingJackson2HttpMessageConverter;
+    private MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter;
 
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
@@ -44,12 +42,12 @@ public class ServletConfig extends WebMvcConfigurationSupport {
     }
 
     @Override
-    protected void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(mappingJackson2HttpMessageConverter);
     }
 
     @Override
-    protected void addInterceptors(InterceptorRegistry registry) {
+    public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new PostLoggingInterceptor());
         super.addInterceptors(registry);
     }
@@ -57,7 +55,6 @@ public class ServletConfig extends WebMvcConfigurationSupport {
     @Bean
     public ViewResolver viewResolver() {
         InternalResourceViewResolver resolver = new InternalResourceViewResolver();
-        //resolver.setPrefix("/WEB-INF/jsp/");
         resolver.setPrefix("/WEB-INF/");
         resolver.setSuffix(".jsp");
         return resolver;
