@@ -1,6 +1,8 @@
 package ru.qrhandshake.qrpos.controller;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,7 +56,9 @@ public class ClientController {
     @ResponseBody
     public ClientOrderHistoryResponse getOrders(Principal principal, ClientOrderHistoryRequest clientOrderHistoryRequest, Pageable pageable) throws AuthException {
         Client client = authService.clientAuth(principal, clientOrderHistoryRequest, true);
-        List<MerchantOrder> merchantOrders = clientService.getOrders(client, pageable);
+        Sort sort = new Sort(Sort.Direction.DESC,"paymentDate");
+        PageRequest pageRequest = new PageRequest(pageable.getPageNumber(),pageable.getPageSize(),sort);
+        List<MerchantOrder> merchantOrders = clientService.getOrders(client, pageRequest);
 
         ClientOrderHistoryResponse clientOrderHistoryResponse = new ClientOrderHistoryResponse();
         for (MerchantOrder merchantOrder : merchantOrders) {

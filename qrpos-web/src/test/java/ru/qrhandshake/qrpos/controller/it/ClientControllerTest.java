@@ -20,6 +20,7 @@ import ru.qrhandshake.qrpos.repository.ClientRepository;
 import ru.qrhandshake.qrpos.util.Util;
 
 import javax.annotation.Resource;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -47,7 +48,9 @@ public class ClientControllerTest extends ItTest {
             assertNotNull(merchantOrder);
             merchantOrder.setClient(client);
             merchantOrder.setOrderStatus(OrderStatus.PAID);
-            merchantOrder.setPaymentDate(new Date());
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.MINUTE,i);
+            merchantOrder.setPaymentDate(calendar.getTime());
             merchantOrderRepository.save(merchantOrder);
 
         }

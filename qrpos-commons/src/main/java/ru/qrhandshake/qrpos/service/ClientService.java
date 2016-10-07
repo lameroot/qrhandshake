@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.service;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.validator.internal.constraintvalidators.EmailValidator;
 import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -31,11 +32,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 public class ClientService {
 
     private final Logger logger = LoggerFactory.getLogger(ClientService.class);
+    private final static Pattern PHONE_PATTERN = Pattern.compile("^(\\+7)[7-9][0-9]{9}$");
+    private final static EmailValidator emailValidator = new EmailValidator();
 
     @Resource
     private ClientRepository clientRepository;
@@ -75,6 +79,13 @@ public class ClientService {
         return null;
     }
 
+    private boolean isPhoneValid(String phone) {
+        return PHONE_PATTERN.matcher(phone).matches();
+    }
+    private boolean isEmailValid(String email) {
+        return emailValidator.isValid(email, null);
+    }
+
     public ClientRegisterResponse register(ClientRegisterRequest clientRegisterRequest) {
         ClientRegisterResponse clientRegisterResponse = new ClientRegisterResponse();
         final AuthType authType = null != clientRegisterRequest.getAuthType() ? clientRegisterRequest.getAuthType() : AuthType.PASSWORD;
@@ -88,10 +99,20 @@ public class ClientService {
             client.setUsername(clientRegisterRequest.getAuthName());
             switch (authType) {
                 case EMAIL: {
+                    if ( !isEmailValid(clientRegisterRequest.getAuthName()) ) {
+                        clientRegisterResponse.setStatus(ResponseStatus.FAIL);
+                        clientRegisterResponse.setMessage("Invalid email: " + clientRegisterRequest.getAuthName());
+                        return clientRegisterResponse;
+                    }
                     client.setEmail(clientRegisterRequest.getAuthName());
                     break;
                 }
                 case PHONE: {
+                    if ( !isPhoneValid(clientRegisterRequest.getAuthName()) ) {
+                        clientRegisterResponse.setStatus(ResponseStatus.FAIL);
+                        clientRegisterResponse.setMessage("Invalid phone: " + clientRegisterRequest.getAuthName());
+                        return clientRegisterResponse;
+                    }
                     client.setPhone(clientRegisterRequest.getAuthName());
                     break;
                 }
