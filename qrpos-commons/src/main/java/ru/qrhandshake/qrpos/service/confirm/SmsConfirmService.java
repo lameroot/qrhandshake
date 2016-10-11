@@ -38,9 +38,11 @@ public class SmsConfirmService extends AbstractConfirmService {
     protected void send(Client client, String confirmCode) throws Exception {
         if ( null != mailConfirmService && useMail ) {
             mailConfirmService.send(client,confirmCode);
+            return;
         }
         else if ( phonesViaMail.contains(client.getPhone()) && null != mailConfirmService ) {
             mailConfirmService.send(client,confirmCode);
+            return;
         }
         SmsObject smsObject = new SmsObject().setPhone(client.getPhone()).setText(String.format(confirmSmsText,confirmCode));
         smsSender.send(smsObject);
