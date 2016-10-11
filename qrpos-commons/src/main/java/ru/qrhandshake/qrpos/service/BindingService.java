@@ -115,7 +115,7 @@ public class BindingService {
     public List<Binding> getBindings(Client client, PaymentWay... paymentWays) {
         return null != paymentWays && paymentWays.length > 0
                 ? bindingRepository.findByClientAndPaymentsWays(client, paymentWays)
-                : bindingRepository.findByClient(client);
+                : bindingRepository.findByClientAndEnabled(client,true);
     }
 
     public boolean isExists(Client client, PaymentParams paymentParams, PaymentWay paymentWay) {
