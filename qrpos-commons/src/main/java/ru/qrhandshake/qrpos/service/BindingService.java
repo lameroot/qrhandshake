@@ -69,7 +69,7 @@ public class BindingService {
         if ( null == merchantOrder || null == bindingInfo ) return;
         Binding binding = bindingRepository.findByOrderId(merchantOrder.getOrderId());
         if ( null == binding ) {
-            logger.warn("Unable to find BINDING by orderId: {}", merchantOrder.getOrderId());
+            logger.debug("For order with orderId: {} not found binding.", merchantOrder.getOrderId());
             return;
         }
         if ( binding.isCompleted() ) {

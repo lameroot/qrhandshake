@@ -56,6 +56,7 @@ public class ItTest extends ServletConfigTest {
         String getYear();
         String getCardHolder();
         String getCvc();
+        boolean needAcs();
     }
     public static class TDSCardData implements CardData {
         @Override
@@ -82,6 +83,11 @@ public class ItTest extends ServletConfigTest {
         public String getCvc() {
             return "123";
         }
+
+        @Override
+        public boolean needAcs() {
+            return true;
+        }
     }
     public static class SSLCardData implements CardData {
         @Override
@@ -107,6 +113,11 @@ public class ItTest extends ServletConfigTest {
         @Override
         public String getCvc() {
             return "123";
+        }
+
+        @Override
+        public boolean needAcs() {
+            return false;
         }
     }
 
@@ -139,7 +150,7 @@ public class ItTest extends ServletConfigTest {
     @Resource
     private EndpointCatalogRepository endpointCatalogRepository;
 
-    protected Binding registerTdsBinding(ClientRegisterResponse clientRegisterResponse, CardData cardData) throws Exception {
+    protected void registerTdsBinding(ClientRegisterResponse clientRegisterResponse, CardData cardData) throws Exception {
         Principal principalClient = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
         MvcResult mvcResultRegister = mockMvc.perform(get("/order/register_for_binding")
                         .principal(principalClient)
@@ -173,22 +184,32 @@ public class ItTest extends ServletConfigTest {
         PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
         ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
         assertNotNull(returnUrlObject);
-        assertEquals("post",returnUrlObject.getAction());
-        assertNotNull(returnUrlObject.getParams().get("MD"));
-        assertNotNull(returnUrlObject.getParams().get("PaReq"));
-        assertNotNull(returnUrlObject.getParams().get("TermUrl"));
-        assertNotNull(returnUrlObject.getUrl());
 
-        String paRes = AcsUtils.emulateCommunicationWithACS(returnUrlObject.getParams().get("MD"), returnUrlObject.getParams().get("TermUrl"), returnUrlObject.getParams().get("PaReq"), true);
-        assertNotNull(paRes);
-        ResponseEntity<String> responseEntity = restTemplate.getForEntity(returnUrlObject.getParams().get("TermUrl")
-                + "?PaRes=" + paRes
-                + "&MD=" + returnUrlObject.getParams().get("MD"), String.class);
-        assertNotNull(responseEntity);
-        System.out.println(responseEntity);
-        assertEquals(302,responseEntity.getStatusCode().value());
-        String finishUri = "/order/finish/" + merchantOrderRegisterResponse.getOrderId() + "?orderId=" + returnUrlObject.getParams().get("MD");
-        assertTrue(responseEntity.getHeaders().getLocation().toString().contains(finishUri));
+        String finishUri = null;
+        if ( cardData.needAcs() ) {
+            assertEquals("post", returnUrlObject.getAction());
+            assertNotNull(returnUrlObject.getParams().get("MD"));
+            assertNotNull(returnUrlObject.getParams().get("PaReq"));
+            assertNotNull(returnUrlObject.getParams().get("TermUrl"));
+            assertNotNull(returnUrlObject.getUrl());
+
+            String paRes = AcsUtils.emulateCommunicationWithACS(returnUrlObject.getParams().get("MD"), returnUrlObject.getParams().get("TermUrl"), returnUrlObject.getParams().get("PaReq"), true);
+            assertNotNull(paRes);
+            ResponseEntity<String> responseEntity = restTemplate.getForEntity(returnUrlObject.getParams().get("TermUrl")
+                    + "?PaRes=" + paRes
+                    + "&MD=" + returnUrlObject.getParams().get("MD"), String.class);
+            assertNotNull(responseEntity);
+            System.out.println(responseEntity);
+            assertEquals(302, responseEntity.getStatusCode().value());
+            finishUri = "/order/finish/" + merchantOrderRegisterResponse.getOrderId() + "?orderId=" + returnUrlObject.getParams().get("MD");
+            assertTrue(responseEntity.getHeaders().getLocation().toString().contains(finishUri));
+        }
+        else {
+            assertEquals("redirect", returnUrlObject.getAction());
+            assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+            assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+            finishUri = "/order/finish/" + merchantOrderRegisterResponse.getOrderId();
+        }
 
         MvcResult finishMvcResult = mockMvc.perform(get(finishUri))
                 .andDo(print())
@@ -200,12 +221,6 @@ public class ItTest extends ServletConfigTest {
         assertTrue(ResponseStatus.SUCCESS.equals(finishModel.get("status")));
         assertTrue(finishMvcResult.getResponse().getForwardedUrl().contains("finish"));
 
-        Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
-        assertNotNull(binding);
-        assertTrue(binding.isCompleted());
-        assertTrue(binding.isEnabled());
-        assertEquals(PaymentSecureType.TDS, binding.getPaymentSecureType());
-
         MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(merchantOrder);
         assertTrue(merchantOrder.getOrderStatus() == OrderStatus.PAID);
@@ -214,7 +229,7 @@ public class ItTest extends ServletConfigTest {
         assertNotNull(merchantOrder.getClient());
         assertEquals(clientRegisterResponse.getAuth().getAuthName(), merchantOrder.getClient().getUsername());
 
-        return binding;
+        return;
     }
 
     protected MerchantRegisterResponse registerMerchant(String name) throws Exception {

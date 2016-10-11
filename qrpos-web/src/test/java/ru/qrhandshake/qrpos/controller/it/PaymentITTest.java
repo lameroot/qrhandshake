@@ -1214,16 +1214,14 @@ public class PaymentITTest extends ItTest {
         assertEquals(ResponseStatus.FAIL,apiResponse.getStatus());
     }
 
-    //todo: тест на дублирующиеся биндинги и 3дс платеж
-
     @Test
     public void testDuplicateRegisterBinding() throws Exception {
         ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
         Authentication authentication = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
 
-        Binding binding1 = registerTdsBinding(clientRegisterResponse, new TDSCardData());
-        Binding binding2 = registerTdsBinding(clientRegisterResponse, new TDSCardData());
-//        Binding binding3 = registerTdsBinding(clientRegisterResponse, new SSLCardData());
+        registerTdsBinding(clientRegisterResponse, new TDSCardData());
+        registerTdsBinding(clientRegisterResponse, new TDSCardData());
+        registerTdsBinding(clientRegisterResponse, new SSLCardData());
 
         MvcResult mvcResultGetBindings = mockMvc.perform(get("/binding/get_bindings")
                         .principal(authentication)
@@ -1237,7 +1235,7 @@ public class PaymentITTest extends ItTest {
         assertTrue(ResponseStatus.SUCCESS == getBindingsResponse.getStatus());
         assertNotNull(getBindingsResponse.getBindings());
 
-        //assertEquals(2,getBindingsResponse.getBindings().size());
+        assertEquals(2,getBindingsResponse.getBindings().size());
 
     }
 
