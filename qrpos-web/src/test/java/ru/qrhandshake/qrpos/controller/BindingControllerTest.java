@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 public class BindingControllerTest extends ItTest {
 
     @Test
-    public void testDisable() throws Exception {
+    public void testDelete() throws Exception {
         ClientRegisterResponse clientRegisterResponse = registerClient("client_" + UUID.randomUUID().toString(),"password",AuthType.PASSWORD);
         Client client = clientRepository.findByUsername(clientRegisterResponse.getAuth().getAuthName());
         assertNotNull(client);

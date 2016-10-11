@@ -1217,6 +1217,31 @@ public class PaymentITTest extends ItTest {
     //todo: тест на дублирующиеся биндинги и 3дс платеж
 
     @Test
+    public void testDuplicateRegisterBinding() throws Exception {
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
+        Authentication authentication = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
+
+        Binding binding1 = registerTdsBinding(clientRegisterResponse, new TDSCardData());
+        Binding binding2 = registerTdsBinding(clientRegisterResponse, new TDSCardData());
+//        Binding binding3 = registerTdsBinding(clientRegisterResponse, new SSLCardData());
+
+        MvcResult mvcResultGetBindings = mockMvc.perform(get("/binding/getBindings")
+                        .principal(authentication)
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResultGetBindings);
+        String responseGetBindings = mvcResultGetBindings.getResponse().getContentAsString();
+        assertNotNull(responseGetBindings);
+
+        GetBindingsResponse getBindingsResponse = objectMapper.readValue(responseGetBindings, GetBindingsResponse.class);
+        assertNotNull(getBindingsResponse);
+        assertTrue(ResponseStatus.SUCCESS == getBindingsResponse.getStatus());
+        assertNotNull(getBindingsResponse.getBindings());
+
+        //assertEquals(2,getBindingsResponse.getBindings().size());
+
+    }
+
+    @Test
     public void testRegisterOrderForBinding() throws Exception {
         ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
 

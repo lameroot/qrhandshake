@@ -3,6 +3,7 @@ package ru.qrhandshake.qrpos.controller.it;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MvcResult;
@@ -18,14 +19,19 @@ import ru.qrhandshake.qrpos.api.merchantorder.MerchantOrderRegisterResponse;
 import ru.qrhandshake.qrpos.api.merchantorder.MerchantOrderStatusResponse;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.*;
+import ru.qrhandshake.qrpos.dto.ReturnUrlObject;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationFacade;
 import ru.qrhandshake.qrpos.repository.*;
 import ru.qrhandshake.qrpos.service.ClientService;
 import ru.qrhandshake.qrpos.service.MerchantService;
+import ru.qrhandshake.qrpos.util.Util;
+import ru.rbs.mpi.test.acs.AcsUtils;
 
 import javax.annotation.Resource;
 
+import java.security.Principal;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,6 +49,66 @@ public class ItTest extends ServletConfigTest {
     protected Long amount = 1000L;
     protected String sessionId = UUID.randomUUID().toString();
     protected String deviceId = UUID.randomUUID().toString();
+
+    public static interface CardData {
+        String getPan();
+        String getMonth();
+        String getYear();
+        String getCardHolder();
+        String getCvc();
+    }
+    public static class TDSCardData implements CardData {
+        @Override
+        public String getPan() {
+            return TDS_CARD;
+        }
+
+        @Override
+        public String getMonth() {
+            return "12";
+        }
+
+        @Override
+        public String getYear() {
+            return "2019";
+        }
+
+        @Override
+        public String getCardHolder() {
+            return "test test";
+        }
+
+        @Override
+        public String getCvc() {
+            return "123";
+        }
+    }
+    public static class SSLCardData implements CardData {
+        @Override
+        public String getPan() {
+            return SSL_CARD;
+        }
+
+        @Override
+        public String getMonth() {
+            return "12";
+        }
+
+        @Override
+        public String getYear() {
+            return "2019";
+        }
+
+        @Override
+        public String getCardHolder() {
+            return "test test";
+        }
+
+        @Override
+        public String getCvc() {
+            return "123";
+        }
+    }
 
     @Resource
     protected ClientRepository clientRepository;
@@ -72,6 +138,84 @@ public class ItTest extends ServletConfigTest {
     protected EndpointRepository endpointRepository;
     @Resource
     private EndpointCatalogRepository endpointCatalogRepository;
+
+    protected Binding registerTdsBinding(ClientRegisterResponse clientRegisterResponse, CardData cardData) throws Exception {
+        Principal principalClient = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
+        MvcResult mvcResultRegister = mockMvc.perform(get("/order/register_for_binding")
+                        .principal(principalClient)
+                        .param("amount", amount.toString())
+                        .param("sessionId", sessionId)
+                        .param("deviceId", deviceId)
+        ).andDo(print()).andReturn();
+
+        MerchantOrderRegisterResponse merchantOrderRegisterResponse = objectMapper.readValue(mvcResultRegister.getResponse().getContentAsString(), MerchantOrderRegisterResponse.class);
+        assertNotNull(merchantOrderRegisterResponse);
+        String orderId = merchantOrderRegisterResponse.getOrderId();
+        assertNotNull(orderId);
+        MerchantOrder merchantOrderByOrderId = merchantOrderRepository.findByOrderId(orderId);
+        assertNotNull(merchantOrderByOrderId);
+        Merchant rootMerchant = merchantService.findRootMerchant();
+        assertNotNull(rootMerchant);
+        assertEquals(rootMerchant.getId(), merchantOrderByOrderId.getMerchant().getId());
+
+        MvcResult mvcResult = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
+                        .principal(principalClient)
+                        .param("orderId", merchantOrderRegisterResponse.getOrderId())
+                        .param("pan", cardData.getPan())
+                        .param("month", cardData.getMonth())
+                        .param("year", cardData.getYear())
+                        .param("cardHolderName", cardData.getCardHolder())
+                        .param("cvc", cardData.getCvc())
+                        .param("paymentWay", "card")
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResult);
+
+        PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
+        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+        assertNotNull(returnUrlObject);
+        assertEquals("post",returnUrlObject.getAction());
+        assertNotNull(returnUrlObject.getParams().get("MD"));
+        assertNotNull(returnUrlObject.getParams().get("PaReq"));
+        assertNotNull(returnUrlObject.getParams().get("TermUrl"));
+        assertNotNull(returnUrlObject.getUrl());
+
+        String paRes = AcsUtils.emulateCommunicationWithACS(returnUrlObject.getParams().get("MD"), returnUrlObject.getParams().get("TermUrl"), returnUrlObject.getParams().get("PaReq"), true);
+        assertNotNull(paRes);
+        ResponseEntity<String> responseEntity = restTemplate.getForEntity(returnUrlObject.getParams().get("TermUrl")
+                + "?PaRes=" + paRes
+                + "&MD=" + returnUrlObject.getParams().get("MD"), String.class);
+        assertNotNull(responseEntity);
+        System.out.println(responseEntity);
+        assertEquals(302,responseEntity.getStatusCode().value());
+        String finishUri = "/order/finish/" + merchantOrderRegisterResponse.getOrderId() + "?orderId=" + returnUrlObject.getParams().get("MD");
+        assertTrue(responseEntity.getHeaders().getLocation().toString().contains(finishUri));
+
+        MvcResult finishMvcResult = mockMvc.perform(get(finishUri))
+                .andDo(print())
+                .andReturn();
+        assertNotNull(finishMvcResult);
+        Map<String,Object> finishModel = finishMvcResult.getModelAndView().getModel();
+        assertNotNull(finishModel);
+        assertTrue(!finishModel.isEmpty());
+        assertTrue(ResponseStatus.SUCCESS.equals(finishModel.get("status")));
+        assertTrue(finishMvcResult.getResponse().getForwardedUrl().contains("finish"));
+
+        Binding binding = bindingRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNotNull(binding);
+        assertTrue(binding.isCompleted());
+        assertTrue(binding.isEnabled());
+        assertEquals(PaymentSecureType.TDS, binding.getPaymentSecureType());
+
+        MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
+        assertNotNull(merchantOrder);
+        assertTrue(merchantOrder.getOrderStatus() == OrderStatus.PAID);
+        assertNotNull(merchantOrder.getPaymentDate());
+        assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
+        assertNotNull(merchantOrder.getClient());
+        assertEquals(clientRegisterResponse.getAuth().getAuthName(), merchantOrder.getClient().getUsername());
+
+        return binding;
+    }
 
     protected MerchantRegisterResponse registerMerchant(String name) throws Exception {
         Merchant merchant = merchantRepository.findByName(name);
