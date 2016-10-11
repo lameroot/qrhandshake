@@ -255,6 +255,22 @@ public class ClientServiceTest extends GeneralTest {
     }
 
     @Test
+    public void testValidEmailAndPhone() {
+        ClientRegisterRequest clientRegisterRequest = new ClientRegisterRequest();
+        clientRegisterRequest.setAuthName("invalid#mail.ru");
+        clientRegisterRequest.setAuthType(AuthType.EMAIL);
+        ClientRegisterResponse clientRegisterResponseInvalidEmail = clientService.register(clientRegisterRequest);
+        assertEquals(ResponseStatus.FAIL, clientRegisterResponseInvalidEmail.getStatus());
+        assertTrue(clientRegisterResponseInvalidEmail.getMessage(), clientRegisterResponseInvalidEmail.getMessage().toLowerCase().contains("invalid email"));
+
+        clientRegisterRequest.setAuthName("891928232");
+        clientRegisterRequest.setAuthType(AuthType.PHONE);
+        ClientRegisterResponse clientRegisterResponseInvalidPhone = clientService.register(clientRegisterRequest);
+        assertEquals(ResponseStatus.FAIL, clientRegisterResponseInvalidEmail.getStatus());
+        assertTrue(clientRegisterResponseInvalidPhone.getMessage(), clientRegisterResponseInvalidPhone.getMessage().toLowerCase().contains("invalid phone"));
+    }
+
+    @Test
     @Ignore
     public void testRegisterViaPhoneReal() throws MailSenderException {
         String authName = "+79267796753";

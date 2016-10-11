@@ -97,7 +97,7 @@ public class BindingService {
             return;
         }
         if ( binding.isCompleted() ) {
-            logger.debug("{} has already competed");
+            logger.debug("{} has already competed", binding);
             return;
         }
         if ( OrderStatus.PAID.equals(orderStatus) && binding.getClient().getClientId().equals(bindingInfo.getClientId())) {
