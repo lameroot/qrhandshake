@@ -54,9 +54,9 @@ public class ExceptionHandlerController {
     }
 
     @ExceptionHandler(value = Throwable.class)
-    public @ResponseBody String error(Throwable e) {
+    public @ResponseBody ApiResponse error(Throwable e) {
         logger.error("Error",e);
-        return "Error";
+        return new ApiResponse(ResponseStatus.FAIL,"Error");
     }
 
 }

@@ -29,7 +29,7 @@ public class BindingController {
     private final static Long MIN_AMOUNT_FOR_CREATE_BINDING = 100L;
     public final static String BINDING_PATH = "/binding";
     public final static String FINISH_PATH = "/finish";
-    public final static String GET_BINDINGS_PATH = "/getBindings";
+    public final static String GET_BINDINGS_PATH = "/get_bindings";
     public final static String DELETE_PATH = "/delete";
 
     @Resource

@@ -1107,7 +1107,7 @@ public class PaymentITTest extends ItTest {
         assertEquals(clientRegisterResponse.getAuth().getAuthName(),merchantOrder.getClient().getUsername());
 
 
-        MvcResult mvcResultGetBindings = mockMvc.perform(get("/binding/getBindings")
+        MvcResult mvcResultGetBindings = mockMvc.perform(get("/binding/get_bindings")
                         .principal(authentication)
         ).andDo(print()).andReturn();
         assertNotNull(mvcResultGetBindings);
@@ -1225,7 +1225,7 @@ public class PaymentITTest extends ItTest {
         Binding binding2 = registerTdsBinding(clientRegisterResponse, new TDSCardData());
 //        Binding binding3 = registerTdsBinding(clientRegisterResponse, new SSLCardData());
 
-        MvcResult mvcResultGetBindings = mockMvc.perform(get("/binding/getBindings")
+        MvcResult mvcResultGetBindings = mockMvc.perform(get("/binding/get_bindings")
                         .principal(authentication)
         ).andDo(print()).andReturn();
         assertNotNull(mvcResultGetBindings);

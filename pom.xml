@@ -370,12 +370,7 @@
                             <name>jetty.port</name>
                             <value>9988</value>
                         </systemProperty>
-                        <!--<systemProperty>-->
-                            <!--<name>org.eclipse.jetty.util.log.Log</name>-->
-                            <!--<value>org.eclipse.jetty.util.log.Slf4jLog</value>-->
-                        <!--</systemProperty>-->
                     </systemProperties>
-
                 </configuration>
             </plugin>
             <plugin>
