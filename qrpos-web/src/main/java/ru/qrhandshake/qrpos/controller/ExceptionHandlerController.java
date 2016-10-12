@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import ru.qrhandshake.qrpos.api.ApiResponse;
+import ru.qrhandshake.qrpos.api.ErrorCode;
 import ru.qrhandshake.qrpos.api.ResponseStatus;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IllegalOrderStatusException;
@@ -34,14 +35,14 @@ public class ExceptionHandlerController {
     @ResponseBody
     public ApiResponse authException(AuthException e) {
         logger.error("Auth error",e);
-        return new ApiResponse.ErrorApiResponse(ResponseStatus.FAIL,e.getMessage());//todo:locale
+        return new ApiResponse.ErrorApiResponseBuilder().message(e.getMessage()).code(ErrorCode.AUTH_ERROR).build();
     }
 
     @ExceptionHandler(value = MerchantOrderNotFoundException.class)
     @ResponseBody
     public ApiResponse merchantOrderNotFoundException(MerchantOrderNotFoundException e) {
         logger.error("Order not found",e);
-        return new ApiResponse.ErrorApiResponse(ResponseStatus.FAIL, e.getMessage());//todo: locale
+        return new ApiResponse.ErrorApiResponseBuilder().message(e.getMessage()).build();
     }
 
     @ExceptionHandler(value = IllegalOrderStatusException.class)

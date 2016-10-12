@@ -48,8 +48,8 @@ public class ClientController {
     @ResponseBody
     public ApiResponse auth(@Valid ApiAuth apiAuth) {
         return Optional.ofNullable(clientService.auth(apiAuth)).isPresent()
-                ? new ApiResponse(ResponseStatus.SUCCESS,"Auth success")
-                : new ApiResponse(ResponseStatus.FAIL,"Auth fail");
+                ? new ApiResponse.SuccessApiResponseBuilder().message("Auth success").build()
+                : new ApiResponse.ErrorApiResponseBuilder().message("Auth fail").code(ErrorCode.AUTH_ERROR).build();
     }
 
     @RequestMapping(value = "/get_orders")
