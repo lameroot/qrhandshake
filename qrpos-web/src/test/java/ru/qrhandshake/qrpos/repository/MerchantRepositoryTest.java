@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.repository;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import java.util.UUID;
 /**
  * Created by lameroot on 18.05.16.
  */
+@Ignore
 public class MerchantRepositoryTest extends GeneralTest {
 
     @Resource

@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.service.mail;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.qrhandshake.qrpos.GeneralTest;
 
@@ -8,6 +9,7 @@ import javax.annotation.Resource;
 /**
  * Created by lameroot on 30.09.16.
  */
+@Ignore
 public class MailSenderTest extends GeneralTest {
 
     @Resource

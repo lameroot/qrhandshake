@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.repository;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.qrhandshake.qrpos.GeneralTest;
 import ru.qrhandshake.qrpos.api.CardPaymentParams;
@@ -16,6 +17,7 @@ import java.util.List;
 /**
  * Created by lameroot on 03.06.16.
  */
+@Ignore
 public class BindingRepositoryTest extends GeneralTest {
 
     @Resource

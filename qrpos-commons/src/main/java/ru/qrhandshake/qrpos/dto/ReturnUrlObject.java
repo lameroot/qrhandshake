@@ -16,24 +16,27 @@ public class ReturnUrlObject {
         return url;
     }
 
-    public void setUrl(String url) {
+    public ReturnUrlObject setUrl(String url) {
         this.url = url;
+        return this;
     }
 
     public String getAction() {
         return action;
     }
 
-    public void setAction(String action) {
+    public ReturnUrlObject setAction(String action) {
         this.action = action;
+        return this;
     }
 
     public Map<String, String> getParams() {
         return params;
     }
 
-    public void setParams(Map<String, String> params) {
+    public ReturnUrlObject setParams(Map<String, String> params) {
         this.params = params;
+        return this;
     }
 
     @Override

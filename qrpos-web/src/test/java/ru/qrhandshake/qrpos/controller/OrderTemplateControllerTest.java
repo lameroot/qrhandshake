@@ -97,7 +97,7 @@ public class OrderTemplateControllerTest extends ItTest {
 
     @Test
     @Transactional
-    @Ignore
+    @org.junit.Ignore
     public void testPaymentOrderByTemplate() throws Exception {
         MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
         TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));

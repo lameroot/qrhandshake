@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.repository;
 
 import org.apache.commons.lang.StringUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
  */
 @Transactional
 @Rollback
+@Ignore
 public class OrderTemplateHistoryRepositoryTest extends GeneralTest {
 
 

@@ -325,9 +325,15 @@ public class OrderService {
             merchantOrder.setPaymentType(integrationPaymentResponse.getPaymentType());
             if ( integrationPaymentResponse.isSuccess() ) {
                 merchantOrder.setExternalOrderStatus(integrationPaymentResponse.getIntegrationOrderStatus().getStatus());
-                if ( null != client && merchantOrder.getMerchant().isCreateBinding()
-                        && !bindingService.isExists(client, paymentParams, PaymentWay.CARD )) {
-                    Binding binding = bindingService.register(client, paymentParams, merchantOrder, false);
+                if ( null != client && merchantOrder.getMerchant().isCreateBinding() ) {
+                    Binding binding = bindingService.findByClientAndPaymentParams(client, paymentParams, PaymentWay.CARD);
+                    if ( null != binding && !binding.isCompleted() ) {
+                        bindingService.delete(client, binding.getBindingId(),false);
+                        binding = bindingService.register(client, paymentParams, merchantOrder, false);
+                    }
+                    else if ( binding == null ) {
+                        binding = bindingService.register(client, paymentParams, merchantOrder, false);
+                    }
                     if ( null != binding ) {
                         logger.debug("Successfully BINDING created: {}", binding);
                         paymentResponse.setBindingId(binding.getBindingId());

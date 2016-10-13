@@ -1,8 +1,10 @@
 package ru.qrhandshake.qrpos.controller.it;
 
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -17,12 +19,14 @@ import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.dto.ReturnUrlObject;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
-import ru.qrhandshake.qrpos.integration.IntegrationCompletionRequest;
-import ru.qrhandshake.qrpos.integration.IntegrationCompletionResponse;
+import ru.qrhandshake.qrpos.integration.*;
+import ru.qrhandshake.qrpos.service.OrderService;
 import ru.qrhandshake.qrpos.util.Util;
 import ru.rbs.mpi.test.acs.AcsUtils;
 
+import javax.annotation.Resource;
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -1219,9 +1223,9 @@ public class PaymentITTest extends ItTest {
         ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
         Authentication authentication = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
 
-        registerTdsBinding(clientRegisterResponse, new TDSCardData());
-        registerTdsBinding(clientRegisterResponse, new TDSCardData());
-        registerTdsBinding(clientRegisterResponse, new SSLCardData());
+        registerBinding(clientRegisterResponse, new TDSCardData());
+        registerBinding(clientRegisterResponse, new TDSCardData());
+        registerBinding(clientRegisterResponse, new SSLCardData());
 
         MvcResult mvcResultGetBindings = mockMvc.perform(get("/binding/get_bindings")
                         .principal(authentication)
@@ -1237,6 +1241,125 @@ public class PaymentITTest extends ItTest {
 
         assertEquals(2,getBindingsResponse.getBindings().size());
 
+    }
+
+    @Test
+    public void testRegisterOrderForBindingDeclineThenRegisterSuccessAndBindingHaveToCreateViaSSLCard() throws Exception {
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
+        Authentication authentication = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
+
+        IntegrationService integrationServiceMock = Mockito.mock(IntegrationService.class);
+        IntegrationPaymentResponse integrationPaymentResponseFail = new IntegrationPaymentResponse();
+        integrationPaymentResponseFail.setSuccess(false);
+        integrationPaymentResponseFail.setMessage("test");
+        Mockito.when(integrationServiceMock.payment(org.mockito.Matchers.anyObject())).thenReturn(integrationPaymentResponseFail);
+        ReflectionTestUtils.setField(orderService,"integrationService",integrationServiceMock);
+
+        SSLCardData sslCardDataDecline = new SSLCardData(){
+            @Override
+            public boolean isValid() {
+                return false;
+            }
+        };
+        registerBinding(clientRegisterResponse, sslCardDataDecline);
+        Client client = clientRepository.findByUsername(clientRegisterResponse.getAuth().getAuthName());
+        assertNotNull(client);
+        List<Binding> bindings = bindingRepository.findByClient(client);
+        assertEquals(0, bindings.size());
+
+        MvcResult mvcResultGetBindings = mockMvc.perform(get("/binding/get_bindings")
+                        .principal(authentication)
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResultGetBindings);
+        String responseGetBindings = mvcResultGetBindings.getResponse().getContentAsString();
+        assertNotNull(responseGetBindings);
+        GetBindingsResponse getBindingsResponse = objectMapper.readValue(responseGetBindings, GetBindingsResponse.class);
+        assertNotNull(getBindingsResponse);
+        assertTrue(ResponseStatus.SUCCESS == getBindingsResponse.getStatus());
+        assertNotNull(getBindingsResponse.getBindings());
+        assertEquals(0,getBindingsResponse.getBindings().size());
+
+        ReflectionTestUtils.setField(orderService,"integrationService",integrationService);
+        SSLCardData sslCardDataSuccess = new SSLCardData(){
+            @Override
+            public boolean isValid() {
+                return true;
+            }
+        };
+        registerBinding(clientRegisterResponse, sslCardDataSuccess);
+        client = clientRepository.findByUsername(clientRegisterResponse.getAuth().getAuthName());
+        assertNotNull(client);
+        bindings = bindingRepository.findByClient(client);
+        assertEquals(1, bindings.size());
+        assertTrue(bindings.get(0).isEnabled());
+
+        mvcResultGetBindings = mockMvc.perform(get("/binding/get_bindings")
+                        .principal(authentication)
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResultGetBindings);
+        responseGetBindings = mvcResultGetBindings.getResponse().getContentAsString();
+        assertNotNull(responseGetBindings);
+        getBindingsResponse = objectMapper.readValue(responseGetBindings, GetBindingsResponse.class);
+        assertNotNull(getBindingsResponse);
+        assertTrue(ResponseStatus.SUCCESS == getBindingsResponse.getStatus());
+        assertNotNull(getBindingsResponse.getBindings());
+        assertEquals(1,getBindingsResponse.getBindings().size());
+    }
+
+    @Test
+    public void testRegisterOrderForBindingDeclineThenRegisterSuccessAndBindingHaveToCreateViaTDSCard() throws Exception {
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8), "client", AuthType.PASSWORD);
+        Authentication authentication = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
+
+        TDSCardData tdsCardDataDecline = new TDSCardData(){
+            @Override
+            public boolean isValid() {
+                return false;
+            }
+        };
+        registerBinding(clientRegisterResponse, tdsCardDataDecline);
+        Client client = clientRepository.findByUsername(clientRegisterResponse.getAuth().getAuthName());
+        assertNotNull(client);
+        List<Binding> bindings = bindingRepository.findByClient(client);
+        assertEquals(1, bindings.size());
+        assertFalse(bindings.get(0).isEnabled());
+
+        MvcResult mvcResultGetBindings = mockMvc.perform(get("/binding/get_bindings")
+                        .principal(authentication)
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResultGetBindings);
+        String responseGetBindings = mvcResultGetBindings.getResponse().getContentAsString();
+        assertNotNull(responseGetBindings);
+        GetBindingsResponse getBindingsResponse = objectMapper.readValue(responseGetBindings, GetBindingsResponse.class);
+        assertNotNull(getBindingsResponse);
+        assertTrue(ResponseStatus.SUCCESS == getBindingsResponse.getStatus());
+        assertNotNull(getBindingsResponse.getBindings());
+        assertEquals(0,getBindingsResponse.getBindings().size());
+
+        TDSCardData tdsCardDataSuccess = new TDSCardData(){
+            @Override
+            public boolean isValid() {
+                return true;
+            }
+        };
+        registerBinding(clientRegisterResponse, tdsCardDataSuccess);
+        client = clientRepository.findByUsername(clientRegisterResponse.getAuth().getAuthName());
+        assertNotNull(client);
+        bindings = bindingRepository.findByClient(client);
+        assertEquals(1, bindings.size());
+        assertTrue(bindings.get(0).isEnabled());
+
+        mvcResultGetBindings = mockMvc.perform(get("/binding/get_bindings")
+                        .principal(authentication)
+        ).andDo(print()).andReturn();
+        assertNotNull(mvcResultGetBindings);
+        responseGetBindings = mvcResultGetBindings.getResponse().getContentAsString();
+        assertNotNull(responseGetBindings);
+        getBindingsResponse = objectMapper.readValue(responseGetBindings, GetBindingsResponse.class);
+        assertNotNull(getBindingsResponse);
+        assertTrue(ResponseStatus.SUCCESS == getBindingsResponse.getStatus());
+        assertNotNull(getBindingsResponse.getBindings());
+        assertEquals(1,getBindingsResponse.getBindings().size());
     }
 
     @Test

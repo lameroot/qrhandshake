@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.repository;
 
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.jdbc.support.JdbcUtils;
 import org.springframework.test.annotation.Rollback;
@@ -17,6 +18,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @ActiveProfiles(value = RbsIntegrationConfig.RBS_PROFILE)
+@Ignore
 public class EndpointRepositoryTest extends GeneralTest {
 
     @Resource

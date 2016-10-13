@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.service;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import ru.qrhandshake.qrpos.GeneralTest;
 
@@ -9,6 +10,7 @@ import java.util.stream.IntStream;
 /**
  * Created by lameroot on 25.05.16.
  */
+@Ignore
 public class TerminalServiceTest extends GeneralTest {
 
     @Resource

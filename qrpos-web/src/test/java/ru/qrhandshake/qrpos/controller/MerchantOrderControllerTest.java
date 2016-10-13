@@ -1,6 +1,7 @@
 package ru.qrhandshake.qrpos.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -35,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 /**
  * Created by lameroot on 23.05.16.
  */
+@Ignore
 public class MerchantOrderControllerTest extends ServletConfigTest {
 
     @Resource

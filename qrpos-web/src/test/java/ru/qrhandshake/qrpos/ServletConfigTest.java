@@ -22,6 +22,7 @@ import ru.qrhandshake.qrpos.repository.MerchantRepository;
 import ru.qrhandshake.qrpos.repository.OrderTemplateRepository;
 import ru.qrhandshake.qrpos.repository.TerminalRepository;
 import ru.qrhandshake.qrpos.repository.UserRepository;
+import ru.qrhandshake.qrpos.service.OrderService;
 
 import javax.annotation.Resource;
 
@@ -67,6 +68,8 @@ public class ServletConfigTest extends AbstractTest {
     protected TransactionTemplate transactionTemplate;
     @Resource
     protected TerminalRepository terminalRepository;
+    @Resource
+    protected OrderService orderService;
     protected MockMvc mockMvc;
 
     @Before

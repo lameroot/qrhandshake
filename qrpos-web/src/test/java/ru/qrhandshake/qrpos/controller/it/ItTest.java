@@ -57,6 +57,7 @@ public class ItTest extends ServletConfigTest {
         String getCardHolder();
         String getCvc();
         boolean needAcs();
+        boolean isValid();
     }
     public static class TDSCardData implements CardData {
         @Override
@@ -86,6 +87,11 @@ public class ItTest extends ServletConfigTest {
 
         @Override
         public boolean needAcs() {
+            return true;
+        }
+
+        @Override
+        public boolean isValid() {
             return true;
         }
     }
@@ -119,6 +125,11 @@ public class ItTest extends ServletConfigTest {
         public boolean needAcs() {
             return false;
         }
+
+        @Override
+        public boolean isValid() {
+            return true;
+        }
     }
 
     @Resource
@@ -150,7 +161,7 @@ public class ItTest extends ServletConfigTest {
     @Resource
     private EndpointCatalogRepository endpointCatalogRepository;
 
-    protected void registerTdsBinding(ClientRegisterResponse clientRegisterResponse, CardData cardData) throws Exception {
+    protected void registerBinding(ClientRegisterResponse clientRegisterResponse, CardData cardData) throws Exception {
         Principal principalClient = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
         MvcResult mvcResultRegister = mockMvc.perform(get("/order/register_for_binding")
                         .principal(principalClient)
@@ -182,18 +193,20 @@ public class ItTest extends ServletConfigTest {
         assertNotNull(mvcResult);
 
         PaymentResponse paymentResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), PaymentResponse.class);
-        ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
-        assertNotNull(returnUrlObject);
 
         String finishUri = null;
         if ( cardData.needAcs() ) {
+            assertTrue(paymentResponse.getStatus() == ResponseStatus.SUCCESS);
+            ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+            assertNotNull(returnUrlObject);
+
             assertEquals("post", returnUrlObject.getAction());
             assertNotNull(returnUrlObject.getParams().get("MD"));
             assertNotNull(returnUrlObject.getParams().get("PaReq"));
             assertNotNull(returnUrlObject.getParams().get("TermUrl"));
             assertNotNull(returnUrlObject.getUrl());
 
-            String paRes = AcsUtils.emulateCommunicationWithACS(returnUrlObject.getParams().get("MD"), returnUrlObject.getParams().get("TermUrl"), returnUrlObject.getParams().get("PaReq"), true);
+            String paRes = AcsUtils.emulateCommunicationWithACS(returnUrlObject.getParams().get("MD"), returnUrlObject.getParams().get("TermUrl"), returnUrlObject.getParams().get("PaReq"), cardData.isValid());
             assertNotNull(paRes);
             ResponseEntity<String> responseEntity = restTemplate.getForEntity(returnUrlObject.getParams().get("TermUrl")
                     + "?PaRes=" + paRes
@@ -205,9 +218,15 @@ public class ItTest extends ServletConfigTest {
             assertTrue(responseEntity.getHeaders().getLocation().toString().contains(finishUri));
         }
         else {
-            assertEquals("redirect", returnUrlObject.getAction());
-            assertTrue(returnUrlObject.getUrl().contains("/finish/"));
-            assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+            assertTrue(cardData.isValid() ? paymentResponse.getStatus() == ResponseStatus.SUCCESS : paymentResponse.getStatus() == ResponseStatus.FAIL);
+            if ( cardData.isValid() ) {
+                ReturnUrlObject returnUrlObject = paymentResponse.getReturnUrlObject();
+                assertNotNull(returnUrlObject);
+
+                assertEquals("redirect", returnUrlObject.getAction());
+                assertTrue(returnUrlObject.getUrl().contains("/finish/"));
+                assertTrue(returnUrlObject.getUrl().contains(merchantOrderRegisterResponse.getOrderId()));
+            }
             finishUri = "/order/finish/" + merchantOrderRegisterResponse.getOrderId();
         }
 
@@ -218,16 +237,23 @@ public class ItTest extends ServletConfigTest {
         Map<String,Object> finishModel = finishMvcResult.getModelAndView().getModel();
         assertNotNull(finishModel);
         assertTrue(!finishModel.isEmpty());
-        assertTrue(ResponseStatus.SUCCESS.equals(finishModel.get("status")));
-        assertTrue(finishMvcResult.getResponse().getForwardedUrl().contains("finish"));
+        if ( cardData.isValid() ) {
+            assertTrue(ResponseStatus.SUCCESS.equals(finishModel.get("status")));
+            assertTrue(finishMvcResult.getResponse().getForwardedUrl().contains("finish"));
+        }
 
         MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertNotNull(merchantOrder);
-        assertTrue(merchantOrder.getOrderStatus() == OrderStatus.PAID);
-        assertNotNull(merchantOrder.getPaymentDate());
-        assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
-        assertNotNull(merchantOrder.getClient());
-        assertEquals(clientRegisterResponse.getAuth().getAuthName(), merchantOrder.getClient().getUsername());
+        if ( cardData.isValid() ) {
+            assertTrue(merchantOrder.getOrderStatus() == OrderStatus.PAID);
+            assertNotNull(merchantOrder.getPaymentDate());
+            assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
+            assertNotNull(merchantOrder.getClient());
+            assertEquals(clientRegisterResponse.getAuth().getAuthName(), merchantOrder.getClient().getUsername());
+        }
+        else {
+            assertTrue(merchantOrder.getOrderStatus() != OrderStatus.PAID);
+        }
 
         return;
     }
