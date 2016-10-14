@@ -10,6 +10,7 @@ public class SessionStatusResponse extends ApiResponse {
     private String orderId;
     private OrderStatus orderStatus;
     private Long amount;
+    private String description;
     private boolean canPayment;
 
     public SessionStatusResponse() {
@@ -49,5 +50,13 @@ public class SessionStatusResponse extends ApiResponse {
 
     public void setCanPayment(boolean canPayment) {
         this.canPayment = canPayment;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

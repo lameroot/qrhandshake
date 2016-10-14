@@ -103,7 +103,8 @@ public class MerchantOrderController {
 
     @RequestMapping(value = SESSION_STATUS_PATH)
     @ResponseBody
-    public SessionStatusResponse getSessionStatus(Principal principal, @Valid SessionStatusRequest sessionStatusRequest) throws MerchantOrderNotFoundException {
+    public SessionStatusResponse getSessionStatus(Principal principal, @Valid SessionStatusRequest sessionStatusRequest) throws MerchantOrderNotFoundException, AuthException {
+        authService.clientAuth(principal, sessionStatusRequest, true);
         MerchantOrder merchantOrder = orderService.findByOrderId(sessionStatusRequest.getOrderId());
         if ( null == merchantOrder ) throw new MerchantOrderNotFoundException("Order: " + sessionStatusRequest.getOrderId() + " not found");
         SessionStatusResponse sessionStatusResponse = new SessionStatusResponse(sessionStatusRequest.getOrderId());
@@ -111,6 +112,7 @@ public class MerchantOrderController {
         sessionStatusResponse.setOrderStatus(merchantOrder.getOrderStatus());
         sessionStatusResponse.setCanPayment(merchantOrder.canPayment());
         sessionStatusResponse.setStatus(ResponseStatus.SUCCESS);
+        sessionStatusResponse.setDescription(merchantOrder.getDescription());
         sessionStatusResponse.setMessage("Session status");
 
         return sessionStatusResponse;

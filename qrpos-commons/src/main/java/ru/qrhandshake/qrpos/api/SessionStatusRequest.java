@@ -5,7 +5,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by lameroot on 21.06.16.
  */
-public class SessionStatusRequest {
+public class SessionStatusRequest extends ApiAuth {
 
     @NotNull
     private String orderId;
