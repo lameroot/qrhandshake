@@ -11,7 +11,7 @@ public class EndpointCatalog {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "endpointCatalogSequence")
     @SequenceGenerator(name = "endpointCatalogSequence", sequenceName = "seq_endpoint_catalog", allocationSize = 1)
     private Long id;
-    @Column(name = "integration_support", nullable = false, unique = true)
+    @Column(name = "integration_support", nullable = false)
     @Enumerated(value = EnumType.STRING)
     private IntegrationSupport integrationSupport;
     @Column(name = "address", nullable = false)
