@@ -60,6 +60,11 @@ public class PaymentITTest extends ItTest {
     public void testCanPaymentMerchantOrder() throws Exception {
         MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
         TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
+        ApiResponse apiResponse = authClient(clientRegisterResponse.getAuth().getAuthName(), clientRegisterResponse.getAuth().getAuthPassword());
+        assertTrue(ResponseStatus.SUCCESS == apiResponse.getStatus());
+        Authentication authentication = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
+
 
         MerchantOrderRegisterResponse merchantOrderRegisterResponse = registerOrder(terminalRegisterResponse.getAuth(),
                 amount,sessionId,deviceId);
@@ -71,6 +76,7 @@ public class PaymentITTest extends ItTest {
         assertTrue(mvcResult.getResponse().getRedirectedUrl().contains("payment.html?orderId=" + merchantOrderRegisterResponse.getOrderId()));
 
         MvcResult mvcResultSessionStatus = mockMvc.perform(get(MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.SESSION_STATUS_PATH)
+                .principal(authentication)
                 .param("orderId", merchantOrderRegisterResponse.getOrderId())).andDo(print()).andReturn();
         assertNotNull(mvcResultSessionStatus);
 
@@ -133,7 +139,13 @@ public class PaymentITTest extends ItTest {
         assertNotNull(mvcResultPayment);
         assertTrue(mvcResultPayment.getResponse().getRedirectedUrl().contains("payment.html?orderId=" + merchantOrderRegisterResponse.getOrderId()));
 
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
+        ApiResponse apiResponse = authClient(clientRegisterResponse.getAuth().getAuthName(), clientRegisterResponse.getAuth().getAuthPassword());
+        assertTrue(ResponseStatus.SUCCESS == apiResponse.getStatus());
+        Authentication authentication = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
+
         MvcResult mvcResultSessionStatus = mockMvc.perform(get(MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.SESSION_STATUS_PATH)
+                .principal(authentication)
             .param("orderId", merchantOrderRegisterResponse.getOrderId())).andDo(print()).andReturn();
         assertNotNull(mvcResultSessionStatus);
 
@@ -887,7 +899,7 @@ public class PaymentITTest extends ItTest {
         assertNotNull(merchantOrder.getPaymentDate());
         assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
         assertNotNull(merchantOrder.getClient());
-        assertEquals(clientRegisterResponse.getAuth().getAuthName(),merchantOrder.getClient().getUsername());
+        assertEquals(clientRegisterResponse.getAuth().getAuthName(), merchantOrder.getClient().getUsername());
 
         ApiResponse apiResponseTerminal = authTerminal(terminalRegisterResponse.getAuth().getAuthName(),terminalRegisterResponse.getAuth().getAuthPassword());
         assertTrue(ResponseStatus.SUCCESS == apiResponseTerminal.getStatus());
@@ -963,7 +975,7 @@ public class PaymentITTest extends ItTest {
         assertNotNull(merchantOrder.getClient());
         assertEquals(clientRegisterResponse.getAuth().getAuthName(),merchantOrder.getClient().getUsername());
 
-        ApiResponse apiResponseTerminal = authTerminal(terminalRegisterResponse.getAuth().getAuthName(),terminalRegisterResponse.getAuth().getAuthPassword());
+        ApiResponse apiResponseTerminal = authTerminal(terminalRegisterResponse.getAuth().getAuthName(), terminalRegisterResponse.getAuth().getAuthPassword());
         assertTrue(ResponseStatus.SUCCESS == apiResponseTerminal.getStatus());
 
         MvcResult mvcResultReverse = mockMvc.perform(post("/order/reverse")
@@ -1168,7 +1180,8 @@ public class PaymentITTest extends ItTest {
         assertTrue(finishMvcResult.getResponse().getForwardedUrl().contains("finish"));
 
         MvcResult getSessionStatusMvcResult = mockMvc.perform(get("/order/sessionStatus")
-            .param("orderId",merchantOrderRegisterResponse.getOrderId())
+                        .principal(authentication)
+            .param("orderId", merchantOrderRegisterResponse.getOrderId())
             ).andDo(print()).andReturn();
 
         assertNotNull(getSessionStatusMvcResult);
@@ -1192,8 +1205,10 @@ public class PaymentITTest extends ItTest {
         ApiResponse apiResponse = authClient(clientRegisterResponse.getAuth().getAuthName(), clientRegisterResponse.getAuth().getAuthPassword());
         assertTrue(ResponseStatus.SUCCESS == apiResponse.getStatus());
 
+        Authentication authentication = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
         MvcResult getSessionStatusMvcResult = mockMvc.perform(get("/order/sessionStatus")
-                        .param("orderId",merchantOrderRegisterResponse.getOrderId())
+                        .principal(authentication)
+                        .param("orderId", merchantOrderRegisterResponse.getOrderId())
         ).andDo(print()).andReturn();
 
         assertNotNull(getSessionStatusMvcResult);
@@ -1207,8 +1222,12 @@ public class PaymentITTest extends ItTest {
 
     @Test
     public void testGetSessionStatusOrderNotFound() throws Exception {
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
+        Authentication authentication = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
+
         MvcResult getSessionStatusMvcResult = mockMvc.perform(get("/order/sessionStatus")
-                        .param("orderId",UUID.randomUUID().toString())
+                        .principal(authentication)
+                        .param("orderId", UUID.randomUUID().toString())
         ).andDo(print()).andReturn();
 
         assertNotNull(getSessionStatusMvcResult);
@@ -1220,7 +1239,7 @@ public class PaymentITTest extends ItTest {
 
     @Test
     public void testDuplicateRegisterBinding() throws Exception {
-        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8),"client", AuthType.PASSWORD);
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + Util.generatePseudoUnique(8), "client", AuthType.PASSWORD);
         Authentication authentication = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
 
         registerBinding(clientRegisterResponse, new TDSCardData());

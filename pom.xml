@@ -10,6 +10,7 @@
     <modules>
         <module>qrpos-commons</module>
         <module>qrpos-web</module>
+        <module>rbs-integration</module>
     </modules>
     <packaging>pom</packaging>
 
