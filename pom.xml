@@ -21,6 +21,7 @@
         <rbs-protocols.version>1.0.87-SNAPSHOT</rbs-protocols.version>
         <spring.version>4.2.6.RELEASE</spring.version>
         <spring-security.version>4.1.0.RELEASE</spring-security.version>
+        <spring-integration.version>4.3.4.RELEASE</spring-integration.version>
         <amqp-bus.version>3.2</amqp-bus.version>
         <logback.version>1.1.7</logback.version>
         <jcl.slf4j.version>1.7.12</jcl.slf4j.version>
@@ -80,6 +81,12 @@
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-config</artifactId>
                 <version>${spring-security.version}</version>
+            </dependency>
+            <!-- Spring integration -->
+            <dependency>
+                <groupId>org.springframework.integration</groupId>
+                <artifactId>spring-integration-core</artifactId>
+                <version>${spring-integration.version}</version>
             </dependency>
 
             <!-- servlets -->
