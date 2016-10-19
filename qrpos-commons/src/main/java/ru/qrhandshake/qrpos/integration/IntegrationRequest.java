@@ -10,6 +10,8 @@ public class IntegrationRequest {
     @NotNull
     private Endpoint endpoint;
 
+    public IntegrationRequest() {
+    }
     public IntegrationRequest(Endpoint endpoint) {
         this.endpoint = endpoint;
     }

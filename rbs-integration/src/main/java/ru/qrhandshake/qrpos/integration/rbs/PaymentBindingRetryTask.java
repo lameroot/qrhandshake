@@ -5,12 +5,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
+import ru.qrhandshake.qrpos.integration.IntegrationFacade;
 import ru.qrhandshake.qrpos.integration.IntegrationPaymentBindingRequest;
 import ru.qrhandshake.qrpos.integration.IntegrationPaymentResponse;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 import ru.rbs.commons.cluster.retry.Retriable;
 
 import javax.annotation.Resource;
+import java.util.Calendar;
 import java.util.Date;
 
 public class PaymentBindingRetryTask implements Retriable<IntegrationPaymentBindingRequest>  {
@@ -21,7 +23,7 @@ public class PaymentBindingRetryTask implements Retriable<IntegrationPaymentBind
     private Integer maxAttempts;
 
     @Resource
-    private RbsIntegrationFacade rbsIntegrationFacade;
+    private IntegrationFacade rbsSbrfIntegrationService;
     @Resource
     private MerchantOrderRepository merchantOrderRepository;
 
@@ -34,7 +36,7 @@ public class PaymentBindingRetryTask implements Retriable<IntegrationPaymentBind
             return;
         }
         try {
-            IntegrationPaymentResponse integrationPaymentResponse = rbsIntegrationFacade.paymentBinding(integrationPaymentBindingRequest);
+            IntegrationPaymentResponse integrationPaymentResponse = rbsSbrfIntegrationService.paymentBinding(integrationPaymentBindingRequest);
             merchantOrder.setPaymentSecureType(integrationPaymentResponse.getPaymentSecureType());
             merchantOrder.setPaymentType(integrationPaymentResponse.getPaymentType());
             merchantOrder.setOrderStatus(integrationPaymentResponse.getOrderStatus());
@@ -45,16 +47,27 @@ public class PaymentBindingRetryTask implements Retriable<IntegrationPaymentBind
                 throw new RuntimeException("Invalid status, go to retry");
             }
             //rbsIntegrationFacade.getOrderStatus()
+            merchantOrder.setPaymentDate(new Date());
             merchantOrderRepository.save(merchantOrder);
         } catch (IntegrationException e) {
-            throw new RuntimeException("");
+            throw new RuntimeException("Error paymentBinding for " + integrationPaymentBindingRequest,e);
         }
 
     }
 
     @Override
     public Date next(int attemptNumber) {
-        return null;
+        Calendar current = Calendar.getInstance();
+        if ( 0 == attemptNumber ) {
+            current.add(Calendar.SECOND, 24*4);
+        }
+        else if ( 1 == attemptNumber ) {
+            current.add(Calendar.SECOND, 24*14);
+        }
+        else if ( 2 == attemptNumber ) {
+            current.add(Calendar.SECOND, 24*28);
+        }
+        return current.getTime();
     }
 
     @Override

@@ -1,9 +1,11 @@
-DELETE from userpassword_endpoint where id=-1;
-delete from endpoint where id=-1;
-DELETE from "user" where id=-1;
+DELETE from userpassword_endpoint;
+delete from endpoint;
+DELETE from "user";
 DELETE from terminal where id=-1;
 DELETE FROM merchant where id=-1;
-DELETE FROM endpoint_catalog where id=-1;
+DELETE FROM endpoint_catalog;
+
+SELECT * FROM userpassword_endpoint where id != -1;
 
 insert into endpoint_catalog (address, integration_support, params, id)
 values ('https://3dsec.sberbank.ru/payment/webservices/merchant-ws?wsdl', 'RBS_SBRF', null, -1);

@@ -8,10 +8,13 @@ import ru.qrhandshake.qrpos.domain.IntegrationSupport;
  */
 public class IntegrationPaymentBindingRequest extends IntegrationPaymentRequest {
 
-    private final String externalBindingId;
+    private String externalBindingId;
     private String bindingId;
     private boolean async;
 
+
+    private IntegrationPaymentBindingRequest() {
+    }
     public IntegrationPaymentBindingRequest(Endpoint endpoint, String externalBindingId) {
         super(endpoint);
         this.externalBindingId = externalBindingId;
@@ -23,6 +26,10 @@ public class IntegrationPaymentBindingRequest extends IntegrationPaymentRequest 
 
     public String getExternalBindingId() {
         return externalBindingId;
+    }
+
+    public void setExternalBindingId(String externalBindingId) {
+        this.externalBindingId = externalBindingId;
     }
 
     public void setBindingId(String bindingId) {

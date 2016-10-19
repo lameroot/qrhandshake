@@ -20,7 +20,7 @@ import org.springframework.web.client.RestTemplate;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationConfig;
-import ru.rbs.util.SyncSimpleDateFormat;
+import ru.rbs.commons.util.SyncSimpleDateFormat;
 
 import javax.annotation.Resource;
 import java.util.HashMap;

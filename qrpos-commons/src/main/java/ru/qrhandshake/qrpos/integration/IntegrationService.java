@@ -26,7 +26,7 @@ public class IntegrationService {
         IntegrationSupport integrationSupport = integrationPaymentBindingRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
         IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationSupport).paymentBinding(integrationPaymentBindingRequest);
         if ( !integrationPaymentResponse.isSuccess() ) throw new IntegrationException(integrationPaymentResponse.getMessage());
-        integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport,integrationPaymentResponse.getIntegrationOrderStatus()));
+        if ( null == integrationPaymentResponse.getOrderStatus() ) integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport,integrationPaymentResponse.getIntegrationOrderStatus()));
         return integrationPaymentResponse;
     }
 

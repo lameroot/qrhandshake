@@ -3,8 +3,8 @@ package ru.qrhandshake.qrpos.domain;
 import javax.persistence.*;
 import java.util.Date;
 
-@Entity
-@Table(name = "black_client")
+//@Entity
+//@Table(name = "black_client")
 public class BlackClient {
 
     @Id

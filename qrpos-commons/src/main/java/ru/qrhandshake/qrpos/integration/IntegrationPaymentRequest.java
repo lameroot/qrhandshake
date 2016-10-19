@@ -25,6 +25,7 @@ public class IntegrationPaymentRequest extends IntegrationRequest {
     private String ip;
     private PaymentType paymentType;
 
+    public IntegrationPaymentRequest(){}
     public IntegrationPaymentRequest(Endpoint endpoint) {
         super(endpoint);
     }

@@ -33,15 +33,20 @@ public class RbsIntegrationFacade implements IntegrationFacade {
 
     @Resource
     private Environment environment;
-    private MerchantServiceProvider merchantServiceProvider;
-    private IntegrationSupport integrationSupport;
-
-    private Map<Endpoint, MerchantService> merchantServiceMap = new HashMap<>();
+    @Resource
+    private RetriableExecutor retriableExecutor;
+    @Resource
+    private PaymentBindingRetryTask paymentBindingRetryTask;
 
     @Value("${integration.rbs.paymentType:PURCHASE}")
     private String sPaymentType;
     @Value("${integration.rbs.paymentBinding.maxAmountForAsync:10000}")
     private Long paymentBindingMaxAmountForAsync;
+
+    private MerchantServiceProvider merchantServiceProvider;
+    private IntegrationSupport integrationSupport;
+
+    private Map<Endpoint, MerchantService> merchantServiceMap = new HashMap<>();
 
     public RbsIntegrationFacade(@NotNull IntegrationSupport integrationSupport) {
         Assert.notNull(integrationSupport,"integrationSupport must not be null");
@@ -66,11 +71,6 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         return merchantService;
     }
 
-    @Resource
-    private RetriableExecutor retriableExecutor;
-    @Resource
-    private PaymentBindingRetryTask paymentBindingRetryTask;
-
     @Override
     public IntegrationPaymentResponse paymentBinding(IntegrationPaymentBindingRequest integrationPaymentBindingRequest) throws IntegrationException {
         IntegrationPaymentResponse integrationPaymentResponse = new IntegrationPaymentResponse();
@@ -85,15 +85,14 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                 integrationPaymentResponse.setOrderStatus(OrderStatus.PENDING);
                 integrationPaymentResponse.setIntegrationOrderStatus(RbsOrderStatus.CREATED);
                 ReturnUrlObject returnUrlObject = new ReturnUrlObject();
-                returnUrlObject.setUrl("async url");
+                returnUrlObject.setUrl("/order/finish/" + integrationPaymentBindingRequest.getOrderId());//http://localhost:80/order/finish/219_1476906395931?orderId=dd53b41b-c322-4b00-ba5a-a998760c6c17
                 returnUrlObject.setAction("redirect");
                 integrationPaymentResponse.setReturnUrlObject(returnUrlObject);
                 integrationPaymentBindingRequest.setAsync(false);
 
                 retriableExecutor.execute(integrationPaymentBindingRequest, paymentBindingRetryTask);
 
-                //rabbitTemplate.send("RBS", "paymentBinding", MessageBuilder.withBody(objectMapper.writeValueAsBytes(integrationPaymentBindingRequest)).build());
-                logger.debug("Async paymentBinding for {}, sent by RBS.paymentBinding routingKey");
+                logger.debug("Async paymentBinding for {}", integrationPaymentBindingRequest);
                 return integrationPaymentResponse;
             }
         } catch (Exception e) {
