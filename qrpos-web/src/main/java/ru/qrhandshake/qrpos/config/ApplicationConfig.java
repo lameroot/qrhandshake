@@ -18,9 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
-import ru.qrhandshake.qrpos.integration.IntegrationFacade;
-import ru.qrhandshake.qrpos.integration.IntegrationService;
-import ru.qrhandshake.qrpos.integration.P2pIntegrationFacade;
+import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationConfig;
 import ru.rbs.util.SyncSimpleDateFormat;
 

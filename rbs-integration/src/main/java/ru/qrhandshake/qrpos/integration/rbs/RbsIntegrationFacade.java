@@ -1,9 +1,12 @@
 package ru.qrhandshake.qrpos.integration.rbs;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.MessageBuilder;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.util.Assert;
@@ -18,6 +21,7 @@ import ru.qrhandshake.qrpos.dto.ReturnUrlObject;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.util.Util;
+import ru.rbs.commons.cluster.retry.RetriableExecutor;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -32,13 +36,19 @@ public class RbsIntegrationFacade implements IntegrationFacade {
 
     @Resource
     private Environment environment;
+    @Resource
+    private RabbitTemplate rabbitTemplate;
+    @Resource
+    private ObjectMapper objectMapper;
     private MerchantServiceProvider merchantServiceProvider;
     private IntegrationSupport integrationSupport;
 
     private Map<Endpoint, MerchantService> merchantServiceMap = new HashMap<>();
 
-    @Value("${rbs.paymentType:PURCHASE}")
+    @Value("${integration.rbs.paymentType:PURCHASE}")
     private String sPaymentType;
+    @Value("${integration.rbs.paymentBinding.maxAmountForAsync:10000}")
+    private Long paymentBindingMaxAmountForAsync;
 
     public RbsIntegrationFacade(@NotNull IntegrationSupport integrationSupport) {
         Assert.notNull(integrationSupport,"integrationSupport must not be null");
@@ -63,8 +73,38 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         return merchantService;
     }
 
+    @Resource
+    private RetriableExecutor retriableExecutor;
+    @Resource
+    private PaymentBindingRetryTask paymentBindingRetryTask;
+
     @Override
     public IntegrationPaymentResponse paymentBinding(IntegrationPaymentBindingRequest integrationPaymentBindingRequest) throws IntegrationException {
+        IntegrationPaymentResponse integrationPaymentResponse = new IntegrationPaymentResponse();
+        integrationPaymentResponse.setOrderId(integrationPaymentBindingRequest.getOrderId());
+        integrationPaymentResponse.setPaymentType(PaymentType.PURCHASE);
+
+        try {
+            if (!integrationPaymentBindingRequest.isForceSync() && integrationPaymentBindingRequest.getClient().isAccountNonLocked() && integrationPaymentBindingRequest.getAmount() <= paymentBindingMaxAmountForAsync) {
+                integrationPaymentResponse.setSuccess(true);
+                integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.SSL);
+                integrationPaymentResponse.setMessage("Order is pending");
+                integrationPaymentResponse.setOrderStatus(OrderStatus.PENDING);
+                integrationPaymentResponse.setIntegrationOrderStatus(RbsOrderStatus.CREATED);
+                ReturnUrlObject returnUrlObject = new ReturnUrlObject();
+                returnUrlObject.setUrl("async url");
+                returnUrlObject.setAction("redirect");
+                integrationPaymentResponse.setReturnUrlObject(returnUrlObject);
+
+                retriableExecutor.execute(integrationPaymentBindingRequest, paymentBindingRetryTask);
+
+                rabbitTemplate.send("RBS", "paymentBinding", MessageBuilder.withBody(objectMapper.writeValueAsBytes(integrationPaymentBindingRequest)).build());
+                logger.debug("Async paymentBinding for {}, sent by RBS.paymentBinding routingKey");
+                return integrationPaymentResponse;
+            }
+        } catch (Exception e) {
+            logger.error("Error paymentBinding for {} use rabbitMQ, try to send as sync",integrationPaymentBindingRequest,e);
+        }
         OrderParams rbsParams = new OrderParams();
         rbsParams.setCurrency(currency);
         rbsParams.setLanguage(language);
@@ -85,9 +125,6 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             if ( null != client.getEmail() ) rbsParams.getParams().add(Util.createServiceParam(Client.EMAIL_PARAM,client.getEmail()));
             if ( null != client.getPhone() ) rbsParams.getParams().add(Util.createServiceParam(Client.PHONE_PARAM, client.getPhone()));
         }
-        IntegrationPaymentResponse integrationPaymentResponse = new IntegrationPaymentResponse();
-        integrationPaymentResponse.setOrderId(integrationPaymentBindingRequest.getOrderId());
-        integrationPaymentResponse.setPaymentType(PaymentType.PURCHASE);
 
         String externalOrderId = null;
         try {

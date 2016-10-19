@@ -6,11 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.api.binding.BindingPaymentParams;
-import ru.qrhandshake.qrpos.api.binding.GetBindingsRequest;
-import ru.qrhandshake.qrpos.api.binding.GetBindingsResponse;
 import ru.qrhandshake.qrpos.api.merchantorder.*;
 import ru.qrhandshake.qrpos.domain.*;
-import ru.qrhandshake.qrpos.dto.BindingDto;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.integration.*;
@@ -21,7 +18,6 @@ import ru.qrhandshake.qrpos.repository.OrderTemplateRepository;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -265,6 +261,9 @@ public class OrderService {
                 }
                 else if ( merchantOrder.getOrderStatus() == OrderStatus.REDIRECTED_TO_EXTERNAL) {
                     paymentResponse.setMessage("Paid by BINDING caused to redirect to external system");
+                }
+                else if ( merchantOrder.getOrderStatus() == OrderStatus.PENDING ) {
+                    paymentResponse.setMessage("Order is pending");
                 }
                 else {
                     paymentResponse.setMessage("Paid by BINDING successfully but status invalid: " + merchantOrder.getOrderStatus());

@@ -1,7 +1,6 @@
 package ru.qrhandshake.qrpos.controller.it;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -25,7 +24,6 @@ import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationFacade;
 import ru.qrhandshake.qrpos.repository.*;
 import ru.qrhandshake.qrpos.service.ClientService;
 import ru.qrhandshake.qrpos.service.MerchantService;
-import ru.qrhandshake.qrpos.util.Util;
 import ru.rbs.mpi.test.acs.AcsUtils;
 
 import javax.annotation.Resource;
