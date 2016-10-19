@@ -1,12 +1,9 @@
 package ru.qrhandshake.qrpos.integration.rbs;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.MessageBuilder;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.util.Assert;
@@ -36,10 +33,6 @@ public class RbsIntegrationFacade implements IntegrationFacade {
 
     @Resource
     private Environment environment;
-    @Resource
-    private RabbitTemplate rabbitTemplate;
-    @Resource
-    private ObjectMapper objectMapper;
     private MerchantServiceProvider merchantServiceProvider;
     private IntegrationSupport integrationSupport;
 
@@ -85,7 +78,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         integrationPaymentResponse.setPaymentType(PaymentType.PURCHASE);
 
         try {
-            if (!integrationPaymentBindingRequest.isForceSync() && integrationPaymentBindingRequest.getClient().isAccountNonLocked() && integrationPaymentBindingRequest.getAmount() <= paymentBindingMaxAmountForAsync) {
+            if (integrationPaymentBindingRequest.isAsync() && integrationPaymentBindingRequest.getClient().isAccountNonLocked() && integrationPaymentBindingRequest.getAmount() <= paymentBindingMaxAmountForAsync) {
                 integrationPaymentResponse.setSuccess(true);
                 integrationPaymentResponse.setPaymentSecureType(PaymentSecureType.SSL);
                 integrationPaymentResponse.setMessage("Order is pending");
@@ -95,10 +88,11 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                 returnUrlObject.setUrl("async url");
                 returnUrlObject.setAction("redirect");
                 integrationPaymentResponse.setReturnUrlObject(returnUrlObject);
+                integrationPaymentBindingRequest.setAsync(false);
 
                 retriableExecutor.execute(integrationPaymentBindingRequest, paymentBindingRetryTask);
 
-                rabbitTemplate.send("RBS", "paymentBinding", MessageBuilder.withBody(objectMapper.writeValueAsBytes(integrationPaymentBindingRequest)).build());
+                //rabbitTemplate.send("RBS", "paymentBinding", MessageBuilder.withBody(objectMapper.writeValueAsBytes(integrationPaymentBindingRequest)).build());
                 logger.debug("Async paymentBinding for {}, sent by RBS.paymentBinding routingKey");
                 return integrationPaymentResponse;
             }

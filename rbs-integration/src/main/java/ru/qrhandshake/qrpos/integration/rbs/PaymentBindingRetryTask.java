@@ -2,6 +2,7 @@ package ru.qrhandshake.qrpos.integration.rbs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import ru.qrhandshake.qrpos.domain.MerchantOrder;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.integration.IntegrationPaymentBindingRequest;
@@ -15,6 +16,9 @@ import java.util.Date;
 public class PaymentBindingRetryTask implements Retriable<IntegrationPaymentBindingRequest>  {
 
     private final static Logger logger = LoggerFactory.getLogger(PaymentBindingRetryTask.class);
+
+    @Value("${integration.rbs.paymentBindingRetry.maxAttempts:3}")
+    private Integer maxAttempts;
 
     @Resource
     private RbsIntegrationFacade rbsIntegrationFacade;
@@ -55,6 +59,6 @@ public class PaymentBindingRetryTask implements Retriable<IntegrationPaymentBind
 
     @Override
     public int maxAttempts() {
-        return 0;
+        return maxAttempts;
     }
 }

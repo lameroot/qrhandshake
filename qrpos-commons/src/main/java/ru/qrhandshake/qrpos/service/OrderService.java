@@ -242,6 +242,7 @@ public class OrderService {
         integrationPaymentBindingRequest.setPaymentWay(PaymentWay.BINDING);
         integrationPaymentBindingRequest.setIp(paymentParams.getIp());
         integrationPaymentBindingRequest.setBindingId(binding.getBindingId());
+        integrationPaymentBindingRequest.setAsync(true);
 
         paymentResponse.setBindingId(binding.getBindingId());
         try {

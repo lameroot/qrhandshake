@@ -10,7 +10,7 @@ public class IntegrationPaymentBindingRequest extends IntegrationPaymentRequest 
 
     private final String externalBindingId;
     private String bindingId;
-    private boolean forceSync;
+    private boolean async;
 
     public IntegrationPaymentBindingRequest(Endpoint endpoint, String externalBindingId) {
         super(endpoint);
@@ -29,12 +29,12 @@ public class IntegrationPaymentBindingRequest extends IntegrationPaymentRequest 
         this.bindingId = bindingId;
     }
 
-    public boolean isForceSync() {
-        return forceSync;
+    public boolean isAsync() {
+        return async;
     }
 
-    public void setForceSync(boolean forceSync) {
-        this.forceSync = forceSync;
+    public void setAsync(boolean async) {
+        this.async = async;
     }
 
     @Override
