@@ -49,4 +49,9 @@ public class SecurityUtils {
         }
         return false;
     }
+
+    public static boolean isCurrentUserAdmin() {
+        User user = getCurrentUser();
+        return user != null && isUserHasRole(user, EnumGrantedAuthority.ADMIN);
+    }
 }
