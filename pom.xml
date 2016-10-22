@@ -6,7 +6,7 @@
 
     <groupId>ru.qrhandshake</groupId>
     <artifactId>qrpos</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <modules>
         <module>qrpos-commons</module>
         <module>qrpos-web</module>
@@ -124,11 +124,17 @@
                 <version>19.0</version>
             </dependency>
 
-            <!--<dependency>-->
-                <!--<groupId>org.slf4j</groupId>-->
-                <!--<artifactId>slf4j-api</artifactId>-->
-                <!--<version>1.6.6</version>-->
-            <!--</dependency>-->
+            <!-- OURS -->
+            <dependency>
+                <groupId>ru.qrhandshake</groupId>
+                <artifactId>qrpos-commons</artifactId>
+                <version>${version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ru.qrhandshake</groupId>
+                <artifactId>rbs-integration</artifactId>
+                <version>${version}</version>
+            </dependency>
 
 
         </dependencies>
