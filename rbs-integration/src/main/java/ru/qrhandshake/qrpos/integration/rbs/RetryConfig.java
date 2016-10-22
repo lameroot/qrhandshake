@@ -38,12 +38,12 @@ public class RetryConfig {
                 .build();
     }
 
-    @Bean(initMethod = "start")
+    @Bean(initMethod = "start", destroyMethod = "destroy")
     public KeepaliveService keepaliveService(DataSource dataSource) {
-        return new KeepaliveService(dataSource);
+        return new KeepaliveService(dataSource, 60L, 60);
     }
 
-    @Bean(initMethod = "start")
+    @Bean(initMethod = "start", destroyMethod = "destroy")
     public DatabaseSLockProvider lockProvider(DataSource dataSource) {
         return new DatabaseSLockProvider(dataSource, keepaliveService(dataSource));
     }

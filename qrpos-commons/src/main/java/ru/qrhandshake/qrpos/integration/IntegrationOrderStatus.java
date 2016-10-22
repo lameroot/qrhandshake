@@ -5,6 +5,7 @@ package ru.qrhandshake.qrpos.integration;
  */
 public interface IntegrationOrderStatus {
 
-    public String getStatus();
+    String getStatus();
+    boolean isPaid();
 
 }

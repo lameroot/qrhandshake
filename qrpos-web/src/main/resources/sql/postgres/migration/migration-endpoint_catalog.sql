@@ -1,6 +1,10 @@
+truncate table retriable_task;
+truncate table db_lock;
+truncate TABLE db_lock_keepalive;
 DELETE from userpassword_endpoint;
 delete from endpoint;
 DELETE from "user";
+DELETE FROM merchant_order where fk_terminal_id=-1;
 DELETE from terminal where id=-1;
 DELETE FROM merchant where id=-1;
 DELETE FROM endpoint_catalog;

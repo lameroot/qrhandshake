@@ -12,13 +12,23 @@ import ru.qrhandshake.qrpos.integration.P2pIntegrationFacade;
 @PropertySource(value = {"classpath:integration/rbs.properties"})
 @Profile(value = {RbsIntegrationConfig.RBS_PROFILE})
 @Import(value = {RetryConfig.class})
-public class RbsIntegrationConfig {
+public class RbsIntegrationConfig  {
 
     public final static String RBS_PROFILE = "rbs";
 
     @Bean
-    public IntegrationFacade rbsSbrfIntegrationService() {
-        return new RbsIntegrationFacade(IntegrationSupport.RBS_SBRF);
+    public RbsSyncIntegrationFacade rbsSyncIntegrationFacade() {
+        return new RbsSyncIntegrationFacade();
+    }
+
+    @Bean
+    public RbsAsyncIntegrationFacade rbsAsyncIntegrationFacade() {
+        return new RbsAsyncIntegrationFacade();
+    }
+
+    @Bean
+    public IntegrationFacade rbsSbrfIntegrationFacade() {
+        return new RbsIntegrationFacade(IntegrationSupport.RBS_SBRF, rbsSyncIntegrationFacade(), rbsAsyncIntegrationFacade());
     }
 
     @Bean

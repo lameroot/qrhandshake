@@ -332,6 +332,10 @@ public class PaymentITTest extends ItTest {
 
     @Test
     public void testSslCardDepositAndCompletionByAnonymous() throws Exception {
+        if ( null == integrationFacades ) {
+            return;
+        }
+        IntegrationFacade rbsIntegrationFacade = integrationFacades.entrySet().stream().filter(e -> e.getKey() == IntegrationSupport.RBS_SBRF ).findFirst().orElse(null).getValue();
         if ( null == rbsIntegrationFacade ) {
             return;
         }
@@ -843,7 +847,7 @@ public class PaymentITTest extends ItTest {
             assertNotNull(merchantOrder1.getPaymentDate());
         }
         assertEquals(PaymentWay.BINDING, merchantOrder1.getPaymentWay());
-        Thread.sleep(100000);
+        //Thread.sleep(100000);
     }
 
     @Test

@@ -1,7 +1,6 @@
 package ru.qrhandshake.qrpos.integration;
 
 import ru.qrhandshake.qrpos.domain.Endpoint;
-import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 
 /**
  * Created by lameroot on 31.05.16.
@@ -10,7 +9,6 @@ public class IntegrationPaymentBindingRequest extends IntegrationPaymentRequest 
 
     private String externalBindingId;
     private String bindingId;
-    private boolean async;
 
 
     private IntegrationPaymentBindingRequest() {
@@ -34,14 +32,6 @@ public class IntegrationPaymentBindingRequest extends IntegrationPaymentRequest 
 
     public void setBindingId(String bindingId) {
         this.bindingId = bindingId;
-    }
-
-    public boolean isAsync() {
-        return async;
-    }
-
-    public void setAsync(boolean async) {
-        this.async = async;
     }
 
     @Override

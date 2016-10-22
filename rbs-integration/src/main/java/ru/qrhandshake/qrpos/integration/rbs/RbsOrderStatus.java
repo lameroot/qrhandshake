@@ -33,6 +33,12 @@ public enum RbsOrderStatus implements IntegrationOrderStatus{
     }
 
     @Override
+    public boolean isPaid() {
+        return this == DEPOSITED || this == APPROVED;
+    }
+
+
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("RbsOrderStatus{");
         sb.append("status=").append(status);
