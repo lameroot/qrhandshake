@@ -6,7 +6,7 @@
 
     <groupId>ru.qrhandshake</groupId>
     <artifactId>qrpos</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.3-SNAPSHOT</version>
     <modules>
         <module>qrpos-commons</module>
         <module>qrpos-web</module>
@@ -136,27 +136,7 @@
                 <version>${version}</version>
             </dependency>
 
-            <!--Logging-->
-            <!-- 2. Bridge logging from JCL to SLF4j-->
-            <dependency>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-                <version>1.2</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>jcl-over-slf4j</artifactId>
-                <version>${jcl.slf4j.version}</version>
-                <scope>runtime</scope>
-            </dependency>
 
-            <!-- 3. logback -->
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>${logback.version}</version>
-            </dependency>
 
         </dependencies>
     </dependencyManagement>
@@ -340,23 +320,26 @@
             <scope>test</scope>
         </dependency>
 
-
-
         <!--Logging-->
         <!-- 2. Bridge logging from JCL to SLF4j-->
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
+            <version>1.2</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
+            <version>${jcl.slf4j.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- 3. logback -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
         </dependency>
 
         <!-- Json -->
