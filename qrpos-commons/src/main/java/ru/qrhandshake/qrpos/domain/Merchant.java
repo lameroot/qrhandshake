@@ -1,5 +1,7 @@
 package ru.qrhandshake.qrpos.domain;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import javax.persistence.*;
 import java.util.Date;
 import java.util.Set;
@@ -26,8 +28,10 @@ public class Merchant {
     @Enumerated(EnumType.STRING)
     private IntegrationSupport integrationSupport;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
+    @JsonManagedReference
     private Set<Terminal> terminals;
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
+    @JsonManagedReference
     private Set<User> users;
     @Column(name = "create_binding")
     private boolean createBinding = true;
