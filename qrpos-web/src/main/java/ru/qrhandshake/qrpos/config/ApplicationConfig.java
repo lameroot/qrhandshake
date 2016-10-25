@@ -35,12 +35,12 @@ import java.util.Map;
         })
 @ComponentScan(basePackages = {"ru.qrhandshake.qrpos.service","ru.qrhandshake.qrpos.converter"})
 @Import(value = {
-        ExternalPropertySourceConfig.class,//must be first
         EntityManagerConfig.class,
         DatabaseConfig.class,
         RbsIntegrationConfig.class,
         MailConfig.class,
-        SmsConfig.class
+        SmsConfig.class,
+        ExternalPropertySourceConfig.class//must be last
 })
 @EnableJpaRepositories(basePackages = {"ru.qrhandshake.qrpos.repository"})
 public class ApplicationConfig {
