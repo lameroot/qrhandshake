@@ -18,7 +18,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.web.client.RestTemplate;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
-import ru.qrhandshake.qrpos.integration.*;
+import ru.qrhandshake.qrpos.integration.IntegrationFacade;
+import ru.qrhandshake.qrpos.integration.IntegrationService;
+import ru.qrhandshake.qrpos.integration.P2pIntegrationFacade;
 import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationConfig;
 import ru.rbs.commons.util.SyncSimpleDateFormat;
 
@@ -27,13 +29,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-@PropertySource(ignoreResourceNotFound = true,
+@PropertySource(ignoreResourceNotFound = false,
         value = {
-                "classpath:config.properties",
-                "${" + ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION + "}"
+                "classpath:config.properties"
         })
 @ComponentScan(basePackages = {"ru.qrhandshake.qrpos.service","ru.qrhandshake.qrpos.converter"})
 @Import(value = {
+        ExternalPropertySourceConfig.class,
         EntityManagerConfig.class,
         DatabaseConfig.class,
         RbsIntegrationConfig.class,
@@ -52,7 +54,8 @@ public class ApplicationConfig {
 
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
-        return new PropertySourcesPlaceholderConfigurer();
+        PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
+        return configurer;
     }
 
     @Bean
@@ -107,17 +110,6 @@ public class ApplicationConfig {
     @Bean
     public IntegrationService integrationService() {
         return new IntegrationService(integrationFacades(), p2pIntegrationFacades());
-    }
-
-    /**
-     * Установить системную переменную 'qrConfigLocation' как значение по умолчанию, иначе если её не будет, приложение не запустится
-     */
-    public final static void setSystemVariableConfigLocation() {
-        logger.debug("System variable with name '" + ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION + "' has value = '" + System.getProperty(ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION) + "'");
-        if ( null == System.getProperty(ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION) ) {
-            logger.debug("Set system variable with name '" + ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION + "' as fake value.");
-            System.setProperty(ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION,"fake value");
-        }
     }
 
     @Bean

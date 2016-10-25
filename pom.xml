@@ -6,7 +6,7 @@
 
     <groupId>ru.qrhandshake</groupId>
     <artifactId>qrpos</artifactId>
-    <version>1.4-SNAPSHOT</version>
+    <version>1.5-SNAPSHOT</version>
     <modules>
         <module>qrpos-commons</module>
         <module>qrpos-web</module>
@@ -128,12 +128,12 @@
             <dependency>
                 <groupId>ru.qrhandshake</groupId>
                 <artifactId>qrpos-commons</artifactId>
-                <version>${version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>ru.qrhandshake</groupId>
                 <artifactId>rbs-integration</artifactId>
-                <version>${version}</version>
+                <version>${project.version}</version>
             </dependency>
 
 

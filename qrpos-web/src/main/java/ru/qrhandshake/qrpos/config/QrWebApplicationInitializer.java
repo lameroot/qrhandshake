@@ -27,10 +27,6 @@ public class QrWebApplicationInitializer  implements WebApplicationInitializer {
             "prod"
     };
 
-    static {
-        ApplicationConfig.setSystemVariableConfigLocation();
-    }
-
 
     @Override
     public void onStartup(ServletContext container) throws ServletException {
