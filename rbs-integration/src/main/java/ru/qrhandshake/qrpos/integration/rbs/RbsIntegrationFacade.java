@@ -52,7 +52,8 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             logger.debug("So [paymentBindingAsyncEnabled={}], client not locked and amount less than {}, payment async by binding: {}",paymentBindingAsyncEnabled, paymentBindingAsyncMaxAmount, integrationPaymentBindingRequest);
             return rbsAsyncIntegrationFacade.paymentBinding(integrationPaymentBindingRequest);
         }
-        logger.debug("Payment sync by binding: {}", integrationPaymentBindingRequest);
+        logger.debug("Payment sync by binding: {}, because paymentBindingAsyncEnabled = {} or {} is locked or amount: {} more than {}",
+                integrationPaymentBindingRequest, paymentBindingAsyncEnabled, integrationPaymentBindingRequest.getClient(), integrationPaymentBindingRequest.getAmount(), paymentBindingAsyncMaxAmount);
         return rbsSyncIntegrationFacade.paymentBinding(integrationPaymentBindingRequest);
     }
 

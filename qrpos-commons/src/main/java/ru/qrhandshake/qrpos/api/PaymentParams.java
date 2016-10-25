@@ -52,4 +52,14 @@ public class PaymentParams {
     public void setPaymentAccount(String paymentAccount) {
         this.paymentAccount = paymentAccount;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("PaymentParams{");
+        sb.append("orderId='").append(orderId).append('\'');
+        sb.append(", ip='").append(ip).append('\'');
+        sb.append(", returnUrl='").append(returnUrl).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }
