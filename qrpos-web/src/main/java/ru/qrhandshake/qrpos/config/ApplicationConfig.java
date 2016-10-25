@@ -29,13 +29,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-@PropertySource(ignoreResourceNotFound = false,
+@PropertySource(ignoreResourceNotFound = true,
         value = {
                 "classpath:config.properties"
         })
 @ComponentScan(basePackages = {"ru.qrhandshake.qrpos.service","ru.qrhandshake.qrpos.converter"})
 @Import(value = {
-        ExternalPropertySourceConfig.class,
+        ExternalPropertySourceConfig.class,//must be first
         EntityManagerConfig.class,
         DatabaseConfig.class,
         RbsIntegrationConfig.class,
@@ -110,6 +110,17 @@ public class ApplicationConfig {
     @Bean
     public IntegrationService integrationService() {
         return new IntegrationService(integrationFacades(), p2pIntegrationFacades());
+    }
+
+    /**
+     * Установить системную переменную 'qrConfigLocation' как значение по умолчанию, иначе если её не будет, приложение не запустится
+     */
+    public final static void setSystemVariableConfigLocation() {
+        logger.debug("System variable with name '" + ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION + "' has value = '" + System.getProperty(ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION) + "'");
+        if ( null == System.getProperty(ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION) ) {
+            logger.debug("Set system variable with name '" + ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION + "' as fake value.");
+            System.setProperty(ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION,"fake value");
+        }
     }
 
     @Bean
