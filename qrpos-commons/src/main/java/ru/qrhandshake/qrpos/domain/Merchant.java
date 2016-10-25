@@ -1,10 +1,7 @@
 package ru.qrhandshake.qrpos.domain;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
 import javax.persistence.*;
 import java.util.Date;
-import java.util.Set;
 
 /**
  * Created by lameroot on 18.05.16.
@@ -27,12 +24,6 @@ public class Merchant {
     @Column(name = "integration_support", nullable = true)
     @Enumerated(EnumType.STRING)
     private IntegrationSupport integrationSupport;
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
-    @JsonManagedReference
-    private Set<Terminal> terminals;
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "merchant")
-    @JsonManagedReference
-    private Set<User> users;
     @Column(name = "create_binding")
     private boolean createBinding = true;
 
@@ -67,22 +58,6 @@ public class Merchant {
 
     public void setCreatedDate(Date createdDate) {
         this.createdDate = createdDate;
-    }
-
-    public Set<Terminal> getTerminals() {
-        return terminals;
-    }
-
-    public void setTerminals(Set<Terminal> terminals) {
-        this.terminals = terminals;
-    }
-
-    public Set<User> getUsers() {
-        return users;
-    }
-
-    public void setUsers(Set<User> users) {
-        this.users = users;
     }
 
     public IntegrationSupport getIntegrationSupport() {

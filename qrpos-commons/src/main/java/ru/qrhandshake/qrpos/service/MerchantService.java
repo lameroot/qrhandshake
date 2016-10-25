@@ -2,7 +2,10 @@ package ru.qrhandshake.qrpos.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import ru.qrhandshake.qrpos.api.*;
+import ru.qrhandshake.qrpos.api.ApiAuth;
+import ru.qrhandshake.qrpos.api.ResponseStatus;
+import ru.qrhandshake.qrpos.api.TerminalRegisterRequest;
+import ru.qrhandshake.qrpos.api.TerminalRegisterResponse;
 import ru.qrhandshake.qrpos.api.merchant.MerchantRegisterRequest;
 import ru.qrhandshake.qrpos.api.merchant.MerchantRegisterResponse;
 import ru.qrhandshake.qrpos.domain.Merchant;

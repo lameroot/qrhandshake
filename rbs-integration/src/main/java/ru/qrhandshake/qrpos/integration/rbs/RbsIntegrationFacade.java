@@ -2,6 +2,8 @@ package ru.qrhandshake.qrpos.integration.rbs;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
@@ -12,6 +14,8 @@ import ru.qrhandshake.qrpos.integration.*;
 import javax.annotation.Resource;
 
 public class RbsIntegrationFacade implements IntegrationFacade {
+
+    private final static Logger logger = LoggerFactory.getLogger(RbsIntegrationFacade.class);
 
     @Resource
     private Environment environment;
@@ -45,8 +49,10 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         if ( null != rbsAsyncIntegrationFacade && paymentBindingAsyncEnabled
                 && integrationPaymentBindingRequest.getClient().isAccountNonLocked()
                 && integrationPaymentBindingRequest.getAmount() <= paymentBindingAsyncMaxAmount ) {
+            logger.debug("So [paymentBindingAsyncEnabled={}], client not locked and amount less than {}, payment async by binding: {}",paymentBindingAsyncEnabled, paymentBindingAsyncMaxAmount, integrationPaymentBindingRequest);
             return rbsAsyncIntegrationFacade.paymentBinding(integrationPaymentBindingRequest);
         }
+        logger.debug("Payment sync by binding: {}", integrationPaymentBindingRequest);
         return rbsSyncIntegrationFacade.paymentBinding(integrationPaymentBindingRequest);
     }
 
@@ -89,7 +95,6 @@ public class RbsIntegrationFacade implements IntegrationFacade {
             }
             return OrderStatus.REGISTERED;
         }
-        //throw new IllegalArgumentException("Unknown integration order status: " + integrationOrderStatus);
         return null;
     }
 }

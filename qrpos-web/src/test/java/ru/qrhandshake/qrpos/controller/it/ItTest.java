@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
  * Created by lameroot on 06.06.16.
  */
 @Transactional
-public class ItTest extends ServletConfigTest {
+public abstract class ItTest extends ServletConfigTest {
 
     protected final static String SSL_CARD = "5555555555555599";
     protected final static String TDS_CARD = "4111111111111111";

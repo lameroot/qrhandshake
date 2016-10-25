@@ -1,6 +1,5 @@
 package ru.qrhandshake.qrpos.domain;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,7 +22,6 @@ public class User implements UserDetails {
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_merchant_id")
-    @JsonBackReference
     private Merchant merchant;
     @Column(nullable = false, unique = true)
     private String username;

@@ -62,9 +62,11 @@ public class JsonServiceTest extends GeneralTest {
         Set<Terminal> terminals = new HashSet<>();
         terminals.add(terminal1);
         terminals.add(terminal2);
-        merchant.setTerminals(terminals);
+
 
         String s = objectMapper.writeValueAsString(merchant);
         System.out.println(s);
+
+        System.out.println(objectMapper.writeValueAsString(terminal1));
     }
 }

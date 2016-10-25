@@ -1,7 +1,5 @@
 package ru.qrhandshake.qrpos.domain;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-
 import javax.persistence.*;
 
 /**
@@ -18,7 +16,6 @@ public class Terminal {
     private Long id;
     @ManyToOne
     @JoinColumn(name = "fk_merchant_id", nullable = false)
-    @JsonBackReference
     private Merchant merchant;
     @Column(name = "auth_name", nullable = false, unique = true)
     private String authName;
