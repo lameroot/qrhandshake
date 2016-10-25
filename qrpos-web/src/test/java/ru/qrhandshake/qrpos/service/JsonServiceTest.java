@@ -8,6 +8,7 @@ import ru.qrhandshake.qrpos.api.PaymentParams;
 import ru.qrhandshake.qrpos.domain.Merchant;
 import ru.qrhandshake.qrpos.domain.PaymentWay;
 import ru.qrhandshake.qrpos.domain.Terminal;
+import ru.qrhandshake.qrpos.domain.UserPasswordEndpoint;
 
 import javax.annotation.Resource;
 import java.util.HashSet;
@@ -68,5 +69,11 @@ public class JsonServiceTest extends GeneralTest {
         System.out.println(s);
 
         System.out.println(objectMapper.writeValueAsString(terminal1));
+
+        UserPasswordEndpoint userPasswordEndpoint = new UserPasswordEndpoint();
+        userPasswordEndpoint.setPassword("pass");
+        userPasswordEndpoint.setMerchant(merchant);
+
+        System.out.println(objectMapper.writeValueAsString(userPasswordEndpoint));
     }
 }
