@@ -30,3 +30,5 @@ values (true,-1, -1, NULL , -1);
 
 insert into userpassword_endpoint (id, username, password)
 values (-1, 'paystudio-api','paystudio-api');
+
+--pay.trans1_operator / bZXaPQYT
