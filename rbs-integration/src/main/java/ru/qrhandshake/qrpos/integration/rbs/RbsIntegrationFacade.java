@@ -58,7 +58,7 @@ public class RbsIntegrationFacade implements IntegrationFacade {
         }
         logger.debug("Payment sync by binding: {}, because paymentBindingAsyncEnabled = {} or {} is locked or amount: {} more than {}", integrationPaymentBindingRequest, paymentBindingAsyncEnabled, integrationPaymentBindingRequest.getClient(), integrationPaymentBindingRequest.getAmount(), paymentBindingAsyncMaxAmount);
         IntegrationPaymentResponse integrationSyncPaymentResponse = rbsSyncIntegrationFacade.paymentBinding(integrationPaymentBindingRequest);
-        if ( !integrationSyncPaymentResponse.isSuccess() ) {
+        if ( !integrationSyncPaymentResponse.getIntegrationOrderStatus().isPaid() ) {
             Client client = clientRepository.findOne(integrationPaymentBindingRequest.getClient().getId());
             client.setLocked(true);
             clientRepository.save(client);
