@@ -44,6 +44,7 @@ public class PaymentBindingRetryTask implements Retriable<IntegrationPaymentBind
             return;
         }
         try {
+            integrationPaymentBindingRequest.setOrderId(integrationPaymentBindingRequest.getOrderId() + "_" + new Date().getTime());//todo: сделать номер попытки, когда появится код
             IntegrationPaymentResponse integrationPaymentResponse = rbsSyncIntegrationFacade.paymentBinding(integrationPaymentBindingRequest);
             if ( !integrationPaymentResponse.isSuccess() ) {
                 throw new RuntimeException("Invalid status, go to retry");
