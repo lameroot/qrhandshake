@@ -54,23 +54,23 @@ public class RbsIntegrationFacade implements IntegrationFacade {
                 && integrationPaymentBindingRequest.getClient().isAccountNonLocked()
                 && integrationPaymentBindingRequest.getAmount() <= paymentBindingAsyncMaxAmount ) {
             logger.debug("So [paymentBindingAsyncEnabled={}], client not locked and amount less than {}, payment async by binding: {}",paymentBindingAsyncEnabled, paymentBindingAsyncMaxAmount, integrationPaymentBindingRequest);
-            IntegrationPaymentResponse integrationSyncPaymentResponse = rbsAsyncIntegrationFacade.paymentBinding(integrationPaymentBindingRequest);
-            if ( !integrationSyncPaymentResponse.isSuccess() ) {
-                Client client = clientRepository.findOne(integrationPaymentBindingRequest.getClient().getId());
-                client.setLocked(true);
-                clientRepository.save(client);
-                logger.debug("Sync payment by binding: {} was failed, so {} will be locked.", integrationPaymentBindingRequest, client);
-            }
-            else if ( !integrationPaymentBindingRequest.getClient().isAccountNonLocked() ) {
-                Client client = clientRepository.findOne(integrationPaymentBindingRequest.getClient().getId());
-                client.setLocked(false);
-                clientRepository.save(client);
-                logger.debug("Sync payment by binding: {} was success and {} was locked, so unlock this client", integrationPaymentBindingRequest, client);
-            }
-            return integrationSyncPaymentResponse;
+            return rbsAsyncIntegrationFacade.paymentBinding(integrationPaymentBindingRequest);
         }
         logger.debug("Payment sync by binding: {}, because paymentBindingAsyncEnabled = {} or {} is locked or amount: {} more than {}", integrationPaymentBindingRequest, paymentBindingAsyncEnabled, integrationPaymentBindingRequest.getClient(), integrationPaymentBindingRequest.getAmount(), paymentBindingAsyncMaxAmount);
-        return rbsSyncIntegrationFacade.paymentBinding(integrationPaymentBindingRequest);
+        IntegrationPaymentResponse integrationSyncPaymentResponse = rbsSyncIntegrationFacade.paymentBinding(integrationPaymentBindingRequest);
+        if ( !integrationSyncPaymentResponse.isSuccess() ) {
+            Client client = clientRepository.findOne(integrationPaymentBindingRequest.getClient().getId());
+            client.setLocked(true);
+            clientRepository.save(client);
+            logger.debug("Sync payment by binding: {} was failed, so {} will be locked.", integrationPaymentBindingRequest, client);
+        }
+        else if ( !integrationPaymentBindingRequest.getClient().isAccountNonLocked() ) {
+            Client client = clientRepository.findOne(integrationPaymentBindingRequest.getClient().getId());
+            client.setLocked(false);
+            clientRepository.save(client);
+            logger.debug("Sync payment by binding: {} was success and {} was locked, so unlock this client", integrationPaymentBindingRequest, client);
+        }
+        return integrationSyncPaymentResponse;
     }
 
     @Override

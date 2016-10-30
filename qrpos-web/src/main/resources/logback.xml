@@ -38,5 +38,6 @@
     <logger name="ru.bpc" level="debug" />
     <logger name="ru.qrhandshake.qrpos.service" level="trace" />
     <logger name="ru.qrhandshake.qrpos.integration" level="trace" />
+    <logger name="ru.qrhandshake.qrpos.interceptor" level="trace" />
 
 </configuration>

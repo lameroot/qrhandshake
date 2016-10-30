@@ -9,6 +9,7 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
 import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.servlet.DispatcherServlet;
 import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationConfig;
+import ru.qrhandshake.qrpos.interceptor.LoggingFilter;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.ServletContext;
@@ -60,6 +61,12 @@ public class QrWebApplicationInitializer  implements WebApplicationInitializer {
 
         container.addFilter("openEntityManagerInViewFilter",openEntityManagerInViewFilter)
                 .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD), true, "/*");
+
+        LoggingFilter loggingFilter = new LoggingFilter();
+        container.addFilter("loggingFilter",loggingFilter).setAsyncSupported(true);
+        container.getFilterRegistration("loggingFilter")
+                .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD), true, "/*");
+
 
         //appServlet
         AnnotationConfigWebApplicationContext dispatcherContext  = new AnnotationConfigWebApplicationContext();
