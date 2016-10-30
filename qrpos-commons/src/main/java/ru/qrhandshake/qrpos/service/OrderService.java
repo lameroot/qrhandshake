@@ -180,7 +180,8 @@ public class OrderService {
             paymentResponse.setMessage("Unknown type of payment request: " +  paymentParams);
         }
 
-        if (OrderStatus.PAID == paymentResponse.getOrderStatus()) {
+        if (OrderStatus.PAID == paymentResponse.getOrderStatus() ||
+                OrderStatus.PENDING == paymentResponse.getOrderStatus() ) {
             OrderTemplateHistory orderTemplateHistory = orderTemplateHistoryService.findByOrderTemplateIdAndMerchantOrderId(merchantOrder.getId());
             if (orderTemplateHistory != null) {
                 orderTemplateHistory.setStatus(true);
