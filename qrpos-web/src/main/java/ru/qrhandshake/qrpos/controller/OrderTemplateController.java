@@ -96,7 +96,7 @@ public class OrderTemplateController {
 
     @RequestMapping(value = "/get_ordertemplate")
     @ResponseBody
-    public OrderTemplateResponse getOrderTemplateInfo(long id) throws AuthException {
+    public OrderTemplateResponse getOrderTemplateInfo(@RequestParam long id) throws AuthException {
         OrderTemplate orderTemplate = orderTemplateService.findById(id);
         if (orderTemplate == null) orderTemplate = new OrderTemplate();
         return conversionService.convert(orderTemplate, OrderTemplateResponse.class);
