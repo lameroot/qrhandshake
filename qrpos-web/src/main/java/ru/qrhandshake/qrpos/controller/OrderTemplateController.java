@@ -62,8 +62,8 @@ public class OrderTemplateController {
         if ( null == principal ) throw new AuthException("Unknown principal");
 
         OrderTemplateParams orderTemplateParams = conversionService.convert(orderTemplateRequest, OrderTemplateParams.class);
-        OrderTemplateResult orderTemplateResult = orderTemplateService.create(orderTemplateParams);
-        return conversionService.convert(orderTemplateResult, OrderTemplateResponse.class);
+        OrderTemplate orderTemplate = orderTemplateService.create(orderTemplateParams);
+        return conversionService.convert(orderTemplate, OrderTemplateResponse.class);
     }
 
     @RequestMapping(value = "/payment", params = {"paymentWay=bindingByOrderTemplate"})
@@ -94,6 +94,13 @@ public class OrderTemplateController {
         return conversionService.convert(orderTemplateHistoryResult, OrderTemplateHistoryResponse.class);
     }
 
+    @RequestMapping(value = "/get_ordertemplate")
+    @ResponseBody
+    public OrderTemplateResponse getOrderTemplateInfo(long id) throws AuthException {
+        OrderTemplate orderTemplate = orderTemplateService.findById(id);
+        if (orderTemplate == null) orderTemplate = new OrderTemplate();
+        return conversionService.convert(orderTemplate, OrderTemplateResponse.class);
+    }
 
     private String getReturnUrl(HttpServletRequest request, String orderTemplateId){
         logger.debug("request schema: {}", request.getScheme());

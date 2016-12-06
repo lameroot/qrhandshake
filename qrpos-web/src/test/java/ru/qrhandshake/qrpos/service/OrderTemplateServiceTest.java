@@ -48,8 +48,8 @@ public class OrderTemplateServiceTest extends GeneralTest {
         orderTemplateRequest.setTerminalId(Long.valueOf(terminal.getId()));
 
         OrderTemplateParams orderTemplateParams = conversionService.convert(orderTemplateRequest, OrderTemplateParams.class);
-        OrderTemplateResult orderTemplateResult = orderTemplateService.create(orderTemplateParams);
-        OrderTemplateResponse orderTemplateResponse = conversionService.convert(orderTemplateResult,OrderTemplateResponse.class);
+        OrderTemplate orderTemplate = orderTemplateService.create(orderTemplateParams);
+        OrderTemplateResponse orderTemplateResponse = conversionService.convert(orderTemplate,OrderTemplateResponse.class);
         assertNotNull(orderTemplateResponse);
         assertNotNull(orderTemplateResponse.getId());
         assertEquals(ResponseStatus.SUCCESS,orderTemplateResponse.getStatus());

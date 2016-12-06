@@ -40,7 +40,7 @@ public class OrderTemplateService {
     private OrderTemplateHistoryService orderTemplateHistoryService;
 
 
-    public OrderTemplateResult create(OrderTemplateParams orderTemplateParams) throws AuthException {
+    public OrderTemplate create(OrderTemplateParams orderTemplateParams) throws AuthException {
         Terminal terminal = terminalRepository.findOne(orderTemplateParams.getTerminalId());
         if ( null == terminal ) throw new AuthException("Invalid terminalId: " + orderTemplateParams.getTerminalId());
         OrderTemplate orderTemplate = new OrderTemplate();
@@ -49,12 +49,7 @@ public class OrderTemplateService {
         orderTemplate.setName(orderTemplateParams.getName());
         orderTemplate.setTerminal(terminal);
 
-        orderTemplateRepository.save(orderTemplate);
-
-        OrderTemplateResult orderTemplateResult = new OrderTemplateResult();
-        orderTemplateResult.setId(orderTemplate.getId());
-
-        return orderTemplateResult;
+        return orderTemplateRepository.save(orderTemplate);
     }
 
     public OrderTemplate findById(Long id) {
