@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.api.binding.*;
 import ru.qrhandshake.qrpos.domain.Client;
+import ru.qrhandshake.qrpos.domain.PaymentWay;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.service.AuthService;
 import ru.qrhandshake.qrpos.service.BindingService;
@@ -38,6 +39,7 @@ public class BindingController {
     private AuthService authService;
 
 
+    @Deprecated
     @RequestMapping(params = {"paymentWay=card"})
     @ResponseBody
     public CardBindingCreateResponse createBinding(Principal principal, @Valid CardBindingCreateRequest cardBindingCreateRequest,
@@ -54,7 +56,7 @@ public class BindingController {
         paymentParams.setIp(request.getRemoteUser());
         paymentParams.setReturnUrl(getReturnUrl(request, orderId));
 
-        PaymentResult paymentResult = bindingService.createBinding(client, MIN_AMOUNT_FOR_CREATE_BINDING, paymentParams, cardBindingCreateRequest.getPaymentWay(), orderId);
+        PaymentResult paymentResult = bindingService.createBinding(client, MIN_AMOUNT_FOR_CREATE_BINDING, paymentParams, PaymentWay.CARD, orderId);
 
         //todo: move to converter
         CardBindingCreateResponse cardBindingCreateResponse = new CardBindingCreateResponse();

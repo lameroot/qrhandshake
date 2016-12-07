@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.springframework.test.web.servlet.MvcResult;
 import ru.qrhandshake.qrpos.api.ResponseStatus;
 import ru.qrhandshake.qrpos.api.binding.BindingDeleteResponse;
+import ru.qrhandshake.qrpos.api.binding.CardBindingCreateResponse;
 import ru.qrhandshake.qrpos.api.client.ClientRegisterResponse;
 import ru.qrhandshake.qrpos.controller.it.ItTest;
 import ru.qrhandshake.qrpos.domain.*;
@@ -23,6 +24,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
  * Time: 12:33
  */
 public class BindingControllerTest extends ItTest {
+
+    @Deprecated
+    public void testCreateBinding() throws Exception {
+        ClientRegisterResponse clientRegisterResponse = registerClient("client_" + UUID.randomUUID().toString(),"password",AuthType.PASSWORD);
+        Client client = clientRepository.findByUsername(clientRegisterResponse.getAuth().getAuthName());
+        assertNotNull(client);
+        Principal clientPrincipal = clientTestingAuthenticationToken(clientRegisterResponse.getAuth());
+
+        MvcResult mvcResult = mockMvc.perform(post("/binding")
+                        .principal(clientPrincipal)
+                        .param("paymentWay", "card")
+                        .param("pan", "4111111111111111")
+                        .param("month", "12")
+                        .param("year", "2019")
+                        .param("cardHolderName", "test test")
+                        .param("cvc", "123")
+        ).andDo(print()).andReturn();
+
+        CardBindingCreateResponse cardBindingCreateResponse = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), CardBindingCreateResponse.class);
+        assertNotNull(cardBindingCreateResponse);
+        assertEquals(ResponseStatus.SUCCESS, cardBindingCreateResponse.getStatus());
+
+    }
 
     @Test
     public void testDelete() throws Exception {

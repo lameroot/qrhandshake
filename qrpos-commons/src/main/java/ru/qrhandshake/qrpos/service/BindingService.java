@@ -135,6 +135,7 @@ public class BindingService {
 
     //todo: должен быть крон который проверяет новые биндинги и делает внешние запросы на получение внешнего binding_id
 
+    @Deprecated
     public PaymentResult createBinding(Client client, Long amount, PaymentParams paymentParams, PaymentWay paymentWay, String orderId) {
         PaymentResult paymentResult = new PaymentResult();
         paymentResult.setOrderId(orderId);
@@ -150,9 +151,9 @@ public class BindingService {
 
         MerchantOrder merchantOrder = merchantOrderRepository.findByOrderId(orderId);
         if ( null == merchantOrder ) {
-            logger.error("Unable to find merchantOrder by orderId: {}", binding.getOrderId());
+            logger.error("Unable to find merchantOrder by orderId: {}", orderId);
             paymentResult.setCode(0);
-            paymentResult.setMessage("Order not found with orderId: " + binding.getOrderId());
+            paymentResult.setMessage("Order not found with orderId: " + orderId);
             return paymentResult;
         }
         IntegrationSupport integrationSupport = integrationSupportService.checkIntegrationSupport(merchantOrder.getMerchant(), paymentParams);
@@ -172,6 +173,7 @@ public class BindingService {
 
             if ( integrationPaymentResponse.isSuccess() ) {
                 logger.debug("Payment on {} and orderId {} via {} was success, let's try to create binding", amount, orderId, integrationSupport);
+                binding = new Binding();
                 binding.setPaymentSecureType(integrationPaymentResponse.getPaymentSecureType());
                 binding.setClient(client);
                 binding.setExternalBindingId(null);
