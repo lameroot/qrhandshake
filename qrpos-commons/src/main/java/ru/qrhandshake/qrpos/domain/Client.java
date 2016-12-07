@@ -26,7 +26,7 @@ public class Client implements UserDetails {
     @Column(name = "client_id", nullable = false, unique = true)
     private String clientId;
     @Column(name = "username", nullable = false, unique = true)
-    private String username;//todo: возмоно сделать по телефону
+    private String username;
     @Column(name = "password", nullable = true)
     private String password;
     @Column(name = "is_enabled")

@@ -47,7 +47,7 @@ public class OrderTemplateControllerTest extends ItTest {
 
     @Before
     public void initConfig() {
-        expectedPaymentType = PaymentType.valueOf(environment.getProperty("rbs.paymentType", PaymentType.PURCHASE.name()));
+        expectedPaymentType = PaymentType.valueOf(environment.getProperty("integration.rbs.paymentType", PaymentType.PURCHASE.name()));
     }
 
     @Test

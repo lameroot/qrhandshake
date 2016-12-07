@@ -1,9 +1,15 @@
-DELETE from userpassword_endpoint where id=-1;
-delete from endpoint where id=-1;
-DELETE from "user" where id=-1;
+truncate table retriable_task;
+truncate table db_lock;
+truncate TABLE db_lock_keepalive;
+DELETE from userpassword_endpoint;
+delete from endpoint;
+DELETE from "user";
+DELETE FROM merchant_order where fk_terminal_id=-1;
 DELETE from terminal where id=-1;
 DELETE FROM merchant where id=-1;
-DELETE FROM endpoint_catalog where id=-1;
+DELETE FROM endpoint_catalog;
+
+SELECT * FROM userpassword_endpoint where id != -1;
 
 insert into endpoint_catalog (address, integration_support, params, id)
 values ('https://3dsec.sberbank.ru/payment/webservices/merchant-ws?wsdl', 'RBS_SBRF', null, -1);
@@ -24,3 +30,5 @@ values (true,-1, -1, NULL , -1);
 
 insert into userpassword_endpoint (id, username, password)
 values (-1, 'paystudio-api','paystudio-api');
+
+--pay.trans1_operator / bZXaPQYT

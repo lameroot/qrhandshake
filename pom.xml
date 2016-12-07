@@ -6,7 +6,7 @@
 
     <groupId>ru.qrhandshake</groupId>
     <artifactId>qrpos</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.5-SNAPSHOT</version>
     <modules>
         <module>qrpos-commons</module>
         <module>qrpos-web</module>
@@ -17,10 +17,11 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
-        <rbs.version>1.100-SNAPSHOT</rbs.version>
+        <rbs.version>1.113-SNAPSHOT</rbs.version>
         <rbs-protocols.version>1.0.87-SNAPSHOT</rbs-protocols.version>
         <spring.version>4.2.6.RELEASE</spring.version>
         <spring-security.version>4.1.0.RELEASE</spring-security.version>
+        <spring-integration.version>4.3.4.RELEASE</spring-integration.version>
         <amqp-bus.version>3.2</amqp-bus.version>
         <logback.version>1.1.7</logback.version>
         <jcl.slf4j.version>1.7.12</jcl.slf4j.version>
@@ -81,6 +82,17 @@
                 <artifactId>spring-security-config</artifactId>
                 <version>${spring-security.version}</version>
             </dependency>
+            <!-- Spring integration -->
+            <dependency>
+                <groupId>org.springframework.integration</groupId>
+                <artifactId>spring-integration-core</artifactId>
+                <version>${spring-integration.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.integration</groupId>
+                <artifactId>spring-integration-java-dsl</artifactId>
+                <version>1.2.0.RELEASE</version>
+            </dependency>
 
             <!-- servlets -->
             <dependency>
@@ -112,11 +124,18 @@
                 <version>19.0</version>
             </dependency>
 
-            <!--<dependency>-->
-                <!--<groupId>org.slf4j</groupId>-->
-                <!--<artifactId>slf4j-api</artifactId>-->
-                <!--<version>1.6.6</version>-->
-            <!--</dependency>-->
+            <!-- OURS -->
+            <dependency>
+                <groupId>ru.qrhandshake</groupId>
+                <artifactId>qrpos-commons</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ru.qrhandshake</groupId>
+                <artifactId>rbs-integration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
 
 
         </dependencies>
@@ -144,6 +163,21 @@
                 <exclusion>
                     <groupId>org.bouncycastle</groupId>
                     <artifactId>bcpg-jdk16</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ru.rbs</groupId>
+                    <artifactId>logback</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>ru.rbs</groupId>
+            <artifactId>rbs2-commons</artifactId>
+            <version>${rbs.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>ru.rbs</groupId>
+                    <artifactId>logback</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -286,8 +320,6 @@
             <scope>test</scope>
         </dependency>
 
-
-
         <!--Logging-->
         <!-- 2. Bridge logging from JCL to SLF4j-->
         <dependency>
@@ -308,7 +340,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- Json -->

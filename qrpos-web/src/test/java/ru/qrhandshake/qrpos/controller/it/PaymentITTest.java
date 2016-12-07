@@ -1,7 +1,6 @@
 package ru.qrhandshake.qrpos.controller.it;
 
 
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -20,11 +19,9 @@ import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.dto.ReturnUrlObject;
 import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
 import ru.qrhandshake.qrpos.integration.*;
-import ru.qrhandshake.qrpos.service.OrderService;
 import ru.qrhandshake.qrpos.util.Util;
 import ru.rbs.mpi.test.acs.AcsUtils;
 
-import javax.annotation.Resource;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +40,7 @@ public class PaymentITTest extends ItTest {
 
     @Before
     public void initConfig() {
-        expectedPaymentType = PaymentType.valueOf(environment.getProperty("rbs.paymentType", PaymentType.PURCHASE.name()));
+        expectedPaymentType = PaymentType.valueOf(environment.getProperty("integration.rbs.paymentType", PaymentType.PURCHASE.name()));
     }
 
     @Test
@@ -335,6 +332,10 @@ public class PaymentITTest extends ItTest {
 
     @Test
     public void testSslCardDepositAndCompletionByAnonymous() throws Exception {
+        if ( null == integrationFacades ) {
+            return;
+        }
+        IntegrationFacade rbsIntegrationFacade = integrationFacades.entrySet().stream().filter(e -> e.getKey() == IntegrationSupport.RBS_SBRF ).findFirst().orElse(null).getValue();
         if ( null == rbsIntegrationFacade ) {
             return;
         }
@@ -841,9 +842,12 @@ public class PaymentITTest extends ItTest {
 
         MerchantOrder merchantOrder1 = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse1.getOrderId());
         assertNotNull(merchantOrder1);
-        assertTrue(merchantOrder1.getOrderStatus() == OrderStatus.PAID);
-        assertNotNull(merchantOrder1.getPaymentDate());
+        assertTrue(merchantOrder1.getOrderStatus() == OrderStatus.PAID || merchantOrder1.getOrderStatus() == OrderStatus.PENDING);
+        if ( merchantOrder1.getOrderStatus() == OrderStatus.PAID ) {
+            assertNotNull(merchantOrder1.getPaymentDate());
+        }
         assertEquals(PaymentWay.BINDING, merchantOrder1.getPaymentWay());
+        //Thread.sleep(100000);
     }
 
     @Test

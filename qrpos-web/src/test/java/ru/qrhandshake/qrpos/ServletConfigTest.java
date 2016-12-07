@@ -1,11 +1,11 @@
 package ru.qrhandshake.qrpos;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -25,16 +25,6 @@ import ru.qrhandshake.qrpos.repository.UserRepository;
 import ru.qrhandshake.qrpos.service.OrderService;
 
 import javax.annotation.Resource;
-
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Created by lameroot on 23.05.16.
@@ -70,6 +60,8 @@ public class ServletConfigTest extends AbstractTest {
     protected TerminalRepository terminalRepository;
     @Resource
     protected OrderService orderService;
+    @Resource
+    protected JdbcTemplate jdbcTemplate;
     protected MockMvc mockMvc;
 
     @Before

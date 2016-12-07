@@ -1,13 +1,11 @@
 package ru.qrhandshake.qrpos.controller.it;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ru.qrhandshake.qrpos.ServletConfigTest;
 import ru.qrhandshake.qrpos.api.*;
@@ -20,16 +18,15 @@ import ru.qrhandshake.qrpos.api.merchantorder.MerchantOrderStatusResponse;
 import ru.qrhandshake.qrpos.controller.MerchantOrderController;
 import ru.qrhandshake.qrpos.domain.*;
 import ru.qrhandshake.qrpos.dto.ReturnUrlObject;
+import ru.qrhandshake.qrpos.integration.IntegrationFacade;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
-import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationFacade;
 import ru.qrhandshake.qrpos.repository.*;
 import ru.qrhandshake.qrpos.service.ClientService;
 import ru.qrhandshake.qrpos.service.MerchantService;
-import ru.qrhandshake.qrpos.util.Util;
 import ru.rbs.mpi.test.acs.AcsUtils;
 
 import javax.annotation.Resource;
-
+import javax.transaction.Transactional;
 import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
@@ -42,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
  * Created by lameroot on 06.06.16.
  */
 @Transactional
-public class ItTest extends ServletConfigTest {
+public abstract class ItTest extends ServletConfigTest {
 
     protected final static String SSL_CARD = "5555555555555599";
     protected final static String TDS_CARD = "4111111111111111";
@@ -151,7 +148,7 @@ public class ItTest extends ServletConfigTest {
     @Resource
     protected BindingRepository bindingRepository;
     @Autowired(required = false)
-    protected RbsIntegrationFacade rbsIntegrationFacade;
+    protected Map<IntegrationSupport,IntegrationFacade> integrationFacades;
     @Resource
     protected IntegrationService integrationService;
     @Resource

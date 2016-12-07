@@ -5,9 +5,6 @@ import org.junit.Test;
 import org.springframework.test.context.ActiveProfiles;
 import ru.qrhandshake.qrpos.GeneralTest;
 import ru.qrhandshake.qrpos.api.CardPaymentParams;
-import ru.qrhandshake.qrpos.domain.IntegrationSupport;
-import ru.qrhandshake.qrpos.integration.IntegrationP2PTransferRequest;
-import ru.qrhandshake.qrpos.integration.IntegrationP2PTransferResponse;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationConfig;
 

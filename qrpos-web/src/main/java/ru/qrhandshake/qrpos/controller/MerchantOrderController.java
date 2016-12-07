@@ -20,6 +20,7 @@ import ru.qrhandshake.qrpos.exception.MerchantOrderNotFoundException;
 import ru.qrhandshake.qrpos.service.AuthService;
 import ru.qrhandshake.qrpos.service.MerchantService;
 import ru.qrhandshake.qrpos.service.OrderService;
+import ru.qrhandshake.qrpos.service.TerminalService;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -49,6 +50,8 @@ public class MerchantOrderController {
     private AuthService authService;
     @Resource
     private MerchantService merchantService;
+    @Resource
+    private TerminalService terminalService;
 
     @Value("${buildHttpsRequest:false}")
     private boolean buildHttpsRequest;
@@ -85,7 +88,8 @@ public class MerchantOrderController {
         String paymentPath = MerchantOrderController.MERCHANT_ORDER_PATH + MerchantOrderController.PAYMENT_PATH;
         authService.clientAuth(principal,merchantOrderRegisterRequest,true);
         Merchant merchant = merchantService.findRootMerchant();
-        Terminal terminal = merchant.getTerminals().stream().filter(t -> t.isEnabled()).findFirst().orElseThrow(() -> new AuthException("Not found parent terminal"));
+        if ( null == merchant ) throw new AuthException("Unknown root merchant");
+        Terminal terminal = terminalService.findByMerchant(merchant).stream().filter(t -> t.isEnabled()).findFirst().orElseThrow(() -> new AuthException("Not found parent terminal"));
         return orderService.register(terminal, merchantOrderRegisterRequest, paymentPath);
     }
 

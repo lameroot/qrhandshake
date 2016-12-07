@@ -5,7 +5,7 @@
     <parent>
         <artifactId>qrpos</artifactId>
         <groupId>ru.qrhandshake</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.5-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>war</packaging>
@@ -16,12 +16,10 @@
         <dependency>
             <groupId>ru.qrhandshake</groupId>
             <artifactId>qrpos-commons</artifactId>
-            <version>1.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>ru.qrhandshake</groupId>
             <artifactId>rbs-integration</artifactId>
-            <version>1.1-SNAPSHOT</version>
         </dependency>
         <!-- Spring -->
         <dependency>
@@ -31,6 +29,10 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
         </dependency>
 
         <!-- servlets -->

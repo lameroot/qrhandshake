@@ -1,7 +1,17 @@
 package ru.qrhandshake.qrpos.domain;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import javax.persistence.*;
 
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = UserPasswordEndpoint.class, name = "userPasswordEndpoint")
+})
 @Entity
 @Table(name = "endpoint")
 @Inheritance(strategy = InheritanceType.JOINED)

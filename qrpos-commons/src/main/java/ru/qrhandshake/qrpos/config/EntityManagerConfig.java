@@ -24,7 +24,7 @@ import java.util.Properties;
  * Created by lameroot on 18.05.16.
  */
 @Configuration
-//@EnableTransactionManagement
+//@EnableTransactionManagement(proxyTargetClass = true)
 public class EntityManagerConfig {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());

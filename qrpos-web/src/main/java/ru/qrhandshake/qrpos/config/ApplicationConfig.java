@@ -22,7 +22,7 @@ import ru.qrhandshake.qrpos.integration.IntegrationFacade;
 import ru.qrhandshake.qrpos.integration.IntegrationService;
 import ru.qrhandshake.qrpos.integration.P2pIntegrationFacade;
 import ru.qrhandshake.qrpos.integration.rbs.RbsIntegrationConfig;
-import ru.rbs.util.SyncSimpleDateFormat;
+import ru.rbs.commons.util.SyncSimpleDateFormat;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -31,8 +31,7 @@ import java.util.Map;
 @Configuration
 @PropertySource(ignoreResourceNotFound = true,
         value = {
-                "classpath:config.properties",
-                "${" + ApplicationConfig.SYSTEM_VARIABLE_CONFIG_LOCATION + "}"
+                "classpath:config.properties"
         })
 @ComponentScan(basePackages = {"ru.qrhandshake.qrpos.service","ru.qrhandshake.qrpos.converter"})
 @Import(value = {
@@ -40,7 +39,8 @@ import java.util.Map;
         DatabaseConfig.class,
         RbsIntegrationConfig.class,
         MailConfig.class,
-        SmsConfig.class
+        SmsConfig.class,
+        ExternalPropertySourceConfig.class//must be last
 })
 @EnableJpaRepositories(basePackages = {"ru.qrhandshake.qrpos.repository"})
 public class ApplicationConfig {
@@ -54,7 +54,8 @@ public class ApplicationConfig {
 
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
-        return new PropertySourcesPlaceholderConfigurer();
+        PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
+        return configurer;
     }
 
     @Bean

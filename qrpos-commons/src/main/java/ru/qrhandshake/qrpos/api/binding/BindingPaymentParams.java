@@ -2,8 +2,6 @@ package ru.qrhandshake.qrpos.api.binding;
 
 import ru.qrhandshake.qrpos.api.PaymentParams;
 
-import javax.validation.constraints.NotNull;
-
 /**
  * Created by lameroot on 01.06.16.
  */
@@ -26,5 +24,14 @@ public class BindingPaymentParams extends PaymentParams {
 
     public void setConfirmValue(String confirmValue) {
         this.confirmValue = confirmValue;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("BindingPaymentParams{");
+        sb.append("bindingId='").append(bindingId).append('\'');
+        sb.append(", confirmValue='").append(confirmValue).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 }

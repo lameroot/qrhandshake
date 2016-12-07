@@ -4,7 +4,7 @@
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-            <layout class="ru.rbs.commons.logs.MaskingPatternLayout">
+            <layout class="ru.qrhandshake.qrpos.util.MaskingPatternLayout">
                 <patternsProperty>
                     <![CDATA[
                             {
@@ -17,7 +17,9 @@
                                 "\"?expiry\"?[ ]*[=:][ ]*\"[^\"]*\"" :   "expiry=\"****\"",
                                 ">([^>]*)<\\/([^>]*):Password>"     :   ">****<\\/Password>",
                                 ">([^>]*)<\/pan>"                   :   "7~**~10",
-                                ">([^>]*)<\/cvc>"                   :   "1~**~6"
+                                ">([^>]*)<\/cvc>"                   :   "1~**~6",
+                                "password[ ]*=[ ]*\"[^\"]*\""       :   "password=\"****\"",
+                                "expiration[ ]*=[ ]*\"[^\"]*\""     :   "expiration=\"****\""
                             }
                             ]]>
                 </patternsProperty>
@@ -36,5 +38,6 @@
     <logger name="ru.bpc" level="debug" />
     <logger name="ru.qrhandshake.qrpos.service" level="trace" />
     <logger name="ru.qrhandshake.qrpos.integration" level="trace" />
+    <logger name="ru.qrhandshake.qrpos.interceptor" level="trace" />
 
 </configuration>

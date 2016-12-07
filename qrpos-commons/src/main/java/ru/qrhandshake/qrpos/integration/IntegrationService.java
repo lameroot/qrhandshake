@@ -23,40 +23,35 @@ public class IntegrationService {
 
     public IntegrationPaymentResponse paymentBinding(IntegrationPaymentBindingRequest integrationPaymentBindingRequest) throws IntegrationException {
         logger.trace("Integration, paymentBinding: {}", integrationPaymentBindingRequest);
-        IntegrationSupport integrationSupport = integrationPaymentBindingRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
-        IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationSupport).paymentBinding(integrationPaymentBindingRequest);
+        IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationPaymentBindingRequest).paymentBinding(integrationPaymentBindingRequest);
         if ( !integrationPaymentResponse.isSuccess() ) throw new IntegrationException(integrationPaymentResponse.getMessage());
-        integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport,integrationPaymentResponse.getIntegrationOrderStatus()));
+        if ( null == integrationPaymentResponse.getOrderStatus() ) integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationPaymentBindingRequest,integrationPaymentResponse.getIntegrationOrderStatus()));
         return integrationPaymentResponse;
     }
 
     //todo: убрать все выбросы if ( !integrationPaymentResponse.isSuccess() ) throw new IntegrationException - сделать лучше заполнение статуса
     public IntegrationPaymentResponse payment(IntegrationPaymentRequest integrationPaymentRequest) throws IntegrationException {
-        IntegrationSupport integrationSupport = integrationPaymentRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
-        IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationSupport).payment(integrationPaymentRequest);
-        integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationSupport, integrationPaymentResponse.getIntegrationOrderStatus()));
+        IntegrationPaymentResponse integrationPaymentResponse = getFacade(integrationPaymentRequest).payment(integrationPaymentRequest);
+        integrationPaymentResponse.setOrderStatus(toOrderStatus(integrationPaymentRequest, integrationPaymentResponse.getIntegrationOrderStatus()));
         return integrationPaymentResponse;
     }
 
     public IntegrationOrderStatusResponse getOrderStatus(IntegrationOrderStatusRequest integrationOrderStatusRequest) throws IntegrationException {
-        IntegrationSupport integrationSupport = integrationOrderStatusRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
-        IntegrationOrderStatusResponse integrationOrderStatusResponse = getFacade(integrationSupport).getOrderStatus(integrationOrderStatusRequest);
+        IntegrationOrderStatusResponse integrationOrderStatusResponse = getFacade(integrationOrderStatusRequest).getOrderStatus(integrationOrderStatusRequest);
         integrationOrderStatusResponse.setOrderId(integrationOrderStatusRequest.getOrderId());
         if ( !integrationOrderStatusResponse.isSuccess() ) throw new IntegrationException(integrationOrderStatusResponse.getMessage());
-        integrationOrderStatusResponse.setOrderStatus(toOrderStatus(integrationSupport, integrationOrderStatusResponse.getIntegrationOrderStatus()));
+        integrationOrderStatusResponse.setOrderStatus(toOrderStatus(integrationOrderStatusRequest, integrationOrderStatusResponse.getIntegrationOrderStatus()));
         return integrationOrderStatusResponse;
     }
 
     public IntegrationReverseResponse reverse(IntegrationReverseRequest integrationReverseRequest) throws IntegrationException {
-        IntegrationSupport integrationSupport = integrationReverseRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
-        IntegrationReverseResponse integrationReverseResponse = getFacade(integrationSupport).reverse(integrationReverseRequest);
+        IntegrationReverseResponse integrationReverseResponse = getFacade(integrationReverseRequest).reverse(integrationReverseRequest);
         if ( !integrationReverseResponse.isSuccess() ) throw new IntegrationException(integrationReverseResponse.getMessage());
         return integrationReverseResponse;
     }
 
     public IntegrationCompletionResponse completion(IntegrationCompletionRequest integrationCompletionRequest) throws IntegrationException {
-        IntegrationSupport integrationSupport = integrationCompletionRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
-        IntegrationCompletionResponse integrationCompletionResponse = getFacade(integrationSupport).completion(integrationCompletionRequest);
+        IntegrationCompletionResponse integrationCompletionResponse = getFacade(integrationCompletionRequest).completion(integrationCompletionRequest);
         integrationCompletionResponse.setOrderId(integrationCompletionRequest.getOrderId());
         if ( !integrationCompletionResponse.isSuccess() ) throw new IntegrationException(integrationCompletionResponse.getMessage());
         return integrationCompletionResponse;
@@ -69,7 +64,9 @@ public class IntegrationService {
         return integrationP2PTransferResponse;
     }
 
-    private IntegrationFacade getFacade(IntegrationSupport integrationSupport) throws IntegrationException {
+    private IntegrationFacade getFacade(IntegrationRequest integrationRequest) throws IntegrationException {
+        IntegrationSupport integrationSupport = integrationRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
+        if ( null == integrationRequest ) throw new IntegrationException("Unknown integration support");
         return Optional.ofNullable(integrationFacades.get(integrationSupport))
                 .orElseThrow(() -> new IntegrationException("Unknown integration type: " + integrationSupport));
     }
@@ -79,7 +76,9 @@ public class IntegrationService {
                 .orElseThrow(() -> new IntegrationException("Unknown integration type: " + integrationSupport));
     }
 
-    private OrderStatus toOrderStatus(IntegrationSupport integrationSupport, IntegrationOrderStatus integrationOrderStatus) throws IntegrationException {
+    private OrderStatus toOrderStatus(IntegrationRequest integrationRequest, IntegrationOrderStatus integrationOrderStatus) throws IntegrationException {
+        IntegrationSupport integrationSupport = integrationRequest.getEndpoint().getEndpointCatalog().getIntegrationSupport();
+        if ( null == integrationRequest ) throw new IntegrationException("Unknown integration support");
         return Optional.ofNullable(integrationFacades.get(integrationSupport))
                 .orElseThrow(()-> new IntegrationException("Unknown integration type: " + integrationSupport))
                 .toOrderStatus(integrationOrderStatus);
