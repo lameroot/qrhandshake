@@ -76,4 +76,12 @@ public class JsonServiceTest extends GeneralTest {
 
         System.out.println(objectMapper.writeValueAsString(userPasswordEndpoint));
     }
+
+    @Test
+    public void testJsonToPaymentParams() throws Exception {
+        String str = "{\"type\":\"cardPaymentParams\",\"paymentAccount\":\"411111**1111\",\"month\":\"12\",\"year\":\"2019\",\"cardHolderName\":\"this i\"}";
+        PaymentParams paymentParams = jsonService.jsonToPaymentParams(str, PaymentWay.CARD);
+        assertNotNull(paymentParams);
+        assertEquals(CardPaymentParams.class, paymentParams.getClass());
+    }
 }

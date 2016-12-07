@@ -1,5 +1,6 @@
 package ru.qrhandshake.qrpos.controller;
 
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.junit.Test;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -9,17 +10,11 @@ import ru.qrhandshake.qrpos.ServletConfigTest;
 import ru.qrhandshake.qrpos.domain.User;
 import ru.qrhandshake.qrpos.repository.UserRepository;
 
-
 import javax.annotation.Resource;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Created by lameroot on 24.05.16.
@@ -40,6 +35,7 @@ public class TerminalControllerTest extends ServletConfigTest {
     @Test
     @Transactional
     @Rollback(false)
+    @Ignore
     public void testRegister() throws Exception {
         User user = userRepository.findByUsername("merchant.auth");
         assertNotNull(user);

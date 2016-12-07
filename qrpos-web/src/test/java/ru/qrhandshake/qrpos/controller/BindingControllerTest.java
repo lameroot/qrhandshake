@@ -41,7 +41,7 @@ public class BindingControllerTest extends ItTest {
             binding.setExternalBindingId(UUID.randomUUID().toString());
             binding.setIntegrationSupport(IntegrationSupport.RBS_SBRF);
             binding.setOrderId(UUID.randomUUID().toString());
-            binding.setPaymentParams("{\"paymentAccount\":\"411111**1111\",\"month\":\"12\",\"year\":\"2019\",\"cardHolderName\":\"this i\"}");
+            binding.setPaymentParams("{\"type\":\"cardPaymentParams\",\"paymentAccount\":\"411111**1111\",\"month\":\"12\",\"year\":\"2019\",\"cardHolderName\":\"this i\"}");
             binding.setPaymentSecureType(PaymentSecureType.TDS);
             binding.setPaymentWay(PaymentWay.CARD);
 
