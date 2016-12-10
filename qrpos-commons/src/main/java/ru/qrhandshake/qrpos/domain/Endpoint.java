@@ -72,4 +72,13 @@ public class Endpoint {
     public void setEndpointCatalog(EndpointCatalog endpointCatalog) {
         this.endpointCatalog = endpointCatalog;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Endpoint{");
+        sb.append("id=").append(id);
+        sb.append(", enabled=").append(enabled);
+        sb.append('}');
+        return sb.toString();
+    }
 }

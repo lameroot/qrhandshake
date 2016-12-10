@@ -25,10 +25,19 @@ public class TerminalControllerTest extends ServletConfigTest {
     private UserRepository userRepository;
 
     @Test
+    @Ignore
     public void testAuth() throws Exception {
         mockMvc.perform(post("/terminal/auth")
         .param("authName","merchant.auth")
         .param("authPassword","merchant.password"))
+                .andDo(print());
+    }
+
+    @Test
+    public void testAuthSandbox() throws Exception {
+        mockMvc.perform(post("/terminal/auth")
+                .param("authName","test6")
+                .param("authPassword","test6"))
                 .andDo(print());
     }
 

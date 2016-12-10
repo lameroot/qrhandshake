@@ -81,4 +81,15 @@ public class Merchant {
         return null != id ? String.valueOf(id) : null;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Merchant{");
+        sb.append("id=").append(id);
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", createdDate=").append(createdDate);
+        sb.append(", integrationSupport=").append(integrationSupport);
+        sb.append(", createBinding=").append(createBinding);
+        sb.append('}');
+        return sb.toString();
+    }
 }

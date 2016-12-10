@@ -147,4 +147,18 @@ public class User implements UserDetails {
     public boolean canCreateTerminal() {
         return !isLocked && !isExpired && isEnabled;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("User{");
+        sb.append("id=").append(id);
+        sb.append(", username='").append(username).append('\'');
+        sb.append(", createdDate=").append(createdDate);
+        sb.append(", isEnabled=").append(isEnabled);
+        sb.append(", isExpired=").append(isExpired);
+        sb.append(", isLocked=").append(isLocked);
+        sb.append(", roles='").append(roles).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }
