@@ -51,4 +51,6 @@ alter table IF EXISTS merchant_order drop constraint if EXISTS FK_MERCHANT_ORDER
 drop table if exists merchant_order cascade;
 drop sequence IF EXISTS seq_merchant_order;
 
+DROP TABLE if EXISTS statistic;
+
 
