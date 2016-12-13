@@ -38,15 +38,9 @@ public class StatisticService {
             endTime.add(Calendar.MINUTE, slotInMinutes);
             logger.debug("Update from {} to {}", startTime, endTime.getTime());
 
-            List<Statistic> statistics = null;
-            if (null == statisticMetrics.getOrderTemplate()) {
-                //todo: почемеу то тут возвращает больше чем надо
-                statistics = statisticRepository.findByPeriod(statisticMetrics.getType(), statisticMetrics.getMerchant(), statisticMetrics.getTimestamp().getTime(), statisticMetrics.getTimestamp().getTime());
-            } else {
-                statistics = statisticRepository.findByPeriod(statisticMetrics.getType(), statisticMetrics.getMerchant(), statisticMetrics.getOrderTemplate(), statisticMetrics.getTimestamp().getTime(), statisticMetrics.getTimestamp().getTime());
-            }
+            List<Statistic> statistics = statisticRepository.findByPeriod(statisticMetrics.getType(), statisticMetrics.getMerchant(), statisticMetrics.getOrderTemplate(), statisticMetrics.getTimestamp().getTime(), statisticMetrics.getTimestamp().getTime());
 
-            if (null != statistics || statistics.isEmpty()) {
+            if (null == statistics || statistics.isEmpty()) {
                 Statistic statistic = new Statistic();
                 statistic.setType(statisticMetrics.getType());
                 statistic.setMerchant(statisticMetrics.getMerchant());
@@ -65,9 +59,9 @@ public class StatisticService {
 
     }
 
-    public long sumByPeriod(Statistic.StatisticType type, Merchant merchant, OrderTemplate orderTemplate, Date startTime, Date endTime) {
-        return null == orderTemplate
+    public long sumByPeriod(Statistic.StatisticType type, Date startTime, Date endTime, Merchant merchant, OrderTemplate... orderTemplates ) {
+        return null == orderTemplates
                 ? statisticRepository.sumByPeriod(type, merchant, endTime.getTime(), startTime.getTime())
-                : statisticRepository.sumByPeriod(type, merchant, orderTemplate, endTime.getTime(), startTime.getTime());
+                : statisticRepository.sumByPeriod(type, merchant, orderTemplates, endTime.getTime(), startTime.getTime());
     }
 }

@@ -171,7 +171,7 @@ create table merchant_order (
 
 create sequence seq_merchant_order;
 
-create table persistent_logins (
+create table if not EXISTS persistent_logins (
   username varchar(64) not null,
   series varchar(64) primary key,
   token varchar(64) not null,

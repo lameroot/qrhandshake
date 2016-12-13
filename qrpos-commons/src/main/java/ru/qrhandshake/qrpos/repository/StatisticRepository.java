@@ -9,6 +9,7 @@ import ru.qrhandshake.qrpos.domain.OrderTemplate;
 import ru.qrhandshake.qrpos.domain.Statistic;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface StatisticRepository extends CrudRepository<Statistic, Long> {
@@ -16,8 +17,8 @@ public interface StatisticRepository extends CrudRepository<Statistic, Long> {
     @Query("select sum(s.value) from Statistic s where s.type = :type and s.merchant = :merchant and s.startTime <= :start and s.endTime > :finish")
     long sumByPeriod(@Param("type")Statistic.StatisticType type, @Param("merchant")Merchant merchant, @Param("start")Long start, @Param("finish")Long finish);
 
-    @Query("select sum(s.value) from Statistic s where s.type = :type and s.merchant = :merchant and s.orderTemplate = :orderTemplate and s.startTime <= :start and s.endTime > :finish")
-    long sumByPeriod(@Param("type")Statistic.StatisticType type, @Param("merchant")Merchant merchant, @Param("orderTemplate")OrderTemplate orderTemplate, @Param("start")Long start, @Param("finish")Long finish);
+    @Query("select sum(s.value) from Statistic s where s.type = :type and s.merchant = :merchant and s.orderTemplate in :orderTemplates and s.startTime <= :start and s.endTime > :finish")
+    long sumByPeriod(@Param("type")Statistic.StatisticType type, @Param("merchant")Merchant merchant, @Param("orderTemplates")OrderTemplate[] orderTemplates, @Param("start")Long start, @Param("finish")Long finish);
 
     @Query("select s from Statistic s where s.type = :type and s.merchant = :merchant and s.startTime <= :start and s.endTime > :finish")
     List<Statistic> findByPeriod(@Param("type")Statistic.StatisticType type, @Param("merchant")Merchant merchant, @Param("start")Long start, @Param("finish")Long finish);

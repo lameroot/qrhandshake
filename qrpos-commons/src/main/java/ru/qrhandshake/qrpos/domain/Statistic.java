@@ -28,7 +28,8 @@ public class Statistic {
     private Long endTime;
 
     public static enum StatisticType {
-        TEMPLATE
+        TEMPLATE_COUNT,
+        TEMPLATE_AMOUNT
     }
 
     public Long getId() {
