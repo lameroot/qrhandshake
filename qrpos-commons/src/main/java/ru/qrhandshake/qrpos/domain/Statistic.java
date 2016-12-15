@@ -16,20 +16,20 @@ public class Statistic {
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
     private StatisticType type;
-    @ManyToOne
-    @JoinColumn(name = "fk_merchant_id", nullable = false)
-    private Merchant merchant;
-    @ManyToOne
-    @JoinColumn(name = "fk_ordertemplate_id")
-    private OrderTemplate orderTemplate;
+    @Column(name = "merchant_id", nullable = false)
+    private Long merchantId;
+    @Column(name = "ordertemplate_id")
+    private Long orderTemplateId;
     @Column(name = "start_time", nullable = false)
     private Long startTime;
     @Column(name = "end_time", nullable = false)
     private Long endTime;
 
     public static enum StatisticType {
-        TEMPLATE_COUNT,
-        TEMPLATE_AMOUNT
+        TEMPLATE_COUNT_PAID,
+        TEMPLATE_AMOUNT_PAID,
+        TEMPLATE_COUNT_DECLINED,
+        TEMPLATE_AMOUNT_DECLINED
     }
 
     public Long getId() {
@@ -56,20 +56,20 @@ public class Statistic {
         this.type = type;
     }
 
-    public Merchant getMerchant() {
-        return merchant;
+    public Long getMerchantId() {
+        return merchantId;
     }
 
-    public void setMerchant(Merchant merchant) {
-        this.merchant = merchant;
+    public void setMerchantId(Long merchantId) {
+        this.merchantId = merchantId;
     }
 
-    public OrderTemplate getOrderTemplate() {
-        return orderTemplate;
+    public Long getOrderTemplateId() {
+        return orderTemplateId;
     }
 
-    public void setOrderTemplate(OrderTemplate orderTemplate) {
-        this.orderTemplate = orderTemplate;
+    public void setOrderTemplateId(Long orderTemplateId) {
+        this.orderTemplateId = orderTemplateId;
     }
 
     public Long getStartTime() {
