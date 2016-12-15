@@ -8,12 +8,14 @@ import ru.qrhandshake.qrpos.api.*;
 import ru.qrhandshake.qrpos.api.binding.BindingPaymentParams;
 import ru.qrhandshake.qrpos.api.merchantorder.*;
 import ru.qrhandshake.qrpos.domain.*;
+import ru.qrhandshake.qrpos.dto.StatisticMetric;
 import ru.qrhandshake.qrpos.exception.AuthException;
 import ru.qrhandshake.qrpos.exception.IntegrationException;
 import ru.qrhandshake.qrpos.integration.*;
 import ru.qrhandshake.qrpos.repository.EndpointRepository;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 import ru.qrhandshake.qrpos.repository.OrderTemplateRepository;
+import ru.qrhandshake.qrpos.service.stats.StatisticService;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -37,6 +39,8 @@ public class OrderService {
     private BindingService bindingService;
     @Resource
     private OrderTemplateHistoryService orderTemplateHistoryService;
+    @Resource
+    private StatisticService statisticService;
     @Resource
     private EndpointRepository endpointRepository;
 
@@ -180,13 +184,24 @@ public class OrderService {
             paymentResponse.setMessage("Unknown type of payment request: " +  paymentParams);
         }
 
+        Long orderTemplateId = null;
+        boolean status = false;
+        boolean updateStats = OrderStatus.PAID == paymentResponse.getOrderStatus() ||
+                OrderStatus.PENDING == paymentResponse.getOrderStatus() || OrderStatus.DECLINED == paymentResponse.getOrderStatus();
         if (OrderStatus.PAID == paymentResponse.getOrderStatus() ||
                 OrderStatus.PENDING == paymentResponse.getOrderStatus() ) {
+            status = true;
             OrderTemplateHistory orderTemplateHistory = orderTemplateHistoryService.findByOrderTemplateIdAndMerchantOrderId(merchantOrder.getId());
             if (orderTemplateHistory != null) {
                 orderTemplateHistory.setStatus(true);
                 orderTemplateHistoryService.save(orderTemplateHistory);
+                orderTemplateId = orderTemplateHistory.getOrderTemplateId();
             }
+        }
+        if ( updateStats ) {
+            statisticService.update(
+                    StatisticMetric.createTemplateAmount(merchantOrder.getMerchant().getId(), orderTemplateId, merchantOrder.getAmount(), new Date(), status)
+            );
         }
         return paymentResponse;
     }
@@ -439,6 +454,10 @@ public class OrderService {
             finishResponse.setOrderStatus(integrationOrderStatusResponse.getOrderStatus());
             finishResponse.setOrderId(integrationOrderStatusResponse.getOrderId());
             finishResponse.setMessage(integrationOrderStatusResponse.getMessage());
+
+            OrderTemplateHistory orderTemplateHistory = orderTemplateHistoryService.findByOrderTemplateIdAndMerchantOrderId(merchantOrder.getId());
+            statisticService.update(StatisticMetric.createTemplateAmount(merchantOrder.getMerchant().getId(), null != orderTemplateHistory ? orderTemplateHistory.getOrderTemplateId() : null, merchantOrder.getAmount(), merchantOrder.getPaymentDate(), integrationOrderStatusResponse.isSuccess()));
+
         } catch (IntegrationException e) {
             logger.error("Fail finish payment." + "Error finish payment with order:" + finishRequest.getOrderId() + ", cause: " + e.getMessage(),e);
             finishResponse.setStatus(ResponseStatus.FAIL);

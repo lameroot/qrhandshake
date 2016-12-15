@@ -4,6 +4,7 @@ import junit.framework.TestCase;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
+import ru.qrhandshake.qrpos.service.stats.StatisticService;
 
 import javax.annotation.Resource;
 
@@ -20,4 +21,6 @@ public class AbstractTest extends TestCase {
 
         @Resource
         protected Environment environment;
+        @Resource
+        protected StatisticService statisticService;
 }

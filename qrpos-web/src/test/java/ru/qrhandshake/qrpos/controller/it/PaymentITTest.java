@@ -23,6 +23,7 @@ import ru.qrhandshake.qrpos.util.Util;
 import ru.rbs.mpi.test.acs.AcsUtils;
 
 import java.security.Principal;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -154,6 +155,7 @@ public class PaymentITTest extends ItTest {
 
     @Test
     public void testTdsCardPaymentByAnonymous() throws Exception {
+        Date start = new Date();
         MerchantRegisterResponse merchantRegisterResponse = registerMerchant("merchant_" + Util.generatePseudoUnique(8));
         TerminalRegisterResponse terminalRegisterResponse = registerTerminal(findUserByUsername(merchantRegisterResponse.getUserAuth()));
 
@@ -210,6 +212,14 @@ public class PaymentITTest extends ItTest {
         assertEquals(PaymentWay.CARD, merchantOrder.getPaymentWay());
         assertNull(merchantOrder.getClient());
         assertEquals(expectedPaymentType, merchantOrder.getPaymentType());
+
+        Date finish = new Date();
+
+        Thread.sleep(500L);
+        Long statsAmount = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, start, finish, merchantOrder.getMerchant().getId());
+        assertEquals(amount, statsAmount);
+        Long statsCount = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_COUNT_PAID, start, finish, merchantOrder.getMerchant().getId());
+        assertEquals(Long.valueOf(1L), statsCount);
     }
 
     @Test
