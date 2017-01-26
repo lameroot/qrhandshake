@@ -49,6 +49,7 @@ public class StatisticService {
                         statistic.setType(statisticMetric.getType());
                         statistic.setMerchantId(statisticMetric.getMerchantId());
                         statistic.setOrderTemplateId(statisticMetric.getOrderTemplateId());
+                        statistic.setTerminalId(statisticMetric.getTerminalId());
                         statistic.setValue(statisticMetric.getValue());
                         statistic.setStartTime(startTime.getTime());
                         statistic.setEndTime(endTime.getTimeInMillis());
@@ -66,9 +67,15 @@ public class StatisticService {
         }
     }
 
-    public Long sumByPeriod(Statistic.StatisticType type, Date startTime, Date endTime, Long merchantId, Long... orderTemplateIds ) {
+    public Long sumByPeriodForTerminals(Statistic.StatisticType type, Date startTime, Date endTime, Long merchantId, Long... terminalIds) {
+        return null == terminalIds || 0 == terminalIds.length
+                ? statisticRepository.sumByPeriod(type, merchantId, endTime.getTime(), startTime.getTime())
+                : statisticRepository.sumByPeriodForTerminals(type, merchantId, terminalIds, endTime.getTime(), startTime.getTime());
+    }
+
+    public Long sumByPeriodByOrderTemplates(Statistic.StatisticType type, Date startTime, Date endTime, Long merchantId, Long... orderTemplateIds) {
         return null == orderTemplateIds || 0 == orderTemplateIds.length
                 ? statisticRepository.sumByPeriod(type, merchantId, endTime.getTime(), startTime.getTime())
-                : statisticRepository.sumByPeriod(type, merchantId, orderTemplateIds, endTime.getTime(), startTime.getTime());
+                : statisticRepository.sumByPeriodForOrderTemplates(type, merchantId, orderTemplateIds, endTime.getTime(), startTime.getTime());
     }
 }

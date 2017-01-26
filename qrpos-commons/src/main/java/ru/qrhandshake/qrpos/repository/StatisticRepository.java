@@ -18,7 +18,10 @@ public interface StatisticRepository extends CrudRepository<Statistic, Long> {
     Long sumByPeriod(@Param("type")Statistic.StatisticType type, @Param("merchantId")Long merchantId, @Param("start")Long start, @Param("finish")Long finish);
 
     @Query("select sum(s.value) from Statistic s where s.type = :type and s.merchantId = :merchantId and s.orderTemplateId in :orderTemplateIds and s.startTime <= :start and s.endTime > :finish")
-    Long sumByPeriod(@Param("type")Statistic.StatisticType type, @Param("merchantId")Long merchantId, @Param("orderTemplateIds")Long[] orderTemplateIds, @Param("start")Long start, @Param("finish")Long finish);
+    Long sumByPeriodForOrderTemplates(@Param("type")Statistic.StatisticType type, @Param("merchantId")Long merchantId, @Param("orderTemplateIds")Long[] orderTemplateIds, @Param("start")Long start, @Param("finish")Long finish);
+
+    @Query("select sum(s.value) from Statistic s where s.type = :type and s.merchantId = :merchantId and s.terminalId in :terminalIds and s.startTime <= :start and s.endTime > :finish")
+    Long sumByPeriodForTerminals(@Param("type")Statistic.StatisticType type, @Param("merchantId")Long merchantId, @Param("terminalIds")Long[] terminalIds, @Param("start")Long start, @Param("finish")Long finish);
 
     @Query("select s from Statistic s where s.type = :type and s.merchantId = :merchantId and s.startTime <= :start and s.endTime > :finish")
     List<Statistic> findByPeriod(@Param("type")Statistic.StatisticType type, @Param("merchantId")Long merchantId, @Param("start")Long start, @Param("finish")Long finish);

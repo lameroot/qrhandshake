@@ -16,17 +16,19 @@ public class StatisticMetric {
     private final static Logger logger = LoggerFactory.getLogger(StatisticMetric.class);
 
     private Long merchantId;
+    private Long terminalId;
     private Long orderTemplateId;
     private long value;
     private Date timestamp;
     private Statistic.StatisticType type;
 
 
-    public static StatisticMetric create(@NotNull Statistic.StatisticType type, @NotNull Long merchantId, @Nullable Long orderTemplateId, long value, @NotNull Date timestamp) {
+    public static StatisticMetric create(@NotNull Statistic.StatisticType type, @NotNull Long merchantId, @NotNull Long terminalId, @Nullable Long orderTemplateId, long value, @NotNull Date timestamp) {
         try {
             Objects.requireNonNull(type, "type is null");
             Objects.requireNonNull(merchantId, "merchantId is null");
             Objects.requireNonNull(timestamp, "timestamp is null");
+            Objects.requireNonNull(terminalId, "terminalId is null");
             Assert.state(value >= 0, "value less 0");
 
             StatisticMetric statisticMetric = new StatisticMetric();
@@ -35,6 +37,7 @@ public class StatisticMetric {
             statisticMetric.orderTemplateId = orderTemplateId;
             statisticMetric.value = value;
             statisticMetric.timestamp = timestamp;
+            statisticMetric.terminalId = terminalId;
 
             return statisticMetric;
         } catch (Exception e) {
@@ -43,17 +46,17 @@ public class StatisticMetric {
         }
     }
 
-    public static StatisticMetric[] createTemplateAmount(Long merchantId, Long orderTemplateId, Long amount, Date timestamp, boolean status) {
+    public static StatisticMetric[] createTemplateAmount(Long merchantId, Long terminalId, Long orderTemplateId, Long amount, Date timestamp, boolean status) {
         if ( status ) {
             return Arrays.asList(
-                    create(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, merchantId, orderTemplateId, amount, timestamp),
-                    create(Statistic.StatisticType.TEMPLATE_COUNT_PAID, merchantId, orderTemplateId, 1, timestamp)
+                    create(Statistic.StatisticType.AMOUNT_PAID, merchantId, terminalId, orderTemplateId, amount, timestamp),
+                    create(Statistic.StatisticType.COUNT_PAID, merchantId, terminalId, orderTemplateId, 1, timestamp)
             ).toArray(new StatisticMetric[]{});
         }
         else {
             return Arrays.asList(
-                    create(Statistic.StatisticType.TEMPLATE_AMOUNT_DECLINED, merchantId, orderTemplateId, amount, timestamp),
-                    create(Statistic.StatisticType.TEMPLATE_COUNT_DECLINED, merchantId, orderTemplateId, 1, timestamp)
+                    create(Statistic.StatisticType.AMOUNT_DECLINED, merchantId, terminalId, orderTemplateId, amount, timestamp),
+                    create(Statistic.StatisticType.COUNT_DECLINED, merchantId, terminalId, orderTemplateId, 1, timestamp)
             ).toArray(new StatisticMetric[]{});
         }
     }
@@ -78,8 +81,12 @@ public class StatisticMetric {
         return timestamp;
     }
 
+    public Long getTerminalId() {
+        return terminalId;
+    }
+
     public boolean isValid() {
-        return null != merchantId && null != type && 0L != value && null != timestamp;
+        return null != merchantId && null != terminalId && null != type && 0L != value && null != timestamp;
     }
 
     @Override

@@ -216,9 +216,9 @@ public class PaymentITTest extends ItTest {
         Date finish = new Date();
 
         Thread.sleep(500L);
-        Long statsAmount = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, start, finish, merchantOrder.getMerchant().getId());
+        Long statsAmount = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.AMOUNT_PAID, start, finish, merchantOrder.getMerchant().getId());
         assertEquals(amount, statsAmount);
-        Long statsCount = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_COUNT_PAID, start, finish, merchantOrder.getMerchant().getId());
+        Long statsCount = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.COUNT_PAID, start, finish, merchantOrder.getMerchant().getId());
         assertEquals(Long.valueOf(1L), statsCount);
     }
 

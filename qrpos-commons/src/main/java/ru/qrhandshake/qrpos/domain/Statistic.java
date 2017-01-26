@@ -20,16 +20,18 @@ public class Statistic {
     private Long merchantId;
     @Column(name = "ordertemplate_id")
     private Long orderTemplateId;
+    @Column(name = "terminal_id")
+    private Long terminalId;
     @Column(name = "start_time", nullable = false)
     private Long startTime;
     @Column(name = "end_time", nullable = false)
     private Long endTime;
 
     public static enum StatisticType {
-        TEMPLATE_COUNT_PAID,
-        TEMPLATE_AMOUNT_PAID,
-        TEMPLATE_COUNT_DECLINED,
-        TEMPLATE_AMOUNT_DECLINED
+        COUNT_PAID,
+        AMOUNT_PAID,
+        COUNT_DECLINED,
+        AMOUNT_DECLINED
     }
 
     public Long getId() {
@@ -86,5 +88,13 @@ public class Statistic {
 
     public void setEndTime(Long endTime) {
         this.endTime = endTime;
+    }
+
+    public Long getTerminalId() {
+        return terminalId;
+    }
+
+    public void setTerminalId(Long terminalId) {
+        this.terminalId = terminalId;
     }
 }

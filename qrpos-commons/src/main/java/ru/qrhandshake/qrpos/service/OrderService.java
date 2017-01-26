@@ -200,7 +200,7 @@ public class OrderService {
         }
         if ( updateStats ) {
             statisticService.update(
-                    StatisticMetric.createTemplateAmount(merchantOrder.getMerchant().getId(), orderTemplateId, merchantOrder.getAmount(), new Date(), status)
+                StatisticMetric.createTemplateAmount(merchantOrder.getMerchant().getId(), merchantOrder.getTerminal().getId(), orderTemplateId, merchantOrder.getAmount(), new Date(), status)
             );
         }
         return paymentResponse;
@@ -456,7 +456,7 @@ public class OrderService {
             finishResponse.setMessage(integrationOrderStatusResponse.getMessage());
 
             OrderTemplateHistory orderTemplateHistory = orderTemplateHistoryService.findByOrderTemplateIdAndMerchantOrderId(merchantOrder.getId());
-            statisticService.update(StatisticMetric.createTemplateAmount(merchantOrder.getMerchant().getId(), null != orderTemplateHistory ? orderTemplateHistory.getOrderTemplateId() : null, merchantOrder.getAmount(), merchantOrder.getPaymentDate(), integrationOrderStatusResponse.isSuccess()));
+            statisticService.update(StatisticMetric.createTemplateAmount(merchantOrder.getMerchant().getId(), merchantOrder.getTerminal().getId(), null != orderTemplateHistory ? orderTemplateHistory.getOrderTemplateId() : null, merchantOrder.getAmount(), merchantOrder.getPaymentDate(), integrationOrderStatusResponse.isSuccess()));
 
         } catch (IntegrationException e) {
             logger.error("Fail finish payment." + "Error finish payment with order:" + finishRequest.getOrderId() + ", cause: " + e.getMessage(),e);

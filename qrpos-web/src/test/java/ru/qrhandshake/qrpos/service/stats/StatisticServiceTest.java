@@ -23,8 +23,8 @@ public class StatisticServiceTest extends GeneralTest {
     @Resource
     private StatisticRepository statisticRepository;
 
-    private StatisticMetric build(Statistic.StatisticType type, Merchant merchant, OrderTemplate orderTemplate, Long value, Date date) {
-        return StatisticMetric.create(type, merchant.getId(), null != orderTemplate ? orderTemplate.getId() : null, value, date);
+    private StatisticMetric build(Statistic.StatisticType type, Merchant merchant, Terminal terminal, OrderTemplate orderTemplate, Long value, Date date) {
+        return StatisticMetric.create(type, merchant.getId(), terminal.getId(), null != orderTemplate ? orderTemplate.getId() : null, value, date);
     }
 
     @Before
@@ -74,37 +74,45 @@ public class StatisticServiceTest extends GeneralTest {
         for (int i = 0; i < count; i++) {
             Thread.sleep(500L);
 
-            statisticService.update(build(Statistic.StatisticType.TEMPLATE_COUNT_PAID, merchant, null, 1L, new Date()));
-            statisticService.update(build(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, merchant, null, 1L, new Date()));
+            statisticService.update(build(Statistic.StatisticType.COUNT_PAID, merchant, terminal, null, 1L, new Date()));
+            statisticService.update(build(Statistic.StatisticType.AMOUNT_PAID, merchant, terminal, null, 1L, new Date()));
 
-            statisticService.update(build(Statistic.StatisticType.TEMPLATE_COUNT_PAID, merchant, orderTemplate, 1L, new Date()));
-            statisticService.update(build(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, merchant, orderTemplate, 1L, new Date()));
+            statisticService.update(build(Statistic.StatisticType.COUNT_PAID, merchant, terminal, orderTemplate, 1L, new Date()));
+            statisticService.update(build(Statistic.StatisticType.AMOUNT_PAID, merchant, terminal, orderTemplate, 1L, new Date()));
 
-            statisticService.update(build(Statistic.StatisticType.TEMPLATE_COUNT_PAID, merchant, orderTemplate2, 1L, new Date()));
-            statisticService.update(build(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, merchant, orderTemplate2, 1L, new Date()));
+            statisticService.update(build(Statistic.StatisticType.COUNT_PAID, merchant, terminal2, orderTemplate2, 1L, new Date()));
+            statisticService.update(build(Statistic.StatisticType.AMOUNT_PAID, merchant, terminal2, orderTemplate2, 1L, new Date()));
         }
         Thread.sleep(100L);
         Date finish = new Date();
 
         assertEquals(6,statisticRepository.count());
-        long sum = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_COUNT_PAID, start, finish, merchant.getId(), null);
+        long sum = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.COUNT_PAID, start, finish, merchant.getId(), null);
         assertEquals(count*3, sum);
-        long sumAmount = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, start, finish, merchant.getId(), null);
+        long sumAmount = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.AMOUNT_PAID, start, finish, merchant.getId(), null);
         assertEquals(count*3, sumAmount);
+        long sumTerminal = statisticService.sumByPeriodForTerminals(Statistic.StatisticType.COUNT_PAID, start, finish, merchant.getId(), terminal.getId());
+        assertEquals(count*2, sumTerminal);
+        long sumAmountTerminal = statisticService.sumByPeriodForTerminals(Statistic.StatisticType.AMOUNT_PAID, start, finish, merchant.getId(), terminal.getId());
+        assertEquals(count*2, sumAmountTerminal);
+        long sumTerminals = statisticService.sumByPeriodForTerminals(Statistic.StatisticType.COUNT_PAID, start, finish, merchant.getId(), terminal.getId(), terminal2.getId());
+        assertEquals(count*3, sumTerminals);
+        long sumAmountTerminals = statisticService.sumByPeriodForTerminals(Statistic.StatisticType.AMOUNT_PAID, start, finish, merchant.getId(), terminal.getId(), terminal2.getId());
+        assertEquals(count*3, sumAmountTerminals);
 
-        long sum2 = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_COUNT_PAID, start, finish, merchant.getId(), orderTemplate.getId());
+        long sum2 = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.COUNT_PAID, start, finish, merchant.getId(), orderTemplate.getId());
         assertEquals(count, sum2);
-        long sumAmount2 = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, start, finish, merchant.getId(), orderTemplate.getId());
+        long sumAmount2 = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.AMOUNT_PAID, start, finish, merchant.getId(), orderTemplate.getId());
         assertEquals(count, sumAmount2);
 
-        long sum3 = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_COUNT_PAID, start, finish, merchant.getId(), orderTemplate2.getId());
+        long sum3 = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.COUNT_PAID, start, finish, merchant.getId(), orderTemplate2.getId());
         assertEquals(count, sum3);
-        long sumAmount3 = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, start, finish, merchant.getId(), orderTemplate2.getId());
+        long sumAmount3 = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.AMOUNT_PAID, start, finish, merchant.getId(), orderTemplate2.getId());
         assertEquals(count, sumAmount3);
 
-        long sum4 = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_COUNT_PAID, start, finish, merchant.getId(), orderTemplate.getId(), orderTemplate2.getId());
+        long sum4 = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.COUNT_PAID, start, finish, merchant.getId(), orderTemplate.getId(), orderTemplate2.getId());
         assertEquals(count*2, sum4);
-        long sumAmount4 = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, start, finish, merchant.getId(), orderTemplate.getId(), orderTemplate2.getId());
+        long sumAmount4 = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.AMOUNT_PAID, start, finish, merchant.getId(), orderTemplate.getId(), orderTemplate2.getId());
         assertEquals(count*2, sumAmount4);
 
     }
@@ -140,21 +148,21 @@ public class StatisticServiceTest extends GeneralTest {
             Calendar date = Calendar.getInstance();
             date.add(Calendar.MINUTE, slotInMinutes + 1);
 
-            statisticService.update(build(Statistic.StatisticType.TEMPLATE_COUNT_PAID, merchant, orderTemplate, 1L, date.getTime()));
-            statisticService.update(build(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, merchant, orderTemplate, 1L, date.getTime()));
+            statisticService.update(build(Statistic.StatisticType.COUNT_PAID, merchant, terminal, orderTemplate, 1L, date.getTime()));
+            statisticService.update(build(Statistic.StatisticType.AMOUNT_PAID, merchant, terminal, orderTemplate, 1L, date.getTime()));
         }
         Thread.sleep(100L);
         Date finish = new Date();
 
         assertEquals(2 * count,statisticRepository.count());
-        long sum = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_COUNT_PAID, start, finish, merchant.getId(), null);
+        long sum = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.COUNT_PAID, start, finish, merchant.getId(), null);
         assertEquals(count, sum);
-        long sumAmount = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, start, finish, merchant.getId(), null);
+        long sumAmount = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.AMOUNT_PAID, start, finish, merchant.getId(), null);
         assertEquals(count, sumAmount);
 
-        long sum2 = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_COUNT_PAID, start, finish, merchant.getId(), orderTemplate.getId());
+        long sum2 = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.COUNT_PAID, start, finish, merchant.getId(), orderTemplate.getId());
         assertEquals(count, sum2);
-        long sumAmount2 = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, start, finish, merchant.getId(), orderTemplate.getId());
+        long sumAmount2 = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.AMOUNT_PAID, start, finish, merchant.getId(), orderTemplate.getId());
         assertEquals(count, sumAmount2);
 
     }
@@ -190,16 +198,16 @@ public class StatisticServiceTest extends GeneralTest {
             Calendar date = Calendar.getInstance();
             date.add(Calendar.MINUTE, slotInMinutes -5);
 
-            statisticService.update(build(Statistic.StatisticType.TEMPLATE_COUNT_PAID, merchant, orderTemplate, 1L, date.getTime()));
-            statisticService.update(build(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, merchant, orderTemplate, 1L, date.getTime()));
+            statisticService.update(build(Statistic.StatisticType.COUNT_PAID, merchant, terminal, orderTemplate, 1L, date.getTime()));
+            statisticService.update(build(Statistic.StatisticType.AMOUNT_PAID, merchant, terminal, orderTemplate, 1L, date.getTime()));
         }
         Thread.sleep(100L);
         Date finish = new Date();
 
         assertEquals(2,statisticRepository.count());
-        long sum = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_COUNT_PAID, start, finish, merchant.getId(), null);
+        long sum = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.COUNT_PAID, start, finish, merchant.getId(), null);
         assertEquals(count, sum);
-        long sumAmount = statisticService.sumByPeriod(Statistic.StatisticType.TEMPLATE_AMOUNT_PAID, start, finish, merchant.getId(), null);
+        long sumAmount = statisticService.sumByPeriodByOrderTemplates(Statistic.StatisticType.AMOUNT_PAID, start, finish, merchant.getId(), null);
         assertEquals(count, sumAmount);
 
     }

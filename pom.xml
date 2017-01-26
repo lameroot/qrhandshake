@@ -17,6 +17,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
+        <rbs-integration.version>1.119-SNAPSHOT</rbs-integration.version>
         <rbs.version>1.113-SNAPSHOT</rbs.version>
         <rbs-protocols.version>1.0.87-SNAPSHOT</rbs-protocols.version>
         <spring.version>4.2.6.RELEASE</spring.version>
@@ -146,7 +147,7 @@
         <dependency>
             <groupId>ru.rbs</groupId>
             <artifactId>rbs2-integration</artifactId>
-            <version>${rbs.version}</version>
+            <version>${rbs-integration.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.bouncycastle</groupId>
