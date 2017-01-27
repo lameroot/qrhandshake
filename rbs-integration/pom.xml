@@ -16,6 +16,12 @@
             <groupId>ru.qrhandshake</groupId>
             <artifactId>qrpos-commons</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>ru.rbs</groupId>
+            <artifactId>rbs-http-sdk</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
 </project>

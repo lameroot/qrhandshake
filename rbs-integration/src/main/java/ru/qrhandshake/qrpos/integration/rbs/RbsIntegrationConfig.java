@@ -7,6 +7,8 @@ import org.springframework.context.annotation.*;
 import ru.qrhandshake.qrpos.domain.IntegrationSupport;
 import ru.qrhandshake.qrpos.integration.IntegrationFacade;
 import ru.qrhandshake.qrpos.integration.P2pIntegrationFacade;
+import ru.rbs.http.api.client.ApiClient;
+import ru.rbs.http.api.client.DefaultApiClient;
 
 @Configuration
 @PropertySource(value = {"classpath:integration/rbs.properties"})
@@ -16,9 +18,16 @@ public class RbsIntegrationConfig  {
 
     public final static String RBS_PROFILE = "rbs";
 
+    //todo: сделать интерфейс  RbsSyncIntegrationFacade и 2 реализации (веб-серивисы и хттп) и везде пробрасывать интерфейс
+
     @Bean
     public RbsSyncIntegrationFacade rbsSyncIntegrationFacade() {
         return new RbsSyncIntegrationFacade();
+    }
+
+    @Bean
+    public RbsSyncHttpIntegrationFacade rbsSyncHttpIntegrationFacade() {
+        return new RbsSyncHttpIntegrationFacade();
     }
 
     @Bean
@@ -34,6 +43,14 @@ public class RbsIntegrationConfig  {
     @Bean
     public P2pIntegrationFacade rbsP2pIntegrationFacade() {
         return new RbsP2PIntegrationFacade(IntegrationSupport.RBS_SBRF_P2P);
+    }
+
+    @Bean
+    public ApiClient restRbsHttpClient() {
+        return new DefaultApiClient.Builder()
+            .setDebugMode(true)
+            //.setHostsProvider(new CustomHostProvider("http://test"))//todo:set url
+            .create();
     }
 
     @Bean(name = "loggingInInterceptor")
