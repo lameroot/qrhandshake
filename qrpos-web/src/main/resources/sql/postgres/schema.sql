@@ -1,3 +1,5 @@
+CREATE TYPE BYTEA AS BLOB;
+
 create table BINDING (
   ID BIGINT NOT NULL PRIMARY KEY,
   binding_id varchar(255) not null,
@@ -9,7 +11,7 @@ create table BINDING (
   payment_params varchar(255) not null,
   payment_secure_type varchar(255),
   payment_way varchar(255) not null,
-  fk_client_id int8 not null,
+  fk_client_id BIGINT not null,
   constraint UK_BINDING_binding_id  unique (binding_id),
   constraint UK_BINDING_order_id  unique (order_id)
 );
@@ -35,7 +37,7 @@ create table merchant_detail (
   kbk varchar(255),
   okato varchar(255),
   p2p_pan varchar(255),
-  fk_merchant_id int8,
+  fk_merchant_id BIGINT,
   constraint FK_MERCHANT_DETAIL_merchant_id foreign key (fk_merchant_id) references merchant
 );
 
@@ -50,7 +52,7 @@ create table "user" (
   password varchar(255) not null,
   roles varchar(255),
   username varchar(255) not null,
-  fk_merchant_id int8,
+  fk_merchant_id BIGINT,
   constraint UK_USER_username  unique (username),
   constraint FK_USER_merchant_id foreign key (fk_merchant_id) references merchant
 );
@@ -62,8 +64,8 @@ create table client (
   address varchar(255),
   client_id varchar(255) not null,
   email varchar(255),
-  lat float8,
-  lon float8,
+--   lat float8,
+--   lon float8,
   name varchar(255),
   password varchar(255),
   phone varchar(255),
@@ -91,8 +93,8 @@ create table endpoint (
   ID BIGINT NOT NULL PRIMARY KEY,
   enabled boolean,
   params varchar(255),
-  fk_endpoint_catalog_id int8 not null,
-  fk_merchant_id int8 not null,
+  fk_endpoint_catalog_id BIGINT not null,
+  fk_merchant_id BIGINT not null,
   constraint FK_ENDPOINT_endpoint_catalog_id foreign key (fk_endpoint_catalog_id) references endpoint_catalog,
   constraint FK_ENDPOINT_merchant_id foreign key (fk_merchant_id) references merchant
 );
@@ -111,7 +113,7 @@ create table terminal (
   auth_name varchar(255) not null,
   auth_password varchar(255) not null,
   enabled boolean,
-  fk_merchant_id int8 not null,
+  fk_merchant_id BIGINT not null,
   constraint UK_TERMINAL_auth_name unique (auth_name),
   constraint FK_TERMINAL_merchant_id foreign key (fk_merchant_id) references merchant
 );
@@ -120,10 +122,10 @@ create sequence seq_terminal;
 
 create table order_template (
   ID BIGINT NOT NULL PRIMARY KEY,
-  amount int8,
+  amount BIGINT,
   description varchar(255),
   name varchar(255),
-  fk_terminal_id int8,
+  fk_terminal_id BIGINT,
   constraint FK_ORDER_TEMPLATE_terminal_id foreign key (fk_terminal_id) references terminal
 );
 
@@ -131,14 +133,14 @@ create sequence seq_order_template;
 
 create table order_template_history (
   ID BIGINT NOT NULL PRIMARY KEY,
-  fk_client_id int8,
+  fk_client_id BIGINT,
   date timestamp,
   device_id varchar(255),
   device_mobile_number varchar(255),
   device_model varchar(255),
   human_order_number varchar(255),
-  fk_order_id int8,
-  fk_order_template_id int8,
+  fk_order_id BIGINT,
+  fk_order_template_id BIGINT,
   status boolean
 );
 
@@ -146,7 +148,7 @@ create sequence seq_order_template_history;
 
 create table merchant_order (
   ID BIGINT NOT NULL PRIMARY KEY,
-  amount int8,
+  amount BIGINT,
   created_date timestamp not null,
   description varchar(255),
   device_id varchar(255),
@@ -160,9 +162,9 @@ create table merchant_order (
   payment_type varchar(255),
   payment_way varchar(255),
   session_id varchar(255),
-  fk_client_id int8,
-  fk_merchant_id int8,
-  fk_terminal_id int8,
+  fk_client_id BIGINT,
+  fk_merchant_id BIGINT,
+  fk_terminal_id BIGINT,
   constraint UK_MERCHANT_ORDER_order_id  unique (order_id),
   constraint FK_MERCHANT_ORDER_client_id foreign key (fk_client_id) references client,
   constraint FK_MERCHANT_ORDER_merchant_id foreign key (fk_merchant_id) references merchant,
@@ -223,3 +225,29 @@ create table DB_LOCK_KEEPALIVE (
   CREATED_DATE TIMESTAMP DEFAULT current_timestamp NOT NULL
 );
 CREATE UNIQUE INDEX DB_LOCK_KEEP_INDX ON DB_LOCK_KEEPALIVE(PROCESS_ID);
+
+CREATE TABLE confirm
+(
+    id BIGINT PRIMARY KEY NOT NULL,
+    attempt INT,
+    auth_type VARCHAR(255),
+    code VARCHAR(255),
+    enabled boolean,
+    expiry TIMESTAMP,
+    fk_client_id BIGINT,
+    FOREIGN KEY (fk_client_id) REFERENCES client (id)
+);
+
+
+CREATE TABLE statistic (
+  id BIGINT PRIMARY KEY NOT NULL,
+  start_time bigint NOT NULL ,
+  end_time bigint NOT NULL ,
+  merchant_id bigint NOT NULL ,
+  ordertemplate_id bigint ,
+  terminal_id bigint ,
+  type character varying(255),
+  value bigint
+);
+
+create sequence seq_statistic;

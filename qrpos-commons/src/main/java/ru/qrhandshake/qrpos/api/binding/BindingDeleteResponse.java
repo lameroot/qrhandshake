@@ -22,4 +22,12 @@ public class BindingDeleteResponse extends ApiResponse {
     public void setBindings(Set<BindingDto> bindings) {
         this.bindings = bindings;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("BindingDeleteResponse{");
+        sb.append("bindings=").append(bindings);
+        sb.append('}');
+        return sb.toString();
+    }
 }

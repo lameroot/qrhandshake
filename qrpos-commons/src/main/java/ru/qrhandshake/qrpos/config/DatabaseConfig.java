@@ -7,8 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseFactoryBean;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
 import javax.annotation.Resource;
 import javax.sql.DataSource;
@@ -17,13 +15,13 @@ import javax.sql.DataSource;
  * Created by lameroot on 18.05.16.
  */
 @Configuration
+@Profile(value = "prod")
 public class DatabaseConfig {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     @Resource
     private Environment environment;
 
-    @Profile(value = "prod")
     @Bean(destroyMethod="close",name="dataSource")
     public DataSource dataSource() {
         logger.debug("Start development datasource");
@@ -52,19 +50,17 @@ public class DatabaseConfig {
         return dataSource;
     }
 
-    @Profile(value = "test")
-    @Bean
-    public DataSource datasource() {
-        EmbeddedDatabaseFactoryBean bean = new EmbeddedDatabaseFactoryBean();
-//		ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
-//		databasePopulator.addScript(new ClassPathResource("hibernate/config/schema.sql"));
-//		bean.setDatabasePopulator(databasePopulator);
-        bean.setDatabaseType(EmbeddedDatabaseType.H2);
-        bean.afterPropertiesSet();
-        return bean.getObject();
-    }
-
-
+//    @Profile(value = "test")
+//    @Bean
+//    public DataSource datasource() {
+//        EmbeddedDatabaseFactoryBean bean = new EmbeddedDatabaseFactoryBean();
+////		ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
+////		databasePopulator.addScript(new ClassPathResource("hibernate/config/schema.sql"));
+////		bean.setDatabasePopulator(databasePopulator);
+//        bean.setDatabaseType(EmbeddedDatabaseType.H2);
+//        bean.afterPropertiesSet();
+//        return bean.getObject();
+//    }
 
 
 }

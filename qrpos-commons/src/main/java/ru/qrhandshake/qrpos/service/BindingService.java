@@ -19,6 +19,8 @@ import ru.qrhandshake.qrpos.repository.EndpointRepository;
 import ru.qrhandshake.qrpos.repository.MerchantOrderRepository;
 
 import javax.annotation.Resource;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,6 +44,8 @@ public class BindingService {
     private EndpointRepository endpointRepository;
     @Resource
     private MerchantOrderRepository merchantOrderRepository;
+    @PersistenceContext
+    private EntityManager entityManager;
 
 
     public Binding register(Client client, PaymentParams paymentParams, MerchantOrder merchantOrder, boolean enabled) {
@@ -239,6 +243,7 @@ public class BindingService {
             return bindingDeleteResponse;
         }
         bindingRepository.delete(binding);
+        entityManager.flush();
         if ( returnNewBindingList ) {
             List<Binding> bindings = bindingRepository.findByClientAndEnabled(client, true);
             if ( null != bindings && !bindings.isEmpty() ) {

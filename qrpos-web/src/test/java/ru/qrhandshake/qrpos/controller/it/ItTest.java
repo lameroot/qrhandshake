@@ -276,7 +276,7 @@ public abstract class ItTest extends ServletConfigTest {
         assertNotNull(merchantRegisterResponse.getTerminalAuth());
         assertTrue(merchantRegisterResponse.getTerminalAuth().authIsNotBlank());
 
-        EndpointRegisterResponse endpointRegisterResponse = registerEndpoint(name, IntegrationSupport.RBS_SBRF, environment.getRequiredProperty("merchant.trans1.username"), environment.getRequiredProperty("merchant.trans1.password"));
+        registerEndpoint(name, IntegrationSupport.RBS_SBRF, environment.getRequiredProperty("merchant.trans1.username"), environment.getRequiredProperty("merchant.trans1.password"));
 
         return merchantRegisterResponse;
     }

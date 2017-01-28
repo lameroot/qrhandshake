@@ -39,7 +39,9 @@ public class Client implements UserDetails {
     private String phone;
     private String email;
     private String address;
+    @Transient
     private Double lat;
+    @Transient
     private Double lon;
 
     public String getName() {

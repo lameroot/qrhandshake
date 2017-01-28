@@ -32,10 +32,11 @@ import javax.annotation.Resource;
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
 @ContextConfiguration(classes = {
+        AbstractTest.TestDataSourceConfig.class,
         ApplicationConfig.class,
         ServletConfig.class
 })
-@ActiveProfiles(value = {"prod", RbsIntegrationConfig.RBS_PROFILE})
+@ActiveProfiles(value = {"test", RbsIntegrationConfig.RBS_PROFILE})
 public class ServletConfigTest extends AbstractTest {
 
     @Resource

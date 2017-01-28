@@ -29,8 +29,6 @@ public class PaymentBindingRetryTask implements Retriable<IntegrationPaymentBind
     private ClientRepository clientRepository;
     @Resource
     private RbsSyncIntegrationFacade rbsSyncIntegrationFacade;
-    @Resource
-    private RbsSyncHttpIntegrationFacade rbsSyncHttpIntegrationFacade;
 
     @Override
     public void execute(IntegrationPaymentBindingRequest integrationPaymentBindingRequest) {

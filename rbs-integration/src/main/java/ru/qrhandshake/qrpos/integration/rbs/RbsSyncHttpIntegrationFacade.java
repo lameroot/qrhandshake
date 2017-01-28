@@ -18,7 +18,7 @@ import ru.rbs.http.api.methods.*;
 import javax.annotation.Resource;
 import java.util.Map;
 
-class RbsSyncHttpIntegrationFacade {
+class RbsSyncHttpIntegrationFacade implements RbsSyncIntegrationFacade {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -164,7 +164,7 @@ class RbsSyncHttpIntegrationFacade {
                 integrationPaymentResponse.setExternalId(externalOrderId);
 
             } catch (Exception e) {
-                throw new IntegrationException("Error integration register order by orderId:" + integrationPaymentRequest.getOrderId(), e);
+                throw new IntegrationException("Error integration payment order by orderId:" + integrationPaymentRequest.getOrderId(), e);
             }
         }
         else {
@@ -254,7 +254,7 @@ class RbsSyncHttpIntegrationFacade {
         try {
             OrderStatusExtendedProcess orderStatusExtendedProcess = restRbsHttpClient.execute(OrderStatusExtendedProcess.Request.newInstance(getOrderStatusExtendedRequest));
             integrationOrderStatusResponse.setMessage(orderStatusExtendedProcess.getErrorMessage());
-            if ( !"0".equals(orderStatusExtendedProcess.getErrorCode()) ) {
+            if ( 0 != orderStatusExtendedProcess.getErrorCode() ) {
                 logger.error("Error get order status: {}, because: {}, code: {}",
                         new Object[]{integrationOrderStatusRequest.getExternalId(),
                                 orderStatusExtendedProcess.getErrorMessage(),

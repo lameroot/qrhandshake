@@ -491,7 +491,8 @@ public class PaymentITTest extends ItTest {
             assertNotNull(mvcResult0);
             PaymentResponse paymentResponse0 = objectMapper.readValue(mvcResult0.getResponse().getContentAsString(), PaymentResponse.class);
             assertEquals(OrderStatus.REGISTERED,paymentResponse0.getOrderStatus());
-            assertEquals(ResponseStatus.FAIL,paymentResponse0.getStatus());//todo: поменять на success если ответ есть, даже если неудачный
+            assertEquals(ResponseStatus.SUCCESS,paymentResponse0.getStatus());//todo: поменять на success если ответ есть, даже если неудачный
+            Thread.sleep(100L);
         }
 
         MvcResult mvcResult0 = mockMvc.perform(post("/order" + MerchantOrderController.PAYMENT_PATH)
@@ -538,8 +539,8 @@ public class PaymentITTest extends ItTest {
         assertNotNull(mvcResult0);
         PaymentResponse paymentResponse0 = objectMapper.readValue(mvcResult0.getResponse().getContentAsString(), PaymentResponse.class);
         assertEquals(OrderStatus.REGISTERED,paymentResponse0.getOrderStatus());
-        assertEquals(ResponseStatus.FAIL,paymentResponse0.getStatus());
-        assertNull(paymentResponse0.getReturnUrlObject());
+        assertEquals(ResponseStatus.SUCCESS,paymentResponse0.getStatus());
+        assertNull(paymentResponse0.getReturnUrlObject().getUrl());
 
         MerchantOrder merchantOrder0 = merchantOrderRepository.findByOrderId(merchantOrderRegisterResponse.getOrderId());
         assertEquals(OrderStatus.REGISTERED, merchantOrder0.getOrderStatus());

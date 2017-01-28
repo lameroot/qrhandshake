@@ -9,7 +9,7 @@ import java.util.List;
 public enum IntegrationSupport {
     RBS_SBRF_OWN,
     RBS_SBRF,
-    RBS_SBRF_HTTP,
+    RBS_SBRF_SOAP,
     RBS_SBRF_P2P,
     RBS_ALFA,
     TINKOFF,

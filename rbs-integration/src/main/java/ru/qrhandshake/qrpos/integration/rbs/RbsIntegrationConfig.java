@@ -18,15 +18,13 @@ public class RbsIntegrationConfig  {
 
     public final static String RBS_PROFILE = "rbs";
 
-    //todo: сделать интерфейс  RbsSyncIntegrationFacade и 2 реализации (веб-серивисы и хттп) и везде пробрасывать интерфейс
+//    @Bean
+//    public RbsSyncSoapIntegrationFacade rbsSyncIntegrationFacade() {
+//        return new RbsSyncSoapIntegrationFacade();
+//    }
 
     @Bean
     public RbsSyncIntegrationFacade rbsSyncIntegrationFacade() {
-        return new RbsSyncIntegrationFacade();
-    }
-
-    @Bean
-    public RbsSyncHttpIntegrationFacade rbsSyncHttpIntegrationFacade() {
         return new RbsSyncHttpIntegrationFacade();
     }
 
